@@ -1,0 +1,861 @@
+{
+ "by_ticker": {
+  "AAMRATECH": [
+   {
+    "company_name": "aamra technologies limited",
+    "purpose": "0.25% Cash Dividend excluding Sponsors and Directors",
+    "dividend_pct": 0.25,
+    "dividend_kind": "cash",
+    "agm_date_text": "Will be notified later subject to consent accorded from the honorable High Court.",
+    "agm_date": null,
+    "record_date_text": "Will be notified later",
+    "record_date": null
+   }
+  ],
+  "ALARABANK": [
+   {
+    "company_name": "Al-Arafah Islami Bank PLC",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "29-Jul-26",
+    "agm_date": "2026-07-29",
+    "record_date_text": "9-Jun-26",
+    "record_date": "2026-06-09"
+   }
+  ],
+  "ARAMIT": [
+   {
+    "company_name": "Aramit Limited",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "Postponed",
+    "agm_date": null,
+    "record_date_text": "27-Jan-26",
+    "record_date": "2026-01-27"
+   }
+  ],
+  "ASIAPACINS": [
+   {
+    "company_name": "Asia Pacific General Insurance PLC",
+    "purpose": "14% Cash Dividend",
+    "dividend_pct": 14.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "9-Jul-26",
+    "agm_date": "2026-07-09",
+    "record_date_text": "21-May-26",
+    "record_date": "2026-05-21"
+   }
+  ],
+  "BIFC": [
+   {
+    "company_name": "Bangladesh Industrial Fin. Co. Ltd.",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "To be notified later.",
+    "agm_date": null,
+    "record_date_text": "30-Jul-26",
+    "record_date": "2026-07-30"
+   }
+  ],
+  "BAYLEASING": [
+   {
+    "company_name": "Bay Leasing & Investment Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "27-Sep-26",
+    "agm_date": "2026-09-27",
+    "record_date_text": "10-Aug-26",
+    "record_date": "2026-08-10"
+   }
+  ],
+  "BERGERPBL": [
+   {
+    "company_name": "Berger Paints Bangladesh Ltd.",
+    "purpose": "525% Cash Dividend",
+    "dividend_pct": 525.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "24-Aug-26",
+    "agm_date": "2026-08-24",
+    "record_date_text": "7-Jul-26",
+    "record_date": "2026-07-07"
+   }
+  ],
+  "BESTHLDNG": [
+   {
+    "company_name": "Best Holdings PLC",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Will be notified after the order by the Honorable Court",
+    "agm_date": null,
+    "record_date_text": "Will be notified after the order by the Honorable Court.",
+    "record_date": null
+   }
+  ],
+  "BXPHARMA": [
+   {
+    "company_name": "Beximco Pharmaceuticals PLC",
+    "purpose": "47.5% Cash Dividend",
+    "dividend_pct": 47.5,
+    "dividend_kind": "cash",
+    "agm_date_text": "AGM will be convened at the earliest practicable time, subject to obtaining the necessary permission and condonation of delay from the Hon'ble High Court Division of the Supreme Court of Bangladesh",
+    "agm_date": null,
+    "record_date_text": "2-Aug-26",
+    "record_date": "2026-08-02"
+   }
+  ],
+  "CLICL": [
+   {
+    "company_name": "Chartered Life Insurance PLC.",
+    "purpose": "4% cash dividend for each shareholder excluding sponsors & directors",
+    "dividend_pct": 4.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "10-Aug-26",
+    "agm_date": "2026-08-10",
+    "record_date_text": "22-Jul-26",
+    "record_date": "2026-07-22"
+   }
+  ],
+  "CONTININS": [
+   {
+    "company_name": "Continental Insurance PLC.",
+    "purpose": "5% Cash Dividend",
+    "dividend_pct": 5.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "13-Aug-26",
+    "agm_date": "2026-08-13",
+    "record_date_text": "15-Jun-26",
+    "record_date": "2026-06-15"
+   }
+  ],
+  "DGIC": [
+   {
+    "company_name": "Desh General Insurance Company Limited",
+    "purpose": "2% Cash Dividend",
+    "dividend_pct": 2.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "9-Sep-26",
+    "agm_date": "2026-09-09",
+    "record_date_text": "7-Jul-26",
+    "record_date": "2026-07-07"
+   }
+  ],
+  "DHAKAINS": [
+   {
+    "company_name": "Dhaka Insurance Limited",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "20 July, 2026",
+    "agm_date": null,
+    "record_date_text": "17-Jun-26",
+    "record_date": "2026-06-17"
+   }
+  ],
+  "EASTERNINS": [
+   {
+    "company_name": "Eastern Insurance PLC.",
+    "purpose": "15% Cash Dividend",
+    "dividend_pct": 15.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "14-Jul-26",
+    "agm_date": "2026-07-14",
+    "record_date_text": "16-Jun-26",
+    "record_date": "2026-06-16"
+   }
+  ],
+  "EIL": [
+   {
+    "company_name": "Express Insurance Limited",
+    "purpose": "5% Cash Dividend",
+    "dividend_pct": 5.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "1-Jul-26",
+    "agm_date": "2026-07-01",
+    "record_date_text": "21-May-26",
+    "record_date": "2026-05-21"
+   }
+  ],
+  "FASFIN": [
+   {
+    "company_name": "FAS Finance & Investment Limited",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Will be notified through AGM notice",
+    "agm_date": null,
+    "record_date_text": "30-Jul-26",
+    "record_date": "2026-07-30"
+   }
+  ],
+  "FEDERALINS": [
+   {
+    "company_name": "Federal Insurance PLC",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "17-Aug-26",
+    "agm_date": "2026-08-17",
+    "record_date_text": "16-Jun-26",
+    "record_date": "2026-06-16"
+   }
+  ],
+  "FIRSTFIN": [
+   {
+    "company_name": "First Finance Limited",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "17-Sep-26",
+    "agm_date": "2026-09-17",
+    "record_date_text": "22-Jul-26",
+    "record_date": "2026-07-22"
+   }
+  ],
+  "GHCL": [
+   {
+    "company_name": "Global Heavy Chemicals Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "To be declared later",
+    "agm_date": null,
+    "record_date_text": "29-Dec-25",
+    "record_date": "2025-12-29"
+   }
+  ],
+  "GLOBALINS": [
+   {
+    "company_name": "Global Insurance PLC",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "18-Aug-26",
+    "agm_date": "2026-08-18",
+    "record_date_text": "20-Jul-26",
+    "record_date": "2026-07-20"
+   }
+  ],
+  "GSPFINANCE": [
+   {
+    "company_name": "GSP Finance Company (Bangladesh) Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Postponed",
+    "agm_date": null,
+    "record_date_text": "14-Oct-25",
+    "record_date": "2025-10-14"
+   }
+  ],
+  "ICBIBANK": [
+   {
+    "company_name": "ICB Islamic Bank Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "21-Sep-26",
+    "agm_date": "2026-09-21",
+    "record_date_text": "28-Jul-26",
+    "record_date": "2026-07-28"
+   }
+  ],
+  "INTRACO": [
+   {
+    "company_name": "Intraco Refueling Station PLC",
+    "purpose": "Fixation of Record date for raising Paid- up capital",
+    "dividend_pct": null,
+    "dividend_kind": null,
+    "agm_date_text": "",
+    "agm_date": null,
+    "record_date_text": "21-May-26",
+    "record_date": "2026-05-21"
+   }
+  ],
+  "ISLAMIBANK": [
+   {
+    "company_name": "Islami Bank Bangladesh PLC",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "16-Sep-26",
+    "agm_date": "2026-09-16",
+    "record_date_text": "21-May-26",
+    "record_date": "2026-05-21"
+   }
+  ],
+  "ICICL": [
+   {
+    "company_name": "Islami Commercial Insurance PLC.",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "6-Aug-26",
+    "agm_date": "2026-08-06",
+    "record_date_text": "8-Jun-26",
+    "record_date": "2026-06-08"
+   }
+  ],
+  "ISLAMIINS": [
+   {
+    "company_name": "Islami Insurance Bangladesh Limited",
+    "purpose": "16% Cash Dividend",
+    "dividend_pct": 16.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "27-Aug-26",
+    "agm_date": "2026-08-27",
+    "record_date_text": "20-Jul-26",
+    "record_date": "2026-07-20"
+   }
+  ],
+  "ISLAMICFIN": [
+   {
+    "company_name": "Islamic Finance & Investment PLC.",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "24-Sep-26",
+    "agm_date": "2026-09-24",
+    "record_date_text": "9-Aug-26",
+    "record_date": "2026-08-09"
+   }
+  ],
+  "JAMUNABANK": [
+   {
+    "company_name": "Jamuna Bank PLC.",
+    "purpose": "29% Cash Dividend",
+    "dividend_pct": 29.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "27-Jul-26",
+    "agm_date": "2026-07-27",
+    "record_date_text": "3-Jun-26",
+    "record_date": "2026-06-03"
+   }
+  ],
+  "JANATAINS": [
+   {
+    "company_name": "Janata Insurance PLC",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "19-Jul-26",
+    "agm_date": "2026-07-19",
+    "record_date_text": "22-Jun-26",
+    "record_date": "2026-06-22"
+   }
+  ],
+  "JUTESPINN": [
+   {
+    "company_name": "Jute Spinners Ltd.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Date and Venue of the 44th AGM will be notified later on after receipt of permission from the High Court for 38th, 39th, 40th, 41st ,42nd and 43rd AGM.",
+    "agm_date": null,
+    "record_date_text": "28-Dec-23",
+    "record_date": "2023-12-28"
+   },
+   {
+    "company_name": "Jute Spinners Ltd.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "To be notified",
+    "agm_date": null,
+    "record_date_text": "27-Nov-25",
+    "record_date": "2025-11-27"
+   }
+  ],
+  "KARNAPHULI": [
+   {
+    "company_name": "Karnaphuli Insurance PLC",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "9-Jul-26",
+    "agm_date": "2026-07-09",
+    "record_date_text": "7-Jun-26",
+    "record_date": "2026-06-07"
+   }
+  ],
+  "KTL": [
+   {
+    "company_name": "Kattali Textile Limited",
+    "purpose": "0.10% Cash Dividend for General Shareholdes (Excluding the Sponsors/Directors)",
+    "dividend_pct": 0.1,
+    "dividend_kind": "cash",
+    "agm_date_text": "Will be notified later",
+    "agm_date": null,
+    "record_date_text": "21-Jan-26",
+    "record_date": "2026-01-21"
+   }
+  ],
+  "LRBDL": [
+   {
+    "company_name": "Lub-rref (Bangladesh) Limited",
+    "purpose": "Proposed Utilization of IPO Proceeds",
+    "dividend_pct": null,
+    "dividend_kind": null,
+    "agm_date_text": "9-Jul-26",
+    "agm_date": "2026-07-09",
+    "record_date_text": "30-Jun-26",
+    "record_date": "2026-06-30"
+   }
+  ],
+  "MAKSONSPIN": [
+   {
+    "company_name": "Maksons Spinning Mills PLC.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Will be notified later",
+    "agm_date": null,
+    "record_date_text": "7-Jan-26",
+    "record_date": "2026-01-07"
+   }
+  ],
+  "MARICO": [
+   {
+    "company_name": "Marico Bangladesh Limited",
+    "purpose": "Final Cash Dividend of 500%",
+    "dividend_pct": 500.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "14-Jul-26",
+    "agm_date": "2026-07-14",
+    "record_date_text": "1-Jun-26",
+    "record_date": "2026-06-01"
+   }
+  ],
+  "MEGHNALIFE": [
+   {
+    "company_name": "Meghna Life Insurance PLC",
+    "purpose": "15% cash dividend",
+    "dividend_pct": 15.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "20-Aug-26",
+    "agm_date": "2026-08-20",
+    "record_date_text": "23-Jul-26",
+    "record_date": "2026-07-23"
+   }
+  ],
+  "MTB": [
+   {
+    "company_name": "Mutual Trust Bank PLC",
+    "purpose": "12% Stock Dividend subject to approval by the respective regulatory authorities",
+    "dividend_pct": 12.0,
+    "dividend_kind": "stock",
+    "agm_date_text": "16-Jul-26",
+    "agm_date": "2026-07-16",
+    "record_date_text": "18-Jun-26",
+    "record_date": "2026-06-18"
+   }
+  ],
+  "NBL": [
+   {
+    "company_name": "National Bank Ltd.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "13-Aug-26",
+    "agm_date": "2026-08-13",
+    "record_date_text": "15-Jun-26",
+    "record_date": "2026-06-15"
+   }
+  ],
+  "NHFIL": [
+   {
+    "company_name": "National Housing Finance PLC",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "15-Sep-26",
+    "agm_date": "2026-09-15",
+    "record_date_text": "23-Jul-26",
+    "record_date": "2026-07-23"
+   }
+  ],
+  "NTC": [
+   {
+    "company_name": "National Tea Company Ltd.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "16-Jul-26",
+    "agm_date": "2026-07-16",
+    "record_date_text": "17-Jun-26",
+    "record_date": "2026-06-17"
+   },
+   {
+    "company_name": "National Tea Company Ltd.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "To be announced later",
+    "agm_date": null,
+    "record_date_text": "To be announced later",
+    "record_date": null
+   }
+  ],
+  "NITOLINS": [
+   {
+    "company_name": "Nitol Insurance PLC.",
+    "purpose": "10.00% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "12-Jul-26",
+    "agm_date": "2026-07-12",
+    "record_date_text": "10-May-26",
+    "record_date": "2026-05-10"
+   }
+  ],
+  "NORTHRNINS": [
+   {
+    "company_name": "Northern Islami Insurance PLC.",
+    "purpose": "5% Cash and 5% Stock Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "mixed",
+    "agm_date_text": "29-Aug-26",
+    "agm_date": "2026-08-29",
+    "record_date_text": "28-Jun-26",
+    "record_date": "2026-06-28"
+   }
+  ],
+  "NRBBANK": [
+   {
+    "company_name": "NRB Bank PLC.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "20-Aug-26",
+    "agm_date": "2026-08-20",
+    "record_date_text": "17-Jun-26",
+    "record_date": "2026-06-17"
+   }
+  ],
+  "OIMEX": [
+   {
+    "company_name": "Oimex Electrode Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Postponed (Will be notified later)",
+    "agm_date": null,
+    "record_date_text": "4-Dec-25",
+    "record_date": "2025-12-04"
+   }
+  ],
+  "ONEBANKPLC": [
+   {
+    "company_name": "One Bank PLC.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "13-Aug-26",
+    "agm_date": "2026-08-13",
+    "record_date_text": "11-Jun-26",
+    "record_date": "2026-06-11"
+   }
+  ],
+  "PLFSL": [
+   {
+    "company_name": "Peoples Leasing and Fin. Services Ltd.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "17-Aug-26",
+    "agm_date": "2026-08-17",
+    "record_date_text": "26-Jul-26",
+    "record_date": "2026-07-26"
+   }
+  ],
+  "PHOENIXFIN": [
+   {
+    "company_name": "Phoenix Finance and Investments Ltd.",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "27-Aug-26",
+    "agm_date": "2026-08-27",
+    "record_date_text": "23-Jul-26",
+    "record_date": "2026-07-23"
+   }
+  ],
+  "PHENIXINS": [
+   {
+    "company_name": "Phoenix Insurance PLC.",
+    "purpose": "12% Cash Dividend",
+    "dividend_pct": 12.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "29-Jul-26",
+    "agm_date": "2026-07-29",
+    "record_date_text": "9-Jun-26",
+    "record_date": "2026-06-09"
+   }
+  ],
+  "POPULARLIF": [
+   {
+    "company_name": "Popular Life Insurance Co. Ltd.",
+    "purpose": "20% Cash Dividend",
+    "dividend_pct": 20.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "22-Sep-26",
+    "agm_date": "2026-09-22",
+    "record_date_text": "20-Jul-26",
+    "record_date": "2026-07-20"
+   }
+  ],
+  "PRAGATIINS": [
+   {
+    "company_name": "Pragati Life Insurance PLC.",
+    "purpose": "15% Cash and 10% Stock Dividend",
+    "dividend_pct": 25.0,
+    "dividend_kind": "mixed",
+    "agm_date_text": "13-Aug-26",
+    "agm_date": "2026-08-13",
+    "record_date_text": "14-Jul-26",
+    "record_date": "2026-07-14"
+   }
+  ],
+  "PRIMELIFE": [
+   {
+    "company_name": "Prime Islami Life Insurance Ltd.",
+    "purpose": "0.25% Cash Dividend",
+    "dividend_pct": 0.25,
+    "dividend_kind": "cash",
+    "agm_date_text": "17-Sep-26",
+    "agm_date": "2026-09-17",
+    "record_date_text": "16-Jul-26",
+    "record_date": "2026-07-16"
+   }
+  ],
+  "PROVATIINS": [
+   {
+    "company_name": "Provati Insurance PLC.",
+    "purpose": "12% Cash Dividend",
+    "dividend_pct": 12.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "10-Aug-26",
+    "agm_date": "2026-08-10",
+    "record_date_text": "10-Jun-26",
+    "record_date": "2026-06-10"
+   }
+  ],
+  "PURABIGEN": [
+   {
+    "company_name": "Purabi Gen. Insurance Company Ltd.",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "30-Aug-26",
+    "agm_date": "2026-08-30",
+    "record_date_text": "25-Jun-26",
+    "record_date": "2026-06-25"
+   }
+  ],
+  "RUPALIBANK": [
+   {
+    "company_name": "Rupali Bank PLC",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "19-Jul-26",
+    "agm_date": "2026-07-19",
+    "record_date_text": "21 May, 26",
+    "record_date": null
+   }
+  ],
+  "RUPALIINS": [
+   {
+    "company_name": "Rupali Insurance Company Ltd.",
+    "purpose": "10% Dividend (5% Cash and 5% Stock)",
+    "dividend_pct": 20.0,
+    "dividend_kind": "mixed",
+    "agm_date_text": "29-Jul-26",
+    "agm_date": "2026-07-29",
+    "record_date_text": "4-Jun-26",
+    "record_date": "2026-06-04"
+   }
+  ],
+  "SEAPEARL": [
+   {
+    "company_name": "Sea Pearl Beach Resort & Spa Limited",
+    "purpose": "1% Cash (only for General Shareholders excluding Sponsors & Directors)",
+    "dividend_pct": 1.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "Postponed (Will be notified later)",
+    "agm_date": null,
+    "record_date_text": "27-Nov-25",
+    "record_date": "2025-11-27"
+   }
+  ],
+  "SICL": [
+   {
+    "company_name": "Sikder Insurance Company Limited",
+    "purpose": "10% Cash Dividend for the General shareholders excluding Sponsors and or Directors",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "27-Sep-26",
+    "agm_date": "2026-09-27",
+    "record_date_text": "23-Jul-26",
+    "record_date": "2026-07-23"
+   }
+  ],
+  "SKTRIMS": [
+   {
+    "company_name": "SK Trims & Industries Limited",
+    "purpose": "No dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "Will notify later upon obtaining the approval/order from the Hon'ble High Court Division",
+    "agm_date": null,
+    "record_date_text": "9-Jul-26",
+    "record_date": "2026-07-09"
+   }
+  ],
+  "SONALILIFE": [
+   {
+    "company_name": "Sonali Life Insurance PLC",
+    "purpose": "15% Cash Dividend",
+    "dividend_pct": 15.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "27-Aug-26",
+    "agm_date": "2026-08-27",
+    "record_date_text": "2-Aug-26",
+    "record_date": "2026-08-02"
+   }
+  ],
+  "SONARBAINS": [
+   {
+    "company_name": "Sonar Bangla Insurance Ltd.",
+    "purpose": "5% Cash and 5% Stock Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "mixed",
+    "agm_date_text": "13-Aug-26",
+    "agm_date": "2026-08-13",
+    "record_date_text": "11-Jun-26",
+    "record_date": "2026-06-11"
+   }
+  ],
+  "SOUTHEASTB": [
+   {
+    "company_name": "Southeast Bank PLC",
+    "purpose": "3% Cash Dividend and 7% Stock Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "mixed",
+    "agm_date_text": "23-Jul-26",
+    "agm_date": "2026-07-23",
+    "record_date_text": "21-05-2026 for Cash & June 04, 2026 for Stock",
+    "record_date": null
+   },
+   {
+    "company_name": "Southeast Bank PLC",
+    "purpose": "EGM to increase the authorized share capital",
+    "dividend_pct": null,
+    "dividend_kind": null,
+    "agm_date_text": "23-Jul-26",
+    "agm_date": "2026-07-23",
+    "record_date_text": "21-Jun-26",
+    "record_date": "2026-06-21"
+   }
+  ],
+  "STANDBANKL": [
+   {
+    "company_name": "Standard Islami Bank PLC.",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "30-Jul-26",
+    "agm_date": "2026-07-30",
+    "record_date_text": "3-Jun-26",
+    "record_date": "2026-06-03"
+   }
+  ],
+  "SUNLIFEINS": [
+   {
+    "company_name": "Sunlife Insurance Company Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "3-Sep-26",
+    "agm_date": "2026-09-03",
+    "record_date_text": "5-Jul-26",
+    "record_date": "2026-07-05"
+   }
+  ],
+  "TRUSTBANK": [
+   {
+    "company_name": "Trust Bank PLC.",
+    "purpose": "8% Cash and 5% Stock Dividend",
+    "dividend_pct": 13.0,
+    "dividend_kind": "mixed",
+    "agm_date_text": "28-Jul-26",
+    "agm_date": "2026-07-28",
+    "record_date_text": "11-Jun-26",
+    "record_date": "2026-06-11"
+   }
+  ],
+  "UNIONCAP": [
+   {
+    "company_name": "Union Capital Limited",
+    "purpose": "No Dividend",
+    "dividend_pct": 0.0,
+    "dividend_kind": "none",
+    "agm_date_text": "29-Jul-26",
+    "agm_date": "2026-07-29",
+    "record_date_text": "22-Jun-26",
+    "record_date": "2026-06-22"
+   }
+  ],
+  "UNIONINS": [
+   {
+    "company_name": "Union Insurance PLC.",
+    "purpose": "10% Cash Dividend",
+    "dividend_pct": 10.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "25-Aug-26",
+    "agm_date": "2026-08-25",
+    "record_date_text": "25-Jun-26",
+    "record_date": "2026-06-25"
+   }
+  ]
+ },
+ "unmatched": [
+  {
+   "company_name": "LankaBangla Securities PLC.",
+   "purpose": "No Dividend",
+   "dividend_pct": 0.0,
+   "dividend_kind": "none",
+   "agm_date_text": "23-Jul-26",
+   "agm_date": "2026-07-23",
+   "record_date_text": "18-Jun-26",
+   "record_date": "2026-06-18"
+  },
+  {
+   "company_name": "Mamun Agro Products Limited",
+   "purpose": "10% Total (5% Cash + 5% Bonus Share for general shareholders; 5% Bonus Share for Sponsors & Directors)",
+   "dividend_pct": 25.0,
+   "dividend_kind": "mixed",
+   "agm_date_text": "Postponed",
+   "agm_date": null,
+   "record_date_text": "13-Nov-25",
+   "record_date": "2025-11-13"
+  },
+  {
+   "company_name": "Union Bank PLC.",
+   "purpose": "5% cash",
+   "dividend_pct": 5.0,
+   "dividend_kind": "cash",
+   "agm_date_text": "Postponed",
+   "agm_date": null,
+   "record_date_text": "6-Jun-24",
+   "record_date": "2024-06-06"
+  }
+ ],
+ "total_rows": 72,
+ "matched_count": 69,
+ "fetched_at": "2026-07-15 13:34:11"
+}

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DSE Market Analyzer</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<header>
+  <h1>DSE Market Analyzer</h1>
+  <div class="overview" id="overview"></div>
+  <div class="spacer"></div>
+  <div id="updateStatus"></div>
+  <button id="btnTheme" data-term="theme_toggle">Theme: Auto</button>
+  <button id="btnHelp" data-term="help">Help / সাহায্য</button>
+  <div>
+    <button class="primary" id="btnUpdate" data-term="update">Update Data</button>
+    <div class="progress hidden" id="updBarWrap"><div id="updBar"></div></div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="suggestions" class="active">Suggestions</button>
+  <button data-tab="highprofit">⚡ High Profit</button>
+  <button data-tab="charts">Charts</button>
+  <button data-tab="potential">Potential Charts</button>
+  <button data-tab="screener">Screener</button>
+  <button data-tab="sectors">Sectors</button>
+</nav>
+
+<main>
+  <!-- ============ SUGGESTIONS ============ -->
+  <section id="tab-suggestions">
+    <p class="disclaimer">Rule-based technical &amp; fundamental scoring computed locally from 2 years of
+      price history — not financial advice. Scores favour liquid, category-A equities; check reasons and
+      flags before acting. · নিয়মভিত্তিক বিশ্লেষণ, বিনিয়োগ পরামর্শ নয়; কেনার আগে কারণ ও ঝুঁকি-চিহ্ন দেখে নিন।</p>
+
+    <div class="panel top10" id="top10Panel">
+      <h2>Top 20 preferred shares · আজকের সেরা ২০ <span class="term" data-term="composite">ⓘ</span></h2>
+      <div class="sub">Best overall picks across price history, announcements and AGM/EGM record dates —
+        diversified (max 3 per sector), each with a suggested purchase date, holding period, profit target
+        and stop-loss.
+        · দামের ইতিহাস, ঘোষণা ও রেকর্ড ডেট মিলিয়ে সেরা শেয়ার; প্রতিটির জন্য কবে কিনবেন, কত দিন রাখবেন, কোন দামে মুনাফা তুলবেন ও কোন দামে ক্ষতি সীমিত করবেন তা দেখানো হয়েছে।</div>
+      <div class="tbl-wrap">
+        <table id="top10Table">
+          <thead><tr>
+            <th>#</th>
+            <th class="lft">Share</th>
+            <th>Price</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
+            <th><span class="term" data-term="composite">Score</span></th>
+            <th class="lft"><span class="term" data-term="buy_date">Buy on</span></th>
+            <th class="lft"><span class="term" data-term="horizon">Hold for</span></th>
+            <th><span class="term" data-term="target">Target</span></th>
+            <th><span class="term" data-term="stop">Stop-loss</span></th>
+            <th class="lft">Why · কেন</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel market" id="marketPanel">
+      <h2><span class="term" data-term="market_update">Market Update · বাজার পরিস্থিতি</span> <small id="marketAsOf"></small></h2>
+      <div id="marketBody"></div>
+    </div>
+
+    <div class="panel alerts" id="alertsPanel">
+      <h2><span class="term" data-term="company_alerts">Company Alerts · কোম্পানির সতর্কতা</span></h2>
+      <div class="sub">From DSE's announcement feed and the AGM/EGM record-date PDF, refreshed on Update Data.
+        · DSE-এর ঘোষণা ও AGM/EGM পিডিএফ থেকে, Update Data চাপলে হালনাগাদ হয়।</div>
+      <div id="alertsBody"></div>
+    </div>
+
+    <div class="panel signals" id="signalsPanel">
+      <h2><span class="term" data-term="signals">Today's fresh signals · আজকের নতুন সংকেত</span></h2>
+      <div class="sub">Technical events that appeared on the latest trading day — early entry opportunities.
+        · সর্বশেষ লেনদেন দিবসে দেখা দেওয়া টেকনিক্যাল ঘটনা — আগেভাগে ঢোকার সুযোগ।</div>
+      <div id="signalGroups"></div>
+    </div>
+
+    <div class="sug-wrap">
+      <div class="panel">
+        <h2><span class="term" data-term="score_short">Short-term picks · 1–2 weeks · স্বল্পমেয়াদি</span></h2>
+        <div class="sub"><span class="term" data-term="momentum">momentum 30%</span> · <span class="term" data-term="sma">trend 20%</span> · <span class="term" data-term="vol_ratio">volume surge 20%</span> · <span class="term" data-term="rsi">RSI zone 15%</span> · <span class="term" data-term="macd">MACD 15%</span></div>
+        <div id="shortPicks" class="loading">Loading…</div>
+      </div>
+      <div class="panel">
+        <h2><span class="term" data-term="score_long">Long-term picks · 1–2 months · দীর্ঘমেয়াদি</span></h2>
+        <div class="sub"><span class="term" data-term="sma">trend 25%</span> · <span class="term" data-term="pe">fundamentals 25%</span> · <span class="term" data-term="pos52">52-week position 20%</span> · <span class="term" data-term="volatility">consistency 15%</span> · <span class="term" data-term="momentum">momentum 15%</span></div>
+        <div id="longPicks" class="loading">Loading…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ HIGH PROFIT (exceptional setups) ============ -->
+  <section id="tab-highprofit" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="high_profit">Exceptional setups for high profit in 1–2 months</span> —
+      seven aggressive strategies scanned across every liquid, eligible share. Higher reward means higher risk:
+      <b>always</b> use the stop-loss and the <span class="term" data-term="position">2% position-size rule</span>;
+      expect some stops to hit — the edge comes from winners outrunning losers, not from never losing.
+      · ১–২ মাসে উচ্চ মুনাফার ব্যতিক্রমী সুযোগ — ৭টি আক্রমণাত্মক কৌশলে বাছাই। বেশি লাভের সম্ভাবনা মানে বেশি ঝুঁকি:
+      স্টপ-লস ও ২% নিয়ম অবশ্যই মানুন; কিছু স্টপ-লস লাগবেই — লাভ আসে জেতা শেয়ারগুলো হারার চেয়ে বড় হওয়ায়।</p>
+    <div class="panel hp-warn hidden" id="hpWarn">⚠ Market regime is <b>Bearish</b> — most aggressive setups fail in a
+      falling market. Buy half-size or wait for the regime to turn. · বাজার নিম্নমুখী — আক্রমণাত্মক কৌশল এখন ঝুঁকিপূর্ণ;
+      অর্ধেক পরিমাণ কিনুন বা অপেক্ষা করুন।</div>
+    <div class="panel">
+      <h2><span class="term" data-term="high_profit">⚡ Exceptional setups · ব্যতিক্রমী সুযোগ</span>
+        <small class="muted-count" id="hpMeta"></small></h2>
+      <div class="sub">Ranked by edge (conviction × reward × risk). Hover any strategy badge for what it means and why it
+        works; ★ = conviction. Click a card for the full detail view.
+        · সুবিধা অনুযায়ী সাজানো; কৌশলের ব্যাজে মাউস রাখলে ব্যাখ্যা, ★ = আস্থা; বিস্তারিত দেখতে কার্ডে ক্লিক করুন।</div>
+      <div class="hp-grid" id="hpGrid"><div class="loading">Loading…</div></div>
+    </div>
+  </section>
+
+  <!-- ============ CHARTS ============ -->
+  <section id="tab-charts" class="hidden">
+    <div class="panel shortlist-panel hidden" id="chartsShortlistPanel">
+      <h2 class="term" data-term="shortlist">★ Shortlisted <span class="muted-count" id="chartsShortlistCount"></span></h2>
+      <div class="grid" id="chartsShortlistGrid"></div>
+    </div>
+    <div class="chart-controls">
+      <input type="text" id="chartSearch" placeholder="Search code or sector…">
+      <div class="seg" id="rangeSeg">
+        <button data-range="2y" class="active">2 years</button>
+        <button data-range="1y">1 year</button>
+      </div>
+      <div class="seg" id="sortSeg">
+        <button data-sort="alpha" class="active">A–Z</button>
+        <button data-sort="short" class="term" data-term="score_short">Short score</button>
+        <button data-sort="long" class="term" data-term="score_long">Long score</button>
+      </div>
+      <div class="spacer"></div>
+      <button id="btnPrev">&larr; Prev</button>
+      <span class="page-info" id="pageInfo"></span>
+      <button id="btnNext">Next &rarr;</button>
+    </div>
+    <div class="grid" id="chartGrid"><div class="loading">Loading…</div></div>
+  </section>
+
+  <!-- ============ SCREENER ============ -->
+  <section id="tab-screener" class="hidden">
+    <div class="panel shortlist-panel hidden" id="scrShortlistPanel">
+      <h2 class="term" data-term="shortlist">★ Shortlisted <span class="muted-count" id="scrShortlistCount"></span></h2>
+      <div class="tbl-wrap"><table id="scrShortlistTable"><thead><tr></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="scr-controls">
+      <input type="text" id="scrSearch" placeholder="Filter by code or sector…">
+      <select id="fltSector" data-term="sector"><option value="">All sectors</option></select>
+      <select id="fltCategory" data-term="category">
+        <option value="">All categories</option>
+        <option value="A">Category A</option><option value="B">Category B</option>
+        <option value="N">Category N</option><option value="Z">Category Z</option>
+      </select>
+      <select id="fltVerdict" data-term="verdict">
+        <option value="">All verdicts</option>
+        <option>Strong Buy</option><option>Buy</option><option>Watch</option>
+        <option>Neutral</option><option>Avoid</option>
+      </select>
+      <select id="fltRsi" data-term="rsi">
+        <option value="">Any RSI</option>
+        <option value="oversold">Oversold &lt;30</option>
+        <option value="neutral">Neutral 30–70</option>
+        <option value="sweet">Sweet spot 45–65</option>
+        <option value="overbought">Overbought &gt;70</option>
+      </select>
+      <label class="term" data-term="liquidity">Min liq
+        <input type="number" id="fltLiq" min="0" step="1" placeholder="mn" style="width:60px"></label>
+      <label class="term" data-term="composite">Min score
+        <input type="number" id="fltComposite" min="0" max="100" step="5" placeholder="0" style="width:56px"></label>
+      <label class="term" data-term="eligible"><input type="checkbox" id="scrEligible"> eligible only</label>
+      <label class="term" data-term="flags"><input type="checkbox" id="fltNoFlags"> no risk flags</label>
+      <span class="page-info" id="scrCount"></span>
+    </div>
+    <div class="tbl-wrap">
+      <table id="scrTable">
+        <thead><tr></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+  <!-- ============ POTENTIAL FUTURE CHARTS ============ -->
+  <section id="tab-potential" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="potential">Past 1 year (blue) vs potential next 6 months (violet)</span>,
+      split by the vertical line at today. The projection is a deterministic statistical shape — damped momentum
+      + last year's seasonal pattern at half strength — <b>a decision aid, not a prediction or guarantee</b>.
+      Regenerated on every Update Data from the freshest history (stored in potential_dse_6m_history.csv).
+      · নীল রেখা = গত ১ বছরের প্রকৃত দাম, বেগুনি রেখা = পরবর্তী ৬ মাসের সম্ভাব্য গতিপথ; মাঝের দাগটি আজকের তারিখ।
+      সিদ্ধান্তে সহায়ক পরিসংখ্যানভিত্তিক অনুমান, ভবিষ্যদ্বাণী নয়।</p>
+    <div class="panel shortlist-panel hidden" id="potShortlistPanel">
+      <h2 class="term" data-term="shortlist">★ Shortlisted <span class="muted-count" id="potShortlistCount"></span></h2>
+      <div class="grid" id="potShortlistGrid"></div>
+    </div>
+    <div class="chart-controls">
+      <input type="text" id="potSearch" placeholder="Search code or sector…">
+      <div class="seg" id="potSortSeg">
+        <button data-sort="alpha" class="active">A–Z</button>
+        <button data-sort="short" class="term" data-term="score_short">Short score</button>
+        <button data-sort="long" class="term" data-term="score_long">Long score</button>
+      </div>
+      <span class="legend" style="margin:0"><span class="l1">Past 1 year</span><span class="l3">Next 6 months (potential)</span></span>
+      <div class="spacer"></div>
+      <button id="potPrev">&larr; Prev</button>
+      <span class="page-info" id="potPageInfo"></span>
+      <button id="potNext">Next &rarr;</button>
+    </div>
+    <div class="grid" id="potGrid"><div class="loading">Loading…</div></div>
+  </section>
+
+  <!-- ============ SECTORS ============ -->
+  <section id="tab-sectors" class="hidden">
+    <p class="disclaimer">Sector rotation view — money moves between sectors; buying strong shares in
+      strengthening sectors improves odds. · সেক্টর রোটেশন — টাকা এক খাত থেকে আরেক খাতে যায়; শক্তিশালী খাতের
+      শক্তিশালী শেয়ার কিনলে সম্ভাবনা বাড়ে।</p>
+    <div class="tbl-wrap">
+      <table id="secTable">
+        <thead><tr>
+          <th class="lft" data-term="sector">Sector</th>
+          <th>Shares</th>
+          <th data-term="returns">Avg 1w%</th>
+          <th data-term="returns">Avg 1m%</th>
+          <th data-term="returns">Avg 3m%</th>
+          <th data-term="regime">% above SMA50</th>
+          <th class="lft" data-term="composite">Best pick</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<!-- ============ DETAIL MODAL ============ -->
+<div class="modal-bg hidden" id="modalBg">
+  <div class="modal">
+    <div class="mhead">
+      <button class="star-btn" id="mStar" title="Add to shortlist">☆</button>
+      <h2 id="mCode"></h2>
+      <span class="mprice" id="mPrice"></span>
+      <span id="mDelta"></span>
+      <button class="close" id="mClose">Close</button>
+    </div>
+    <div class="msub" id="mSub"></div>
+    <div class="mplan" id="mPlan"></div>
+    <div class="mplan calc" data-term="position">
+      <b>Position size · কয়টি কিনবেন?</b>
+      <label>Capital ৳ <input type="number" id="calcAmount" value="100000" min="1000" step="1000"></label>
+      <label>Risk <select id="calcRisk">
+        <option value="1">1%</option><option value="2" selected>2%</option><option value="5">5%</option>
+      </select></label>
+      <span id="calcOut" class="plan-text"></span>
+    </div>
+    <div class="legend"><span class="l1">Close price</span><span class="l2 term" data-term="sma">SMA 20</span><span class="l3 term" data-term="sma">SMA 50</span></div>
+    <canvas id="dPrice"></canvas>
+    <div class="axis-note">Volume</div>
+    <canvas id="dVol"></canvas>
+    <div class="axis-note">RSI 14 (30 / 70 guides)</div>
+    <canvas id="dRsi"></canvas>
+    <div class="mgrid" id="mStats"></div>
+    <div class="mreasons">
+      <div><h3>Short-term case (<span id="mScoreS"></span>/100)</h3><ul id="mReasonsS"></ul></div>
+      <div><h3>Long-term case (<span id="mScoreL"></span>/100)</h3><ul id="mReasonsL"></ul></div>
+    </div>
+    <div id="mRecordDate"></div>
+    <h3 style="margin-top:14px" class="term" data-term="company_alerts">Recent company news · সাম্প্রতিক ঘোষণা</h3>
+    <div id="mNews" class="mnews"></div>
+  </div>
+</div>
+
+<!-- ============ HELP MODAL ============ -->
+<div class="modal-bg hidden" id="helpBg">
+  <div class="modal">
+    <div class="mhead">
+      <h2>Help · সাহায্য</h2>
+      <button class="close" id="helpClose">Close</button>
+    </div>
+    <p class="disclaimer">Hover over any underlined term in the app to see this explanation in place.
+      · অ্যাপের যেকোনো আন্ডারলাইন করা শব্দের উপর মাউস রাখলে ব্যাখ্যা দেখা যাবে।</p>
+    <div class="tbl-wrap"><table id="helpTable">
+      <thead><tr><th class="lft">Term</th><th class="lft">Meaning</th><th class="lft">অর্থ</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="tooltip hidden" id="tooltip"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
