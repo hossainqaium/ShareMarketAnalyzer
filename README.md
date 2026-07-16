@@ -39,10 +39,29 @@ nohup python3 server.py > server.log 2>&1 &
   date** (DSE Sunday–Thursday calendar aware: fresh setups buy next session,
   overheated ones wait 2–3 sessions, record-date captures buy ≥2 sessions
   before the date), a **holding period**, a **profit target price** and a
-  **stop-loss price** scaled to that share's volatility.
+  **stop-loss price** scaled to that share's volatility. A **market-wisdom
+  pass** cross-checks every share against the Spike and Margin analyses
+  before final verdicts: a volume/catalyst-backed spike or a bottom-of-range
+  reversal earns a composite bonus, while an unbacked spike
+  (`spike-fade-risk`) or a top-of-range share with fall risk
+  (`top-of-range`, blocks Strong Buy) is penalised. The **Why column** gives
+  detailed, data-backed bullet reasons (trend, relative strength, volume,
+  fundamentals, signal history, record dates, wisdom cross-checks) — hover
+  the text to read it in Bengali; the Spike and Margin Why columns work the
+  same way.
 - **Suggestions** — top short-term (1–2 week) and long-term (1–2 month) picks,
   each with a 0–100 score, the reasons behind it, and risk flags.
-- **⚡ High Profit** — exceptional setups for high profit in 1–2 months, found
+- **Spike** — shares that suddenly jumped **3%+ this session**, vs yesterday's
+  close and vs the session open (clicking Update Data during trading hours
+  makes this "right now vs the start of the day", since live prices are
+  fetched). Each spike gets a 0–100 **continuation score** — the chance the
+  rise keeps going: volume backing 25%, room to run (circuit distance, RSI,
+  resistance headroom) 20%, trend backdrop 20%, real catalyst from the
+  announcement/AGM data (dividend, results, board meeting, record date;
+  exchange queries count *against*) 20%, and the share's own signal
+  follow-through history 15% — with an outlook badge (Likely to continue /
+  Mixed / Likely to fade) and honest ⚠ warnings (thin volume, no news,
+  overbought, at the circuit).
   by seven aggressive pattern-hunting strategies scanned across every liquid,
   eligible share on each analysis run: **volatility squeeze** (tightest bands
   in 6 months + accumulation), **momentum leader** (beating the market 8%+ in
@@ -57,6 +76,20 @@ nohup python3 server.py > server.log 2>&1 &
   sector; a warning banner appears when the market regime is Bearish.
   Higher bar than the regular lists (≥ 8 mn BDT daily liquidity, no hard risk
   flags) — but higher reward means higher risk: use the stop and the 2% rule.
+- **Margin** — every share at an extreme of its own 2-year price range, in two
+  sub-tabs. **Lower Margin** (bottom 25% of the range) scores each share 0–100
+  for the chance the price starts *rising* — reversal evidence (MACD/RSI
+  turning) 35%, OBV accumulation 20%, support holding 15%, fundamentals 15%,
+  catalysts (record dates, dividend/board-meeting news) 15%; trading halts and
+  audit concerns crush the score, because cheap isn't the same as safe.
+  **Higher Margin** (top 25%) scores the chance the price starts *falling* —
+  over-extension 35%, momentum fade 20%, OBV distribution 15%, weak valuation
+  15%, event risk (imminent ex-dividend drop, exchange query) 15% — useful for
+  booking profit on holdings and for not chasing tops. Each row carries an
+  estimated **turn date** (DSE calendar aware): confirmed reversals = next
+  session, MACD-approaching-zero extrapolated at its current pace, record
+  dates pull the date (run-ups start ~2 weeks before; ex-dividend drops land
+  right after). Searchable, star-shortlistable, rows open the detail view.
 - **Today's fresh signals** — technical events on the latest trading day:
   golden cross, MACD cross, 3-month breakout, oversold rebound, volume spike.
 - **Sectors** — sector-rotation table: average returns, breadth, and the best

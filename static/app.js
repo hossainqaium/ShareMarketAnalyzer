@@ -7,6 +7,8 @@ const state = {
   chartsPage: 1, chartsSort: "alpha", chartsRange: "2y", chartsSearch: "", chartsData: null,
   potPage: 1, potSort: "alpha", potSearch: "", potData: null,
   scrSortKey: "score_short", scrSortDir: -1,
+  mgView: "lower", mgSearch: "",
+  spSearch: "",
   detail: null, // cached /api/history payload for the open modal
   shortlist: loadShortlistSet(),
 };
@@ -114,6 +116,9 @@ const GLOSSARY = {
   "flag:audit-concern": { t: "audit-concern", en: "The auditor issued a Qualified Opinion, Emphasis of Matter, or going-concern warning in the latest financials — a serious red flag on the company's accounts. Avoid until resolved.", bn: "সাম্প্রতিক আর্থিক বিবরণীতে অডিটর Qualified Opinion বা Going Concern নিয়ে সতর্ক করেছেন — কোম্পানির হিসাবে গুরুতর ঝুঁকির সংকেত। সমাধান না হওয়া পর্যন্ত এড়িয়ে চলুন।" },
   "flag:exchange-query": { t: "exchange-query", en: "DSE sent this company a formal query, usually about an abnormal price movement. Read the response before trusting the current price move.", bn: "DSE এই কোম্পানিকে আনুষ্ঠানিক প্রশ্ন পাঠিয়েছে, সাধারণত অস্বাভাবিক দাম ওঠানামা নিয়ে। বর্তমান দামের গতিবিধি বিশ্বাস করার আগে জবাব পড়ুন।" },
   "flag:category-change-news": { t: "category-change-news", en: "This company's DSE category (A/B/N/Z) recently changed — check which direction, as it affects dividend eligibility and risk perception.", bn: "কোম্পানির DSE ক্যাটাগরি (A/B/N/Z) সম্প্রতি পরিবর্তিত হয়েছে — কোন দিকে পরিবর্তন হয়েছে দেখে নিন, এটি লভ্যাংশ যোগ্যতা ও ঝুঁকিকে প্রভাবিত করে।" },
+  "flag:top-of-range": { t: "top-of-range", en: "Trading in the top quarter of its 2-year range with a meaningful fall score — the Margin analysis sees this as a profit-taking zone, not an entry zone. Blocks a Strong Buy verdict.", bn: "২ বছরের সীমার উপরের ২৫%-এ আছে এবং পতনের স্কোর উল্লেখযোগ্য — Margin বিশ্লেষণ একে মুনাফা তোলার জায়গা মনে করে, ঢোকার নয়। Strong Buy রায় আটকে দেয়।" },
+  "flag:spike-fade-risk": { t: "spike-fade-risk", en: "This share spiked today but the continuation score is low (thin volume / no news / weak trend) — the Spike analysis expects the jump to fade. Don't chase it.", bn: "শেয়ারটি আজ স্পাইক করেছে কিন্তু ধারাবাহিকতা-স্কোর কম (কম ভলিউম / খবর নেই / দুর্বল ট্রেন্ড) — Spike বিশ্লেষণ ধারণা করছে লাফটি মিলিয়ে যাবে। পেছনে ছুটবেন না।" },
+  why_col: { t: "Why · কেন", en: "The detailed, data-backed reasons behind this row — trend, relative strength, volume, fundamentals, signal history, record dates, plus cross-checks against today's Spike list and the 2-year Margin extremes. Hover the text itself to read it in Bengali.", bn: "এই সারির পেছনের বিস্তারিত, তথ্যভিত্তিক কারণ — ট্রেন্ড, আপেক্ষিক শক্তি, ভলিউম, মৌলভিত্তি, সংকেতের ইতিহাস, রেকর্ড ডেট, এবং আজকের Spike ও Margin-এর সাথে মিলিয়ে দেখা। লেখাটির উপর মাউস রাখলে বাংলায় পড়া যাবে।" },
   "flag:record-date-soon": { t: "record-date-soon", en: "The dividend record date is within ~20 days — a near-term reason to hold through that date if you want the dividend.", bn: "লভ্যাংশের রেকর্ড ডেট প্রায় ২০ দিনের মধ্যে — লভ্যাংশ পেতে চাইলে ওই তারিখ পর্যন্ত ধরে রাখার একটি কারণ।" },
   "news:dividend": { t: "dividend news", en: "Company announced or disbursed a dividend.", bn: "কোম্পানি লভ্যাংশ ঘোষণা বা বিতরণ করেছে।" },
   "news:financials": { t: "financials news", en: "Quarterly or annual financial results were published — may move EPS/P/E.", bn: "ত্রৈমাসিক বা বার্ষিক আর্থিক ফলাফল প্রকাশিত হয়েছে — EPS/P/E বদলাতে পারে।" },
@@ -134,6 +139,20 @@ const GLOSSARY = {
   "hp:breakout": { t: "Volume breakout", en: "Price just cleared its 3-month high (or is pressing the 52-week high) on 1.3×+ volume. Everyone who wanted to sell at that level already has — with sellers cleared and demand proven, breakouts from a base tend to run for weeks.", bn: "১.৩ গুণের বেশি ভলিউমে দাম ৩ মাসের সর্বোচ্চ ভেঙেছে (বা ৫২-সপ্তাহের সর্বোচ্চ ছুঁইছুঁই)। ওই স্তরে বিক্রেতারা বিক্রি করে ফেলেছে — বাধা পরিষ্কার ও চাহিদা প্রমাণিত হলে ব্রেকআউট কয়েক সপ্তাহ ধরে চলে।" },
   "hp:dividend-runner": { t: "Dividend runner", en: "A 3.5%+ cash-yield share in an uptrend with its record date 4–25 days away. Prices typically run up as the record date approaches (buyers want the dividend) — you can ride the run-up AND keep the dividend by holding through the date.", bn: "রেকর্ড ডেটের ৪–২৫ দিন আগে থাকা ৩.৫%+ নগদ লভ্যাংশের ঊর্ধ্বমুখী শেয়ার। রেকর্ড ডেট যত কাছে আসে দাম তত বাড়ে (সবাই লভ্যাংশ চায়) — দাম বাড়ার সুবিধাও নিতে পারেন, আবার ধরে রাখলে লভ্যাংশও পাবেন।" },
   "hp:proven-signal": { t: "Proven signal", en: "A fresh MACD/golden cross on the latest session — but only on shares whose past signals actually worked (60%+ backtested win rate over 2 years). Entering on day one of a historically reliable signal, instead of chasing after the move.", bn: "সর্বশেষ সেশনে নতুন MACD/গোল্ডেন ক্রস — তবে শুধু সেই শেয়ারে যার আগের সংকেতগুলো সত্যিই কাজ করেছে (২ বছরের ব্যাকটেস্টে ৬০%+ সফল)। মুভের পেছনে না ছুটে নির্ভরযোগ্য সংকেতের প্রথম দিনেই ঢোকা।" },
+  spike_tab: { t: "Spike", en: "Shares that suddenly rose 3%+ today — vs yesterday's close (Δ vs yesterday) or vs the session open (Δ since open). Update Data during trading hours fetches live prices, so the comparison is 'right now vs the start of the day'. Each spike gets a continuation score; most unexplained spikes fade, so the score weighs volume, trend, headroom, catalysts and this share's own follow-through history.", bn: "আজ হঠাৎ ৩%+ বেড়ে যাওয়া শেয়ার — গতকালের ক্লোজ বা আজকের শুরুর দামের তুলনায়। লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। প্রতিটি স্পাইকের ধারাবাহিকতা-স্কোর দেওয়া হয়; কারণহীন স্পাইক সাধারণত মিলিয়ে যায়, তাই ভলিউম, ট্রেন্ড, জায়গা, উপলক্ষ ও ইতিহাস মিলিয়ে স্কোর হয়।" },
+  day_change: { t: "Δ vs yesterday", en: "Today's price change vs yesterday's closing price (YCP). The DSE daily circuit limit is ±10%, so 3%+ is a genuine jolt.", bn: "গতকালের ক্লোজিং দামের তুলনায় আজকের পরিবর্তন। DSE-র দৈনিক সীমা ±১০%, তাই ৩%+ মানে সত্যিকারের ঝাঁকুনি।" },
+  intraday_change: { t: "Δ since open", en: "Price change from today's opening price to the latest price — during trading hours this is the move from the session start to right now (refresh with Update Data).", bn: "আজকের শুরুর দাম থেকে সর্বশেষ দামের পরিবর্তন — লেনদেন চলাকালে এটি দিনের শুরু থেকে এই মুহূর্ত পর্যন্ত ওঠানামা (Update Data চাপলে হালনাগাদ)।" },
+  vol_today: { t: "Today's volume ratio", en: "Today's traded volume ÷ the 30-day average. A spike on 2×+ volume has real money behind it; a spike on thin volume is usually a trap.", bn: "আজকের লেনদেন ÷ ৩০ দিনের গড়। ২ গুণের বেশি ভলিউমে স্পাইক মানে সত্যিকারের টাকা ঢুকছে; কম ভলিউমের স্পাইক সাধারণত ফাঁদ।" },
+  spike_score: { t: "Continuation score", en: "0–100 chance today's spike keeps rising: volume backing 25%, room to run (circuit distance, RSI, resistance headroom) 20%, trend backdrop 20%, real catalyst (dividend/results/board meeting/record date; exchange query counts against) 20%, this share's signal follow-through history 15%. 60+ = likely to continue; below 40 = likely to fade.", bn: "০–১০০: আজকের স্পাইক চলতে থাকার সম্ভাবনা — ভলিউম ২৫%, বাড়ার জায়গা ২০%, ট্রেন্ড ২০%, প্রকৃত উপলক্ষ ২০%, অতীতের ধারাবাহিকতা ১৫%। ৬০+ = চলার সম্ভাবনা; ৪০-এর নিচে = মিলিয়ে যাওয়ার সম্ভাবনা।" },
+  margin_tab: { t: "Margin", en: "Shares trading at the extremes of their own 2-year price range. Lower Margin = bottom 25% of the range (candidates to buy before a rise); Higher Margin = top 25% (candidates to sell / avoid before a fall). Refreshed on every Update Data.", bn: "নিজের ২ বছরের দামের সীমার প্রান্তে থাকা শেয়ার। Lower Margin = সীমার নিচের ২৫% (বাড়ার আগে কেনার প্রার্থী); Higher Margin = উপরের ২৫% (কমার আগে বেচা/এড়ানোর প্রার্থী)। প্রতি Update Data-তে হালনাগাদ হয়।" },
+  lower_margin: { t: "Lower Margin", en: "All shares in the bottom quarter of their 2-year range, scored 0–100 for the chance the price starts rising: reversal evidence (MACD/RSI turning) 35%, OBV accumulation 20%, support holding 15%, fundamentals 15%, catalysts (record date, dividend/board-meeting news) 15%. Trading halts and audit concerns crush the score — cheap is not the same as safe.", bn: "২ বছরের সীমার নিচের ২৫%-এ থাকা সব শেয়ার, দাম বাড়া শুরুর সম্ভাবনায় ০–১০০ স্কোর: রিভার্সাল প্রমাণ ৩৫%, OBV সঞ্চয় ২০%, সাপোর্ট ধরে রাখা ১৫%, মৌলভিত্তি ১৫%, উপলক্ষ (রেকর্ড ডেট, লভ্যাংশ/বোর্ড মিটিং) ১৫%। লেনদেন বন্ধ বা অডিট উদ্বেগ থাকলে স্কোর প্রায় শূন্য — সস্তা মানেই নিরাপদ নয়।" },
+  higher_margin: { t: "Higher Margin", en: "All shares in the top quarter of their 2-year range, scored 0–100 for the chance the price starts falling: over-extension (RSI, streaks, parabolic month) 35%, momentum fade 20%, OBV distribution 15%, weak valuation 15%, event risk (imminent ex-dividend drop, exchange query, audit concern) 15%. Use it to book profit on holdings and to avoid chasing tops.", bn: "২ বছরের সীমার উপরের ২৫%-এ থাকা সব শেয়ার, দাম কমা শুরুর সম্ভাবনায় ০–১০০ স্কোর: অতিরিক্ত বৃদ্ধি ৩৫%, গতি হ্রাস ২০%, OBV বিতরণ ১৫%, দুর্বল ভ্যালুয়েশন ১৫%, ঘটনা-ঝুঁকি (এক্স-ডিভিডেন্ড পতন, এক্সচেঞ্জ কোয়েরি) ১৫%। ধরে রাখা শেয়ারে মুনাফা তুলতে ও চূড়ায় না কিনতে ব্যবহার করুন।" },
+  rise_score: { t: "Rise score", en: "0–100 chance this bottom-of-range share starts rising soon. 60+ = reversal underway with support; 40–60 = bottoming, watch; below 40 = no evidence yet, falling knife risk.", bn: "০–১০০: তলানিতে থাকা শেয়ারটির দাম শিগগির বাড়া শুরুর সম্ভাবনা। ৬০+ = রিভার্সাল চলছে; ৪০–৬০ = তলানি গড়ছে, নজরে রাখুন; ৪০-এর নিচে = এখনো প্রমাণ নেই, পড়ন্ত ছুরি ধরার ঝুঁকি।" },
+  fall_score: { t: "Fall score", en: "0–100 chance this top-of-range share starts falling soon. 50+ = overheated with fade signs — take profit / don't chase; below 30 = strong trend that may simply continue.", bn: "০–১০০: চূড়ায় থাকা শেয়ারটির দাম শিগগির কমা শুরুর সম্ভাবনা। ৫০+ = অতিরিক্ত গরম, মুনাফা তুলুন / পিছে ছুটবেন না; ৩০-এর নিচে = শক্তিশালী প্রবণতা, চলতেও পারে।" },
+  turn_date: { t: "Estimated turn date", en: "A calendar-aware estimate (DSE trades Sunday–Thursday) of when the move could begin: confirmed reversals = next session; MACD-approaching-zero = extrapolated at its current pace; record dates pull the date (run-ups start ~2 weeks before; ex-dividend drops come right after). An estimate to plan around, NOT a guarantee.", bn: "পরিবর্তন কবে শুরু হতে পারে তার আনুমানিক তারিখ (DSE রবি–বৃহস্পতিবার খোলা): নিশ্চিত রিভার্সাল = পরের সেশন; MACD শূন্যের দিকে এগোলে বর্তমান গতিতে হিসাব; রেকর্ড ডেটের ~২ সপ্তাহ আগে দাম বাড়া শুরু হয়, আর ঠিক পরে এক্স-ডিভিডেন্ড পতন আসে। পরিকল্পনার সহায়ক অনুমান, নিশ্চয়তা নয়।" },
+  pos2y: { t: "2-year position", en: "Where the price sits in its 2-year low→high range: 0 = at the 2-year low, 1 = at the 2-year high. ≤ 0.25 lands in Lower Margin, ≥ 0.75 in Higher Margin.", bn: "২ বছরের সর্বনিম্ন→সর্বোচ্চ সীমায় দামের অবস্থান: ০ = সর্বনিম্নে, ১ = সর্বোচ্চে। ≤ ০.২৫ হলে Lower Margin, ≥ ০.৭৫ হলে Higher Margin।" },
+  from_low: { t: "Above 2-year low", en: "How far the price has already recovered above its 2-year low. Small = still at the very bottom.", bn: "২ বছরের সর্বনিম্ন থেকে দাম কতটা উঠেছে। কম মানে এখনো একেবারে তলানিতে।" },
+  from_high: { t: "Below 2-year high", en: "How far the price sits below its 2-year high. Small = right at the top of its range.", bn: "২ বছরের সর্বোচ্চ থেকে দাম কতটা নিচে। কম মানে সীমার একেবারে চূড়ায়।" },
   potential: { t: "Potential future chart", en: "Left of the divider: the real past year. Right: a deterministic 6-month projection — momentum of the last 60/120/250 sessions, damped over time, plus last year's detrended seasonal shape at half strength. A statistical shape to support your decision, NOT a prediction; regenerated from the freshest history on every Update Data.", bn: "দাগের বাঁয়ে: গত ১ বছরের প্রকৃত দাম। ডানে: পরবর্তী ৬ মাসের গাণিতিক অভিক্ষেপ — সাম্প্রতিক গতি (ক্রমশ ক্ষীয়মাণ) ও গত বছরের ঋতুভিত্তিক আকৃতির অর্ধেক মিলিয়ে। সিদ্ধান্তে সহায়ক পরিসংখ্যানিক আকৃতি, ভবিষ্যদ্বাণী নয়; প্রতি Update Data-তে সর্বশেষ ইতিহাস থেকে নতুন করে তৈরি হয়।" },
 };
 const VERDICT_BN = { "Strong Buy": "জোরালো ক্রয়", "Buy": "ক্রয়", "Watch": "পর্যবেক্ষণ", "Neutral": "নিরপেক্ষ", "Avoid": "এড়িয়ে চলুন" };
@@ -293,6 +312,22 @@ document.addEventListener("mouseout", (e) => {
   if (e.target.closest("[data-term]")) hideTooltip();
 });
 
+/* Bengali-on-hover: any element with data-bn shows its বাংলা meaning */
+function escAttr(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+document.addEventListener("mouseover", (e) => {
+  if (e.target.closest("[data-term]")) return; // glossary tooltip wins
+  const el = e.target.closest("[data-bn]");
+  if (!el || !el.dataset.bn) return;
+  showTooltip(
+    `<b>অর্থ · Meaning</b><div style="max-width:340px;margin-top:3px">${el.dataset.bn}</div>`,
+    e.clientX, e.clientY);
+});
+document.addEventListener("mouseout", (e) => {
+  if (e.target.closest("[data-bn]")) hideTooltip();
+});
+
 /* help modal: full glossary */
 $("#btnHelp").addEventListener("click", () => {
   $("#helpTable tbody").innerHTML = Object.values(GLOSSARY)
@@ -309,7 +344,7 @@ $("#helpBg").addEventListener("click", (e) => {
 document.querySelectorAll("nav.tabs button").forEach((b) => {
   b.addEventListener("click", () => {
     document.querySelectorAll("nav.tabs button").forEach((x) => x.classList.toggle("active", x === b));
-    ["suggestions", "highprofit", "charts", "screener", "sectors", "potential"].forEach((t) =>
+    ["suggestions", "spike", "highprofit", "margin", "charts", "screener", "sectors", "potential"].forEach((t) =>
       $("#tab-" + t).classList.toggle("hidden", t !== b.dataset.tab));
     // canvases drawn while their tab was hidden (display:none) end up blank —
     // e.g. a star toggled from another tab redraws the shortlist grid at 0×0.
@@ -332,6 +367,8 @@ async function loadSummary() {
   renderOverview();
   renderSuggestions();
   renderHighProfit();
+  renderMargin();
+  renderSpike();
   renderMarket();
   renderAlerts();
   renderSignals();
@@ -494,7 +531,10 @@ function renderTop10() {
   const codes = state.summary.top20 || state.summary.top10 || [];
   $("#top10Table tbody").innerHTML = codes.map((c, i) => {
     const m = t[c];
-    const why = [...(m.reasons_long || []), ...(m.reasons_short || [])].slice(0, 2);
+    const why = (m.why && m.why.length)
+      ? m.why.slice(0, 4)
+      : [...(m.reasons_long || []), ...(m.reasons_short || [])].slice(0, 2);
+    const whyBn = (m.why_bn || []).slice(0, 4);
     const buyNote = m.buy_note || "";
     const buyShort = buyNote.includes("dividend") ? "before record date"
       : buyNote.startsWith("Overheated") ? "wait for a dip"
@@ -509,7 +549,7 @@ function renderTop10() {
       <td class="lft" data-term="horizon">${m.horizon}<br><small style="color:var(--muted)">${HORIZON_BN[m.horizon_key] || ""}</small></td>
       <td class="pos" data-term="target">${fmt(m.target_price, 1)}<br><small>+${fmt(m.target_pct, 0)}%</small></td>
       <td class="neg" data-term="stop">${fmt(m.stop_price, 1)}<br><small>−${fmt(m.stop_pct, 0)}%</small></td>
-      <td class="lft" style="white-space:normal;max-width:300px"><small>${why.join(" · ")}</small></td>
+      <td class="lft why-cell" style="max-width:380px"><small data-bn="${escAttr(whyBn.map((w) => "• " + w).join("<br>"))}">${why.map((w) => "• " + w).join("<br>")}</small></td>
     </tr>`;
   }).join("") || `<tr><td colspan="10" class="loading">No qualifying shares today</td></tr>`;
   $("#top10Table tbody").querySelectorAll("tr[data-code]").forEach((tr) =>
@@ -583,6 +623,116 @@ function renderHighProfit() {
   grid.querySelectorAll(".hp-card").forEach((el) =>
     el.addEventListener("click", () => openDetail(el.dataset.code)));
 }
+
+/* ---------------- spike (sudden risers today) ---------------- */
+function spikeLabelBadge(s) {
+  const cls = s.score >= 60 ? "v-strong" : s.score >= 40 ? "v-watch" : "v-avoid";
+  const bn = s.score >= 60 ? "চলতে পারে" : s.score >= 40 ? "নিশ্চিত হয়ে কিনুন" : "মিলিয়ে যেতে পারে";
+  return `<span class="verdict ${cls}">${s.label}<small>${bn}</small></span>`;
+}
+
+function renderSpike() {
+  const sp = state.summary.spike;
+  if (!sp) return;
+  const q = (state.spSearch || "").toUpperCase();
+  let rows = sp.spikes || [];
+  if (q) rows = rows.filter((s) => s.code.includes(q) || (s.sector || "").toUpperCase().includes(q));
+  $("#spMeta").textContent = sp.date ? `session ${sp.date} · threshold +${sp.min_pct}%` : "";
+  $("#spCount").textContent = `${rows.length} shares spiked ${sp.min_pct}%+ this session`;
+  $("#spTable tbody").innerHTML = rows.map((s, i) => {
+    const flags = (s.flags || [])
+      .filter((f) => ["trading-halt", "audit-concern", "illiquid", "exchange-query", "category-Z"].includes(f))
+      .map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ");
+    return `<tr data-code="${s.code}">
+      <td>${i + 1}</td>
+      <td>${starBtn(s.code)}</td>
+      <td class="lft"><b>${s.code}</b></td>
+      <td class="lft">${s.sector || "–"}</td>
+      <td class="lft">${s.category || "–"}</td>
+      <td>${fmt(s.price)}</td>
+      <td>${pct(s.day_change)}</td>
+      <td>${pct(s.intraday_change)}</td>
+      <td><b>${fmt(s.vol_today_ratio, 1)}×</b></td>
+      <td>${fmt(s.rsi14, 0)}</td>
+      <td>${fmt(s.dist_resistance)}</td>
+      <td><b class="${s.score >= 60 ? "pos" : ""}">${fmt(s.score, 0)}</b><small style="color:var(--muted)">/100</small></td>
+      <td class="lft">${spikeLabelBadge(s)}</td>
+      <td class="lft why-cell"><small data-bn="${escAttr((s.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(s.why || []).join(" · ")}</small> ${flags}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="14" class="loading">No shares spiked ${sp.min_pct}%+ this session — check again after the next Update Data during trading hours.</td></tr>`;
+  wireScreenerTable($("#spTable"));
+}
+
+$("#spSearch").addEventListener("input", debounce(() => {
+  state.spSearch = $("#spSearch").value;
+  renderSpike();
+}, 250));
+
+/* ---------------- margin (2-year range extremes) ---------------- */
+function mgScoreCell(score, dir) {
+  // rise score: green when high (good entry). fall score: red when high (danger).
+  const cls = dir === "lower" ? (score >= 60 ? "pos" : "") : (score >= 50 ? "neg" : "");
+  return `<td><b class="${cls}">${fmt(score, 0)}</b><small style="color:var(--muted)">/100</small></td>`;
+}
+
+function mgRowHtml(e, i, dir) {
+  const dist = dir === "lower"
+    ? `+${fmt(e.from_low, 0)}%`
+    : `−${fmt(e.from_high, 0)}%`;
+  const flags = (e.flags || [])
+    .filter((f) => ["trading-halt", "audit-concern", "stale-data", "illiquid", "exchange-query"].includes(f))
+    .map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ");
+  return `<tr data-code="${e.code}">
+    <td>${i + 1}</td>
+    <td>${starBtn(e.code)}</td>
+    <td class="lft"><b>${e.code}</b></td>
+    <td class="lft">${e.sector || "–"}</td>
+    <td class="lft">${e.category || "–"}</td>
+    <td>${fmt(e.price)}</td>
+    <td>${fmt(e.pos_2y, 2)}</td>
+    <td>${dist}</td>
+    <td>${fmt(e.rsi14, 0)}</td>
+    <td>${pct(e.r_1w)}</td><td>${pct(e.r_1m)}</td>
+    ${mgScoreCell(e.score, dir)}
+    <td class="lft"><b>${e.turn_date}</b><br><small style="color:var(--muted);white-space:normal">${e.turn_note}</small></td>
+    <td class="lft why-cell"><small data-bn="${escAttr((e.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(e.why || []).join(" · ")}</small> ${flags}</td>
+  </tr>`;
+}
+
+function renderMargin() {
+  const mg = state.summary.margin;
+  if (!mg) return;
+  const q = (state.mgSearch || "").toUpperCase();
+  const filt = (list) => q
+    ? list.filter((e) => e.code.includes(q) || (e.sector || "").toUpperCase().includes(q))
+    : list;
+  const lower = filt(mg.lower || []);
+  const higher = filt(mg.higher || []);
+  const isLower = state.mgView === "lower";
+  $("#mgLowerPanel").classList.toggle("hidden", !isLower);
+  $("#mgHigherPanel").classList.toggle("hidden", isLower);
+  $("#mgCount").textContent = isLower
+    ? `${lower.length} shares in the bottom 25% of their 2-year range`
+    : `${higher.length} shares in the top 25% of their 2-year range`;
+  $("#mgLowerTable tbody").innerHTML =
+    lower.map((e, i) => mgRowHtml(e, i, "lower")).join("") ||
+    `<tr><td colspan="14" class="loading">No shares in the lower margin right now</td></tr>`;
+  $("#mgHigherTable tbody").innerHTML =
+    higher.map((e, i) => mgRowHtml(e, i, "higher")).join("") ||
+    `<tr><td colspan="14" class="loading">No shares in the higher margin right now</td></tr>`;
+  wireScreenerTable($("#mgLowerTable"));
+  wireScreenerTable($("#mgHigherTable"));
+}
+
+$("#mgSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  $("#mgSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  state.mgView = b.dataset.mg;
+  renderMargin();
+}));
+$("#mgSearch").addEventListener("input", debounce(() => {
+  state.mgSearch = $("#mgSearch").value;
+  renderMargin();
+}, 250));
 
 const SCR_COLS = [
   ["star", "★", "", null],
@@ -1117,7 +1267,7 @@ applyTheme(localStorage.getItem("dse_theme") || "auto");
 /* ---------------- init ---------------- */
 loadSummary().then(() => {
   const tab = location.hash.replace("#", "");
-  if (["highprofit", "charts", "screener", "sectors", "potential"].includes(tab)) {
+  if (["spike", "highprofit", "margin", "charts", "screener", "sectors", "potential"].includes(tab)) {
     document.querySelector(`nav.tabs button[data-tab="${tab}"]`).click();
   } else if (tab.startsWith("t:")) {
     openDetail(decodeURIComponent(tab.slice(2)));

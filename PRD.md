@@ -61,6 +61,10 @@ DSE day-end data.
 | F13 | Top 10 composite recommendation: diversified (max 2/sector) picks with verdict, holding period, target price, stop-loss, risk/reward ratio, and historical signal win rate. |
 | F14 | Every term, column, flag, and score has an English + Bengali hover explanation, plus a full glossary in a Help modal. |
 | F15 | ⚡ High Profit tab: exceptional 1–2 month setups found by seven aggressive strategies (volatility squeeze, momentum leader, quiet accumulation, oversold rebound, volume breakout, dividend runner, proven signal), each pick with conviction stars, aggressive target, tight stop, R/R, buy date and hold period; ranked by edge, capped 4/strategy and 3/sector, max 15; Bearish-regime warning banner. |
+| F16 | Margin tab with Lower/Higher sub-tabs: all shares in the bottom 25% of their 2-year range scored 0–100 for rise probability, all shares in the top 25% scored for fall probability, each with an estimated DSE-calendar-aware turn date and reasons drawn from technicals, announcements, record dates and AGM/EGM data. |
+| F17 | Spike tab: shares up 3%+ this session vs yesterday's close or the session open (live prices on Update Data make it now-vs-open), each scored 0–100 for continuation (volume 25%, room 20%, trend 20%, catalyst 20%, follow-through history 15%) with a Likely-to-continue / Mixed / Likely-to-fade outlook. |
+| F18 | Market-wisdom cross-signal pass before final verdicts: backed spike (continuation ≥ 60) composite +3; unbacked spike (< 40) −4 and `spike-fade-risk` flag; lower-margin reversal (rise score ≥ 55) +4; higher-margin fall risk (≥ 50) −6 and `top-of-range` flag which blocks Strong Buy. Verdicts and plans re-derived after adjustment. |
+| F19 | Detailed Why reasons: every ticker gets structured, data-backed (English, বাংলা) reason pairs — trend, relative strength, RSI, volume/OBV, fundamentals, backtest reliability, record dates, wisdom cross-checks — shown as bullets in the Top 20 and available in Bengali via hover in the Suggestions, Spike and Margin Why columns. |
 
 ## Scoring rules (the analysis contract)
 
@@ -104,6 +108,16 @@ target/stop and holding window; a share matching several strategies gets a
 confluence bonus (+1 conviction, higher edge). Edge = conviction·8 +
 min(target, 25)·0.8 + max(R/R − 1, 0)·6 + (composite − 50)·0.3. Final list:
 sorted by edge, ≤ 4 per strategy, ≤ 3 per sector, ≤ 15 total.
+
+**Margin scores**: shares with 2-year range position ≤ 0.25 get a **rise
+score** = reversal evidence·0.35 + OBV accumulation·0.20 + support·0.15 +
+fundamentals·0.15 + catalyst·0.15 (halt/audit ⇒ ≤ 5, stale ×0.3, cat-Z ×0.5);
+position ≥ 0.75 gets a **fall score** = over-extension·0.35 + momentum
+fade·0.20 + OBV distribution·0.15 + valuation risk·0.15 + event risk·0.15.
+Turn-date estimate: confirmed reversal/rollover → next session; MACD
+histogram approaching zero → extrapolated sessions at current slope (2–20);
+record dates override (run-up window opens ~10 sessions before the record
+date; the ex-dividend drop is dated the session after it).
 
 ## Data requirements
 

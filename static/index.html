@@ -23,7 +23,9 @@
 
 <nav class="tabs">
   <button data-tab="suggestions" class="active">Suggestions</button>
+  <button data-tab="spike">Spike</button>
   <button data-tab="highprofit">⚡ High Profit</button>
+  <button data-tab="margin">Margin</button>
   <button data-tab="charts">Charts</button>
   <button data-tab="potential">Potential Charts</button>
   <button data-tab="screener">Screener</button>
@@ -40,9 +42,12 @@
     <div class="panel top10" id="top10Panel">
       <h2>Top 20 preferred shares · আজকের সেরা ২০ <span class="term" data-term="composite">ⓘ</span></h2>
       <div class="sub">Best overall picks across price history, announcements and AGM/EGM record dates —
-        diversified (max 3 per sector), each with a suggested purchase date, holding period, profit target
-        and stop-loss.
-        · দামের ইতিহাস, ঘোষণা ও রেকর্ড ডেট মিলিয়ে সেরা শেয়ার; প্রতিটির জন্য কবে কিনবেন, কত দিন রাখবেন, কোন দামে মুনাফা তুলবেন ও কোন দামে ক্ষতি সীমিত করবেন তা দেখানো হয়েছে।</div>
+        cross-checked against today's <b>Spike</b> list and the 2-year <b>Margin</b> extremes (backed spikes and
+        bottom-of-range reversals earn a bonus; unbacked spikes and top-of-range shares are penalised). Diversified
+        (max 3 per sector), each with a purchase date, holding period, profit target and stop-loss. Hover the Why
+        text for বাংলা.
+        · দামের ইতিহাস, ঘোষণা ও রেকর্ড ডেটের সাথে আজকের Spike ও ২ বছরের Margin প্রান্তও মিলিয়ে দেখা হয়েছে; প্রতিটির জন্য
+        কবে কিনবেন, কত দিন রাখবেন, কোন দামে মুনাফা তুলবেন ও ক্ষতি সীমিত করবেন তা দেখানো হয়েছে। "কেন" লেখায় মাউস রাখলে বাংলা।</div>
       <div class="tbl-wrap">
         <table id="top10Table">
           <thead><tr>
@@ -55,7 +60,7 @@
             <th class="lft"><span class="term" data-term="horizon">Hold for</span></th>
             <th><span class="term" data-term="target">Target</span></th>
             <th><span class="term" data-term="stop">Stop-loss</span></th>
-            <th class="lft">Why · কেন</th>
+            <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
           <tbody></tbody>
         </table>
@@ -95,6 +100,47 @@
     </div>
   </section>
 
+  <!-- ============ SPIKE ============ -->
+  <section id="tab-spike" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="spike_tab">Shares that suddenly jumped 3%+ today</span> —
+      vs yesterday's close and vs the session open. Click <b>Update Data</b> during trading hours to compare the
+      price of <i>this moment</i> against the start of the day; each spike is scored for the chance it <b>continues
+      rising</b> (volume backing, room to run, trend, a real catalyst, and this share's history of follow-through).
+      Chasing an unexplained spike is how money is lost — read the Why column first.
+      · আজ হঠাৎ ৩%+ লাফ দেওয়া শেয়ার — গতকালের ক্লোজ ও আজকের শুরুর তুলনায়। লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের
+      দাম দিনের শুরুর সাথে তুলনা হয়; প্রতিটি স্পাইক আরও বাড়ার সম্ভাবনা অনুযায়ী স্কোর করা। কারণ না জেনে স্পাইকের পেছনে
+      ছুটবেন না — আগে "কেন" কলামটি পড়ুন।</p>
+    <div class="chart-controls">
+      <input type="text" id="spSearch" placeholder="Filter by code or sector…">
+      <span class="page-info" id="spCount"></span>
+    </div>
+    <div class="panel">
+      <h2><span class="term" data-term="spike_tab">▲ Today's spikes · আজকের স্পাইক</span>
+        <small class="muted-count" id="spMeta"></small></h2>
+      <div class="sub">Sorted by <span class="term" data-term="spike_score">continuation score</span> — the chance the
+        rise keeps going. 60+ = backed by volume/trend/news; below 40 = likely a one-day event.
+        · আরও বাড়ার সম্ভাবনা অনুযায়ী সাজানো; ৬০+ = ভলিউম/ট্রেন্ড/খবরের সমর্থন আছে, ৪০-এর নিচে = একদিনের ঘটনা হওয়ার সম্ভাবনা বেশি।</div>
+      <div class="tbl-wrap tall">
+        <table id="spTable">
+          <thead><tr>
+            <th>#</th><th>★</th>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th>Price</th>
+            <th data-term="day_change">Δ vs yesterday</th>
+            <th data-term="intraday_change">Δ since open</th>
+            <th data-term="vol_today">Vol× today</th>
+            <th data-term="rsi">RSI</th>
+            <th data-term="support">Headroom%</th>
+            <th data-term="spike_score">Continue score</th>
+            <th class="lft" data-term="spike_score">Outlook</th>
+            <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ HIGH PROFIT (exceptional setups) ============ -->
   <section id="tab-highprofit" class="hidden">
     <p class="disclaimer"><span class="term" data-term="high_profit">Exceptional setups for high profit in 1–2 months</span> —
@@ -113,6 +159,71 @@
         works; ★ = conviction. Click a card for the full detail view.
         · সুবিধা অনুযায়ী সাজানো; কৌশলের ব্যাজে মাউস রাখলে ব্যাখ্যা, ★ = আস্থা; বিস্তারিত দেখতে কার্ডে ক্লিক করুন।</div>
       <div class="hp-grid" id="hpGrid"><div class="loading">Loading…</div></div>
+    </div>
+  </section>
+
+  <!-- ============ MARGIN (2-year range extremes) ============ -->
+  <section id="tab-margin" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="margin_tab">Shares at the extremes of their 2-year price range</span> —
+      the bottom quarter (<b>Lower Margin</b>) scored for the chance the price starts <b>rising</b>, the top quarter
+      (<b>Higher Margin</b>) scored for the chance it starts <b>falling</b>, using 2 years of history, announcements,
+      record dates and AGM/EGM data. The "from" date is a calendar-aware estimate of when the turn could begin —
+      a decision aid, not a prediction. · ২ বছরের দামের সীমার প্রান্তে থাকা শেয়ার — নিচের ২৫% (Lower Margin) দাম বাড়ার
+      সম্ভাবনা অনুযায়ী, উপরের ২৫% (Higher Margin) দাম কমার সম্ভাবনা অনুযায়ী স্কোর করা। তারিখটি পরিবর্তন শুরুর আনুমানিক
+      সময় — সিদ্ধান্তে সহায়ক, ভবিষ্যদ্বাণী নয়।</p>
+    <div class="chart-controls">
+      <div class="seg" id="mgSeg">
+        <button data-mg="lower" class="active term" data-term="lower_margin">▼ Lower Margin · নিম্ন প্রান্ত</button>
+        <button data-mg="higher" class="term" data-term="higher_margin">▲ Higher Margin · উচ্চ প্রান্ত</button>
+      </div>
+      <input type="text" id="mgSearch" placeholder="Filter by code or sector…">
+      <span class="page-info" id="mgCount"></span>
+    </div>
+    <div class="panel" id="mgLowerPanel">
+      <h2><span class="term" data-term="lower_margin">▼ Lower Margin — bottom 25% of the 2-year range</span></h2>
+      <div class="sub">Sorted by <span class="term" data-term="rise_score">rise score</span> — the chance the price
+        turns up soon. High scores mean reversal evidence + accumulation + a catalyst; ⚠-flagged shares are cheap for
+        a reason. · দাম শিগগিরই বাড়ার সম্ভাবনা অনুযায়ী সাজানো; ⚠ চিহ্নিত শেয়ার কারণ ছাড়া সস্তা নয়।</div>
+      <div class="tbl-wrap tall">
+        <table id="mgLowerTable">
+          <thead><tr>
+            <th>#</th><th>★</th>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th>Price</th>
+            <th data-term="pos2y">2y pos</th>
+            <th data-term="from_low">Above 2y low</th>
+            <th data-term="rsi">RSI</th>
+            <th data-term="returns">1w%</th><th data-term="returns">1m%</th>
+            <th data-term="rise_score">Rise score</th>
+            <th class="lft" data-term="turn_date">Could start rising</th>
+            <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel hidden" id="mgHigherPanel">
+      <h2><span class="term" data-term="higher_margin">▲ Higher Margin — top 25% of the 2-year range</span></h2>
+      <div class="sub">Sorted by <span class="term" data-term="fall_score">fall score</span> — the chance the price
+        turns down soon. Useful for taking profit on shares you hold, and for knowing what NOT to chase.
+        · দাম শিগগিরই কমার সম্ভাবনা অনুযায়ী সাজানো — ধরে রাখা শেয়ারে মুনাফা তোলার এবং কোনটির পেছনে না ছোটার নির্দেশনা।</div>
+      <div class="tbl-wrap tall">
+        <table id="mgHigherTable">
+          <thead><tr>
+            <th>#</th><th>★</th>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th>Price</th>
+            <th data-term="pos2y">2y pos</th>
+            <th data-term="from_high">Below 2y high</th>
+            <th data-term="rsi">RSI</th>
+            <th data-term="returns">1w%</th><th data-term="returns">1m%</th>
+            <th data-term="fall_score">Fall score</th>
+            <th class="lft" data-term="turn_date">Could start falling</th>
+            <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -175,7 +286,7 @@
       <label class="term" data-term="flags"><input type="checkbox" id="fltNoFlags"> no risk flags</label>
       <span class="page-info" id="scrCount"></span>
     </div>
-    <div class="tbl-wrap">
+    <div class="tbl-wrap tall">
       <table id="scrTable">
         <thead><tr></tr></thead>
         <tbody></tbody>

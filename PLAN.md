@@ -99,9 +99,9 @@ Python 3 stdlib + vanilla JS/canvas throughout, with one pip dependency
 | `fetch_profiles.py` | per-company fundamentals + full name scrape + bulk trailing P/E; checkpointed |
 | `fetch_news.py` | announcements fetch + categorization + 60-day merge |
 | `fetch_agm.py` | AGM/EGM PDF download + `pdfplumber` table extraction + name matching |
-| `analysis.py` | indicators, two scores, `recommend()` (quality/composite/verdict/target/stop), news/AGM overlay, alerts, sectors, regime, `build_high_profit()` (7 exceptional-setup strategies over `accum_20d` OBV slope + `squeeze_pctile` bandwidth percentile, edge-ranked with strategy/sector caps) |
+| `analysis.py` | indicators, two scores, `recommend()` (quality/composite/verdict/target/stop), news/AGM overlay, alerts, sectors, regime, `build_high_profit()` (7 exceptional-setup strategies over `accum_20d` OBV slope + `squeeze_pctile` bandwidth percentile, edge-ranked with strategy/sector caps), `build_margin()` (2y-range extremes: rise/fall scores + calendar-aware turn-date estimates), `build_spike()` (3%+ session jumps vs YCP/open, continuation-scored), `apply_market_wisdom()` (spike/margin cross-signal composite adjustments + verdict re-derivation), `build_pick_why()` (detailed EN+BN reason pairs per ticker) |
 | `server.py` | HTTP API + static serving + background update job |
-| `static/*` | UI: six tabs (incl. ⚡ High Profit strategy cards), modal detail view with position calculator, update progress, EN+BN glossary |
+| `static/*` | UI: eight tabs (incl. Spike, ⚡ High Profit strategy cards, Margin lower/higher sub-tabs), modal detail view with position calculator, update progress, EN+BN glossary |
 
 ## API surface
 

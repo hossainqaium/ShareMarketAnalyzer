@@ -188,6 +188,9 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     macd_hist = macd_hist_series(closes[-120:])
     hist_now = macd_hist[-1] if macd_hist else None
     hist_prev = macd_hist[-2] if len(macd_hist) > 1 else None
+    m["macd_hist"] = round(hist_now, 4) if hist_now is not None else None
+    m["macd_slope"] = (round(hist_now - hist_prev, 4)
+                       if hist_now is not None and hist_prev is not None else None)
 
     bt = backtest_macd(closes)
     if bt:
@@ -207,10 +210,32 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     liq30 = sma(vals, min(30, len(vals)))
     m["avg_value_mn_30d"] = round(liq30, 2) if liq30 else 0.0
 
+    # today's move vs yesterday's close (YCP) and vs today's open — spike
+    # inputs. With the live overlay, "price" is the current intraday price, so
+    # this compares NOW against the session open and the previous close.
+    last_raw = next((r for r in reversed(rows) if r.get("Date") == dates[-1]), None)
+    ycp = openp = 0.0
+    if last_raw:
+        try:
+            ycp = float(last_raw.get("YCP") or 0)
+            openp = float(last_raw.get("OpenP") or 0)
+        except (ValueError, TypeError):
+            pass
+    if ycp <= 0 and len(closes) > 1:
+        ycp = closes[-2]
+    m["day_change"] = round((price / ycp - 1) * 100, 2) if ycp > 0 else None
+    m["intraday_change"] = round((price / openp - 1) * 100, 2) if openp > 0 else None
+    m["vol_today_ratio"] = round(vols[-1] / vol30, 2) if vols and vol30 else None
+
     yr = closes[-250:]
     hi52, lo52 = max(yr), min(yr)
     pos52 = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
     m["hi_52w"], m["lo_52w"], m["pos_52w"] = round(hi52, 2), round(lo52, 2), round(pos52, 2)
+
+    # full-history (up to 2y) range position — the "margin" the share trades at
+    hi2, lo2 = max(closes), min(closes)
+    m["hi_2y"], m["lo_2y"] = round(hi2, 2), round(lo2, 2)
+    m["pos_2y"] = round((price - lo2) / (hi2 - lo2), 3) if hi2 > lo2 else None
 
     # support / resistance over the last quarter (~63 trading days)
     qtr = closes[-63:]
@@ -395,6 +420,7 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     if vols and vol30_full and vols[-1] > 2.5 * vol30_full:
         signals.append("volume-spike")
     prev_rsi = rsi(closes[-81:-1])
+    m["rsi_prev"] = round(prev_rsi, 1) if prev_rsi is not None else None
     if rsi14 is not None and prev_rsi is not None and prev_rsi < 30 <= rsi14:
         signals.append("oversold-rebound")
     m["signals"] = signals
@@ -793,6 +819,574 @@ def build_high_profit(results, regime):
             "regime": regime}
 
 
+# ================= MARGIN VIEW (range extremes) =================
+# "Lower margin" = trading in the bottom quarter of its 2-year range;
+# "higher margin" = top quarter. For each, score the chance the price turns
+# (up from the bottom, down from the top) using the same evidence the rest of
+# the app trusts — 2y technicals, OBV flow, announcements, record dates — and
+# estimate WHEN the turn could start (DSE trading-calendar aware).
+MARGIN_LOWER = 0.25
+MARGIN_UPPER = 0.75
+
+
+def margin_rise_score(m):
+    """0–100 chance a bottom-of-range share starts rising."""
+    rsi14, rsi_prev = m.get("rsi14"), m.get("rsi_prev")
+    hist, slope = m.get("macd_hist"), m.get("macd_slope") or 0
+
+    reversal = 0.0                                   # is the turn already showing?
+    if hist is not None and hist > 0:
+        reversal += 0.35
+    if slope > 0:
+        reversal += 0.25
+    if rsi14 is not None and rsi_prev is not None and rsi_prev < rsi14 < 60:
+        reversal += 0.2
+    if (m.get("r_1w") or 0) > 0:
+        reversal += 0.2
+
+    accumulation = clamp(((m.get("accum_20d") or 0) + 0.2) / 0.7)
+
+    support = clamp(1 - (m.get("dist_support") or 20) / 15)
+    if (m.get("r_1w") or 0) < -2:                    # still knifing down
+        support *= 0.5
+    if m.get("higher_lows"):
+        support = clamp(support + 0.3)
+
+    f = 0.0                                          # is it worth catching?
+    if (m.get("eps") or 0) > 0:
+        f += 0.35
+    f += {"A": 0.3, "B": 0.15}.get(m.get("category"), 0.0)
+    if m.get("dividend_yield"):
+        f += 0.2
+    if (m.get("avg_value_mn_30d") or 0) >= MIN_LIQUIDITY_MN:
+        f += 0.15
+
+    cat = 0.0                                        # a reason to turn NOW
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 < dtr <= 30:
+        cat += 0.6
+    news_cats = {a["category"] for a in (m.get("recent_news") or [])}
+    if "dividend" in news_cats:
+        cat += 0.3
+    if "board-meeting" in news_cats:
+        cat += 0.2
+    if "financials" in news_cats:
+        cat += 0.1
+
+    score = 100 * (0.35 * clamp(reversal) + 0.20 * accumulation + 0.15 * clamp(support)
+                   + 0.15 * clamp(f) + 0.15 * clamp(cat))
+    flags = set(m.get("flags") or [])
+    if flags & {"trading-halt", "audit-concern"}:    # cheap for a reason
+        score = min(score, 5)
+    if "stale-data" in flags:
+        score *= 0.3
+    if m.get("category") == "Z":
+        score *= 0.5
+    return round(score, 1)
+
+
+def margin_fall_score(m):
+    """0–100 chance a top-of-range share starts falling."""
+    rsi14 = m.get("rsi14") or 50
+    slope = m.get("macd_slope") or 0
+
+    over = 0.0                                       # how stretched is it?
+    if rsi14 > 70:
+        over += 0.35
+    elif rsi14 > 65:
+        over += 0.2
+    if (m.get("boll_pos") or 0.5) > 0.9:
+        over += 0.2
+    if (m.get("up_streak") or 0) >= 5:
+        over += 0.2
+    if (m.get("r_1m") or 0) > 25:
+        over += 0.25
+
+    fade = 0.0                                       # is momentum already rolling over?
+    if slope < 0:
+        fade += 0.5
+    if (m.get("r_1w") or 0) < 0:
+        fade += 0.3
+    if (m.get("vol_ratio") or 1) < 0.8:
+        fade += 0.2
+
+    distribution = clamp((0.1 - (m.get("accum_20d") or 0)) / 0.6)
+
+    v = 0.0                                          # what is the height built on?
+    pe = m.get("pe")
+    if pe and pe > 30:
+        v += 0.5
+    if (m.get("eps") or 0) <= 0:
+        v += 0.3
+    v += {"B": 0.2, "N": 0.2, "Z": 0.5}.get(m.get("category"), 0.0)
+
+    ev = 0.0                                         # a scheduled reason to drop
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 <= dtr <= 7:            # ex-dividend adjustment imminent
+        ev += 0.6
+    news_cats = {a["category"] for a in (m.get("recent_news") or [])}
+    flags = set(m.get("flags") or [])
+    if "exchange-query" in news_cats or "exchange-query" in flags:
+        ev += 0.4
+    if "audit-concern" in flags:
+        ev += 0.5
+    if "category-change-news" in flags:
+        ev += 0.2
+
+    score = 100 * (0.35 * clamp(over) + 0.20 * clamp(fade) + 0.15 * distribution
+                   + 0.15 * clamp(v) + 0.15 * clamp(ev))
+    return round(score, 1)
+
+
+def margin_rise_when(m, today):
+    """Estimated date the rise could start, from how far along the reversal is."""
+    hist, slope = m.get("macd_hist"), m.get("macd_slope") or 0
+    rsi14, rsi_prev = m.get("rsi14"), m.get("rsi_prev")
+    if hist is not None and hist > 0 and ((m.get("r_1w") or 0) > 0 or slope > 0):
+        d = next_trading_day(today, 1)
+        note = "Reversal already confirmed (MACD positive, price turning) — from the next session"
+    elif hist is not None and hist < 0 and slope > 0:
+        sessions = int(clamp(math.ceil(-hist / slope), 2, 20))
+        d = next_trading_day(today, sessions)
+        note = f"MACD histogram closing on zero at its current pace (~{sessions} sessions)"
+    elif ((rsi14 is not None and rsi_prev is not None and rsi_prev < rsi14 < 45)
+          or (m.get("accum_20d") or 0) > 0.2):
+        d = next_trading_day(today, 8)
+        note = "Early bottoming signs — typically needs another 1–2 weeks of basing"
+    else:
+        d = next_trading_day(today, 15)
+        note = "No reversal evidence yet — recheck in ~3 weeks"
+    rd = m.get("upcoming_record_date")
+    if rd:
+        rd_date = datetime.strptime(rd, "%Y-%m-%d").date()
+        runup = prev_trading_day(rd_date, 10)        # run-ups start ~2 weeks ahead
+        if runup <= today < rd_date:
+            d2 = next_trading_day(today, 1)
+            if d2 < d:
+                d, note = d2, f"Pre-record-date run-up window is open (record date {rd})"
+        elif today < runup < d:
+            d, note = runup, f"Run-ups ahead of a record date typically start around here (record date {rd})"
+    return d.isoformat(), note
+
+
+def margin_fall_when(m, today):
+    """Estimated date the fall could start."""
+    rd = m.get("upcoming_record_date")
+    if rd:
+        rd_date = datetime.strptime(rd, "%Y-%m-%d").date()
+        if 0 <= (rd_date - today).days <= 10:
+            return (next_trading_day(rd_date, 1).isoformat(),
+                    f"Ex-dividend adjustment — price typically drops right after record date {rd}")
+    slope = m.get("macd_slope") or 0
+    rsi14 = m.get("rsi14") or 50
+    streak = m.get("up_streak") or 0
+    if slope < 0 and (m.get("r_1w") or 0) < 0:
+        return (next_trading_day(today, 1).isoformat(),
+                "Rollover already underway (momentum and price both falling)")
+    if slope < 0 or rsi14 >= 75:
+        return (next_trading_day(today, 3).isoformat(),
+                "Momentum fading at the top — turn likely within a week")
+    if streak >= 5:
+        return (next_trading_day(today, max(1, 8 - streak)).isoformat(),
+                f"{streak} straight up days — statistically overdue for a red session")
+    return (next_trading_day(today, 10).isoformat(),
+            "Still strong — no fall trigger yet; reassess in ~2 weeks")
+
+
+def margin_rise_reasons(m):
+    """(english, বাংলা) reason pairs."""
+    r = []
+    hist, slope = m.get("macd_hist"), m.get("macd_slope") or 0
+    rsi14, rsi_prev = m.get("rsi14"), m.get("rsi_prev")
+    if hist is not None and hist > 0:
+        r.append(("MACD already bullish", "MACD ইতিমধ্যে ঊর্ধ্বমুখী"))
+    elif slope > 0:
+        r.append(("MACD histogram rising toward a cross",
+                  "MACD হিস্টোগ্রাম ক্রসের দিকে বাড়ছে"))
+    if rsi14 is not None and rsi_prev is not None and rsi_prev + 1 <= rsi14 < 55:
+        r.append((f"RSI turning up ({rsi_prev:.0f}→{rsi14:.0f})",
+                  f"RSI ঘুরে দাঁড়াচ্ছে ({rsi_prev:.0f}→{rsi14:.0f})"))
+    if (m.get("accum_20d") or 0) >= 0.2:
+        r.append((f"OBV accumulation ({m['accum_20d']:+.2f}) near the lows",
+                  f"তলানিতে OBV সঞ্চয় ({m['accum_20d']:+.2f}) — কেউ চুপচাপ কিনছে"))
+    if m.get("higher_lows"):
+        r.append(("Higher-lows base forming", "ক্রমশ উঁচু লো — ভিত তৈরি হচ্ছে"))
+    if (m.get("dist_support") or 99) <= 5:
+        r.append((f"Holding {m['dist_support']:.1f}% above defended support",
+                  f"সাপোর্টের {m['dist_support']:.1f}% উপরে টিকে আছে"))
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 < dtr <= 30:
+        div = (f" ({m['upcoming_dividend_pct']:.0f}% dividend)"
+               if m.get("upcoming_dividend_pct") else "")
+        div_bn = (f" ({m['upcoming_dividend_pct']:.0f}% লভ্যাংশ)"
+                  if m.get("upcoming_dividend_pct") else "")
+        r.append((f"Record date {m['upcoming_record_date']} in {dtr}d{div}",
+                  f"রেকর্ড ডেট {m['upcoming_record_date']}, {dtr} দিন বাকি{div_bn}"))
+    news_cats = {a["category"] for a in (m.get("recent_news") or [])}
+    if "dividend" in news_cats:
+        r.append(("Recent dividend announcement", "সাম্প্রতিক লভ্যাংশ ঘোষণা"))
+    if "board-meeting" in news_cats:
+        r.append(("Board meeting scheduled — possible catalyst",
+                  "বোর্ড মিটিং নির্ধারিত — সম্ভাব্য উপলক্ষ"))
+    if (m.get("eps") or 0) > 0 and m.get("category") == "A":
+        r.append(("Profitable category-A share at the bottom of its range",
+                  "লাভজনক A-ক্যাটাগরি শেয়ার, নিজের সীমার তলানিতে"))
+    hard = set(m.get("flags") or []) & {"trading-halt", "audit-concern", "stale-data"}
+    if hard:
+        hard_s = ", ".join(sorted(hard))
+        r.append((f"⚠ {hard_s} — cheap for a reason",
+                  f"⚠ {hard_s} — কারণ ছাড়া সস্তা নয়"))
+    return r[:4] or [("No turn evidence yet — deep value only if fundamentals convince you",
+                      "ঘুরে দাঁড়ানোর প্রমাণ এখনো নেই — মৌলভিত্তিতে আস্থা থাকলে তবেই ভাবুন")]
+
+
+def margin_fall_reasons(m):
+    """(english, বাংলা) reason pairs."""
+    r = []
+    rsi14 = m.get("rsi14")
+    if rsi14 is not None and rsi14 > 70:
+        r.append((f"RSI {rsi14:.0f} overbought", f"RSI {rsi14:.0f} — অতিরিক্ত কেনা"))
+    if (m.get("boll_pos") or 0.5) > 0.9:
+        r.append(("Pressing the upper Bollinger band", "উপরের বলিঞ্জার ব্যান্ডে চাপ দিচ্ছে"))
+    if (m.get("r_1m") or 0) > 25:
+        r.append((f"+{m['r_1m']:.0f}% in a month — parabolic, mean-reversion risk",
+                  f"এক মাসে +{m['r_1m']:.0f}% — অস্বাভাবিক গতি, দাম ফিরে আসার ঝুঁকি"))
+    if (m.get("up_streak") or 0) >= 5:
+        r.append((f"{m['up_streak']} straight up days",
+                  f"টানা {m['up_streak']} দিন ঊর্ধ্বমুখী"))
+    if (m.get("accum_20d") or 0) <= -0.2:
+        r.append((f"OBV distribution ({m['accum_20d']:+.2f}) — volume leaving at the highs",
+                  f"OBV বিতরণ ({m['accum_20d']:+.2f}) — চূড়ায় ভলিউম বেরিয়ে যাচ্ছে"))
+    if (m.get("macd_slope") or 0) < 0:
+        r.append(("MACD momentum already fading", "MACD-র গতি ইতিমধ্যে কমছে"))
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 <= dtr <= 7:
+        r.append((f"Ex-dividend drop expected after record date {m['upcoming_record_date']}",
+                  f"রেকর্ড ডেট {m['upcoming_record_date']}-এর পর এক্স-ডিভিডেন্ড পতনের সম্ভাবনা"))
+    news_cats = {a["category"] for a in (m.get("recent_news") or [])}
+    if "exchange-query" in news_cats:
+        r.append(("DSE exchange query on the price move",
+                  "দামের ওঠানামা নিয়ে DSE-র আনুষ্ঠানিক প্রশ্ন (এক্সচেঞ্জ কোয়েরি)"))
+    pe = m.get("pe")
+    if pe and pe > 30:
+        r.append((f"Expensive at P/E {pe:.0f}", f"P/E {pe:.0f} — আয়ের তুলনায় দামি"))
+    if (m.get("eps") or 0) <= 0:
+        r.append(("Loss-making yet at 2-year highs", "লোকসানি কোম্পানি, তবু ২ বছরের চূড়ায়"))
+    return r[:4] or [("Strong uptrend with no fall trigger yet — just extended",
+                      "শক্তিশালী ঊর্ধ্বগতি, পতনের সংকেত এখনো নেই — শুধু অনেকটা বেড়ে আছে")]
+
+
+def build_margin(results, today):
+    lower, higher = [], []
+    for code, m in results.items():
+        pos = m.get("pos_2y")
+        if pos is None:
+            continue
+        base = {
+            "code": code, "price": m["price"], "sector": m.get("sector"),
+            "category": m.get("category"), "pos_2y": pos,
+            "rsi14": m.get("rsi14"), "r_1w": m.get("r_1w"), "r_1m": m.get("r_1m"),
+            "flags": m.get("flags") or [], "eligible": m["eligible"],
+            "record_date": m.get("upcoming_record_date"),
+        }
+        if pos <= MARGIN_LOWER:
+            when, note = margin_rise_when(m, today)
+            pairs = margin_rise_reasons(m)
+            lower.append(dict(
+                base, score=margin_rise_score(m), turn_date=when, turn_note=note,
+                from_low=round((m["price"] / m["lo_2y"] - 1) * 100, 1) if m.get("lo_2y") else None,
+                why=[p[0] for p in pairs], why_bn=[p[1] for p in pairs]))
+        elif pos >= MARGIN_UPPER:
+            when, note = margin_fall_when(m, today)
+            pairs = margin_fall_reasons(m)
+            higher.append(dict(
+                base, score=margin_fall_score(m), turn_date=when, turn_note=note,
+                from_high=round((1 - m["price"] / m["hi_2y"]) * 100, 1) if m.get("hi_2y") else None,
+                why=[p[0] for p in pairs], why_bn=[p[1] for p in pairs]))
+    lower.sort(key=lambda e: -e["score"])
+    higher.sort(key=lambda e: -e["score"])
+    return {"lower": lower, "higher": higher,
+            "lower_threshold": MARGIN_LOWER, "higher_threshold": MARGIN_UPPER}
+
+
+# ================= SPIKE DETECTOR =================
+# Shares that suddenly rose a big amount TODAY — vs yesterday's close and/or
+# vs today's open (the live overlay makes "now vs session start" real during
+# trading hours). Each spike is scored for the chance it CONTINUES rising:
+# volume backing, room to run, trend backdrop, a real catalyst, and this
+# share's own history of following through.
+SPIKE_MIN_PCT = 3.0          # DSE circuit is ±10%, so 3%+ in a day is a jolt
+SPIKE_NEWS_DAYS = 5
+
+
+def spike_score(m, today):
+    """0–100 chance today's spike keeps going, with (english, বাংলা) reasons."""
+    why = []
+    dc = max(m.get("day_change") or 0, m.get("intraday_change") or 0)
+
+    vt = m.get("vol_today_ratio") or 0
+    volume = clamp((vt - 0.8) / 2.2)
+    if vt >= 2:
+        why.append((f"Volume {vt:.1f}× the 30-day average — real money behind the move",
+                    f"ভলিউম ৩০ দিনের গড়ের {vt:.1f} গুণ — মুভের পেছনে সত্যিকারের টাকা"))
+    elif vt < 1:
+        why.append((f"⚠ Only {vt:.1f}× average volume — a spike without backing usually fades",
+                    f"⚠ ভলিউম গড়ের মাত্র {vt:.1f} গুণ — সমর্থনহীন স্পাইক সাধারণত মিলিয়ে যায়"))
+
+    rsi14 = m.get("rsi14") or 50
+    room = (clamp((10 - dc) / 7) * 0.4          # distance to the 10% circuit
+            + clamp((80 - rsi14) / 30) * 0.3
+            + clamp((m.get("dist_resistance") or 0) / 10) * 0.3)
+    if dc >= 9:
+        why.append(("At/near the 10% daily circuit — no room left today; continuation would need tomorrow",
+                    "১০% দৈনিক সার্কিটের কাছে — আজ আর বাড়ার জায়গা নেই; চলতে হলে আগামীকাল"))
+    elif (m.get("dist_resistance") or 0) > 8:
+        why.append((f"{m['dist_resistance']:.0f}% headroom below 3-month resistance",
+                    f"৩ মাসের রেজিস্ট্যান্সের নিচে {m['dist_resistance']:.0f}% ফাঁকা জায়গা"))
+    if rsi14 > 80:
+        why.append((f"⚠ RSI {rsi14:.0f} — already very overbought",
+                    f"⚠ RSI {rsi14:.0f} — ইতিমধ্যে মাত্রাতিরিক্ত কেনা"))
+
+    trend = 0.0
+    if m.get("sma50") and m["price"] > m["sma50"]:
+        trend += 0.4
+    if m.get("sma20") and m["price"] > m["sma20"]:
+        trend += 0.2
+    if (m.get("macd_hist") or 0) > 0:
+        trend += 0.2
+    if m.get("higher_lows"):
+        trend += 0.2
+    if trend >= 0.6:
+        why.append(("Spike inside an established uptrend — these follow through more often",
+                    "প্রতিষ্ঠিত ঊর্ধ্বগতির মধ্যে স্পাইক — এগুলো প্রায়ই চলতে থাকে"))
+    elif trend <= 0.2:
+        why.append(("⚠ Spike against a downtrend — usually a one-day event",
+                    "⚠ নিম্নগতির বিপরীতে স্পাইক — সাধারণত একদিনের ঘটনা"))
+
+    cat = 0.0
+    cutoff = (today - timedelta(days=SPIKE_NEWS_DAYS)).isoformat()
+    fresh = {a["category"] for a in (m.get("recent_news") or []) if a["date"] >= cutoff}
+    if "dividend" in fresh:
+        cat += 0.5
+        why.append(("Dividend announcement in the last few days — a real catalyst",
+                    "গত কয়েক দিনে লভ্যাংশ ঘোষণা — প্রকৃত উপলক্ষ"))
+    if "financials" in fresh:
+        cat += 0.35
+        why.append(("Fresh financial results behind the move",
+                    "মুভের পেছনে নতুন আর্থিক ফলাফল"))
+    if "credit-rating" in fresh:
+        cat += 0.25
+    if "board-meeting" in fresh:
+        cat += 0.3
+        why.append(("Board meeting announced — market may be front-running a dividend decision",
+                    "বোর্ড মিটিং ঘোষণা — লভ্যাংশের প্রত্যাশায় বাজার আগাম কিনছে হতে পারে"))
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 < dtr <= 15:
+        cat += 0.5
+        why.append((f"Record date {m['upcoming_record_date']} in {dtr}d — dividend-capture buying",
+                    f"রেকর্ড ডেট {m['upcoming_record_date']}, {dtr} দিন বাকি — লভ্যাংশ পেতে কেনাকাটা"))
+    if "exchange-query" in fresh:
+        cat -= 0.4
+        why.append(("⚠ DSE exchange query on this price move — regulator sees it as abnormal",
+                    "⚠ এই মুভ নিয়ে DSE-র এক্সচেঞ্জ কোয়েরি — নিয়ন্ত্রক একে অস্বাভাবিক মনে করছে"))
+    if cat <= 0 and not fresh:
+        why.append(("⚠ No announcement behind the spike — could be pure speculation",
+                    "⚠ স্পাইকের পেছনে কোনো ঘোষণা নেই — নিছক জল্পনাও হতে পারে"))
+
+    hist = clamp(((m.get("win_rate") or 45) - 40) / 40)
+
+    score = 100 * (0.25 * volume + 0.20 * room + 0.20 * trend
+                   + 0.20 * clamp(cat) + 0.15 * hist)
+    flags = set(m.get("flags") or [])
+    if flags & {"trading-halt", "audit-concern"}:
+        score = min(score, 5)
+        why.append(("⚠ Hard risk flag — do not chase this spike",
+                    "⚠ গুরুতর ঝুঁকি-চিহ্ন — এই স্পাইকের পেছনে ছুটবেন না"))
+    if m.get("category") == "Z":
+        score *= 0.5
+    if "illiquid" in flags:
+        score *= 0.7
+    score = round(score, 1)
+    label = ("Likely to continue" if score >= 60
+             else "Mixed — wait for confirmation" if score >= 40
+             else "Likely to fade")
+    pairs = why[:5]
+    return score, label, [p[0] for p in pairs], [p[1] for p in pairs]
+
+
+def build_spike(results, today):
+    # market date = latest date a meaningful share of tickers traded on — a
+    # single stray row (odd-lot listing, partial fetch) must not define it
+    counts = {}
+    for m in results.values():
+        counts[m["last_date"]] = counts.get(m["last_date"], 0) + 1
+    floor = max(5, len(results) // 20)
+    real = [d for d, n in counts.items() if n >= floor]
+    market_date = max(real) if real else (max(counts) if counts else None)
+    spikes = []
+    for code, m in results.items():
+        if m["last_date"] != market_date:       # spike must be from the live session
+            continue
+        dc, ic = m.get("day_change"), m.get("intraday_change")
+        if (dc or 0) < SPIKE_MIN_PCT and (ic or 0) < SPIKE_MIN_PCT:
+            continue
+        score, label, why, why_bn = spike_score(m, today)
+        spikes.append({
+            "code": code, "price": m["price"], "sector": m.get("sector"),
+            "category": m.get("category"), "day_change": dc, "intraday_change": ic,
+            "vol_today_ratio": m.get("vol_today_ratio"), "rsi14": m.get("rsi14"),
+            "dist_resistance": m.get("dist_resistance"),
+            "score": score, "label": label, "why": why, "why_bn": why_bn,
+            "flags": m.get("flags") or [], "eligible": m["eligible"],
+            "record_date": m.get("upcoming_record_date"),
+        })
+    spikes.sort(key=lambda s: -s["score"])
+    return {"date": market_date, "min_pct": SPIKE_MIN_PCT, "spikes": spikes}
+
+
+# ================= MARKET WISDOM (cross-signal pass) =================
+# Classic market rules layered on the composite before final verdicts:
+# buy low (lower-margin share with reversal evidence), don't chase tops
+# (higher-margin share with fall risk), respect a backed spike, and never
+# chase an unbacked one. Adjusts composite ± and re-derives the verdict.
+def apply_market_wisdom(results, spike, margin):
+    sp = {s["code"]: s for s in spike["spikes"]}
+    lo = {e["code"]: e for e in margin["lower"]}
+    hi = {e["code"]: e for e in margin["higher"]}
+    for code, m in results.items():
+        adj = 0.0
+        notes = []
+        s = sp.get(code)
+        if s:
+            if s["score"] >= 60:
+                adj += 3
+                notes.append((
+                    f"Spiking today (+{s['day_change']:.1f}%) with volume/catalyst backing — "
+                    f"continuation score {s['score']:.0f}/100",
+                    f"আজ স্পাইক করছে (+{s['day_change']:.1f}%) ভলিউম/উপলক্ষের সমর্থনসহ — "
+                    f"ধারাবাহিকতা স্কোর {s['score']:.0f}/100"))
+            elif s["score"] < 40:
+                adj -= 4
+                m["flags"].append("spike-fade-risk")
+                notes.append((
+                    f"Today's +{s['day_change']:.1f}% spike looks unbacked "
+                    f"(continuation score only {s['score']:.0f}/100) — don't chase it",
+                    f"আজকের +{s['day_change']:.1f}% স্পাইক সমর্থনহীন মনে হচ্ছে "
+                    f"(স্কোর মাত্র {s['score']:.0f}/100) — পেছনে ছুটবেন না"))
+        e = lo.get(code)
+        if e and e["score"] >= 55:
+            adj += 4
+            notes.append((
+                f"Bottom of its 2-year range WITH reversal evidence (rise score "
+                f"{e['score']:.0f}/100) — buying low instead of chasing high",
+                f"২ বছরের সীমার তলানিতে, ঘুরে দাঁড়ানোর প্রমাণসহ (রাইজ স্কোর "
+                f"{e['score']:.0f}/100) — চড়া দামের পেছনে না ছুটে সস্তায় কেনা"))
+        h = hi.get(code)
+        if h and h["score"] >= 50:
+            adj -= 6
+            m["flags"].append("top-of-range")
+            notes.append((
+                f"Top of its 2-year range with fall risk {h['score']:.0f}/100 — "
+                f"a profit-taking zone, not an entry zone",
+                f"২ বছরের সীমার চূড়ায়, পতনের ঝুঁকি {h['score']:.0f}/100 — "
+                f"এটি মুনাফা তোলার জায়গা, ঢোকার নয়"))
+        m["wisdom"] = notes
+        if adj:
+            m["composite"] = round(clamp(m["composite"] + adj, 0, 100), 1)
+        # re-derive verdict & plan with the adjusted composite (same thresholds
+        # as recommend, plus top-of-range blocks Strong Buy like overbought)
+        flags = set(m["flags"])
+        blocked = flags & {"overbought", "extended-rally", "top-of-range"}
+        if not m["eligible"]:
+            v = "Avoid"
+        elif m["composite"] >= 72 and not blocked:
+            v = "Strong Buy"
+        elif m["composite"] >= 62:
+            v = "Buy"
+        elif m["composite"] >= 52:
+            v = "Watch"
+        else:
+            v = "Neutral"
+        m["verdict"] = v
+        if v in ("Strong Buy", "Buy"):
+            m["plan"] = (f"Enter near {m['price']:.1f}; "
+                         f"book profit around {m['target_price']:.1f} (+{m['target_pct']:.0f}%); "
+                         f"exit below {m['stop_price']:.1f} (−{m['stop_pct']:.0f}%) to cap losses")
+        else:
+            m["plan"] = None
+
+
+def build_pick_why(m):
+    """Detailed, data-backed reasons for the suggestion tables — parallel
+    (english, বাংলা) lists built from structured fields so both stay in sync."""
+    en, bn = [], []
+
+    def add(e, b):
+        en.append(e)
+        bn.append(b)
+
+    price = m["price"]
+    r1w, r1m = m.get("r_1w") or 0, m.get("r_1m") or 0
+    if m.get("sma20") and m.get("sma50") and price > m["sma20"] > m["sma50"]:
+        add(f"Clean uptrend — price above SMA20 above SMA50, {r1m:+.1f}% in 1 month, {r1w:+.1f}% this week",
+            f"পরিষ্কার ঊর্ধ্বগতি — দাম > SMA20 > SMA50, ১ মাসে {r1m:+.1f}%, এই সপ্তাহে {r1w:+.1f}%")
+    elif m.get("sma50") and price > m["sma50"]:
+        add(f"Medium-term trend intact (above SMA50), {r1m:+.1f}% in 1 month",
+            f"মধ্যমেয়াদি প্রবণতা অটুট (SMA50-এর উপরে), ১ মাসে {r1m:+.1f}%")
+    rel = m.get("rel_1m") or 0
+    if rel > 2:
+        add(f"Beating the market average by {rel:.1f}% over the last month",
+            f"গত এক মাসে বাজারের গড়কে {rel:.1f}% ব্যবধানে হারাচ্ছে")
+    rsi14 = m.get("rsi14")
+    if rsi14 is not None and 45 <= rsi14 <= 65:
+        add(f"RSI {rsi14:.0f} — rising with room to run, not yet overbought",
+            f"RSI {rsi14:.0f} — বাড়ছে কিন্তু এখনো অতিরিক্ত কেনা নয়, জায়গা আছে")
+    vr = m.get("vol_ratio")
+    if vr and vr >= 1.3:
+        add(f"Volume {vr:.1f}× its 30-day average — fresh buyers stepping in",
+            f"ভলিউম ৩০ দিনের গড়ের {vr:.1f} গুণ — নতুন ক্রেতা ঢুকছে")
+    elif (m.get("accum_20d") or 0) >= 0.25:
+        add(f"Quiet OBV accumulation ({m['accum_20d']:+.2f}) before the price moves",
+            f"দাম বড় ওঠার আগে নীরব OBV সঞ্চয় ({m['accum_20d']:+.2f})")
+    fund = []
+    fund_bn = []
+    if (m.get("eps") or 0) > 0:
+        fund.append(f"EPS {m['eps']:.1f}")
+        fund_bn.append(f"EPS {m['eps']:.1f}")
+    if m.get("pe") and 0 < m["pe"] <= 25:
+        fund.append(f"fair P/E {m['pe']:.1f}")
+        fund_bn.append(f"যুক্তিসঙ্গত P/E {m['pe']:.1f}")
+    if m.get("dividend_yield"):
+        fund.append(f"{m['dividend_yield']:.1f}% dividend yield")
+        fund_bn.append(f"{m['dividend_yield']:.1f}% লভ্যাংশ ফলন")
+    if m.get("category") == "A":
+        fund.append("category A")
+        fund_bn.append("A ক্যাটাগরি")
+    if len(fund) >= 2:
+        add("Solid fundamentals: " + ", ".join(fund),
+            "মজবুত মৌলভিত্তি: " + ", ".join(fund_bn))
+    if (m.get("win_rate") or 0) >= 60 and (m.get("signal_trades") or 0) >= 5:
+        add(f"Reliable history — past buy signals won {m['win_rate']}% of the time "
+            f"({m['signal_trades']} trades in 2 years)",
+            f"নির্ভরযোগ্য ইতিহাস — অতীতের কেনার সংকেত {m['win_rate']}% সময় সফল "
+            f"(২ বছরে {m['signal_trades']}টি)")
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 < dtr <= 20 and m.get("upcoming_dividend_pct"):
+        add(f"Record date {m['upcoming_record_date']} in {dtr}d — buy before it to capture "
+            f"the {m['upcoming_dividend_pct']:.0f}% dividend",
+            f"রেকর্ড ডেট {m['upcoming_record_date']}, {dtr} দিন বাকি — আগে কিনলে "
+            f"{m['upcoming_dividend_pct']:.0f}% লভ্যাংশ পাবেন")
+    if m.get("higher_lows"):
+        add("Higher-lows pattern — buyers defending every dip at a higher price",
+            "ক্রমশ উঁচু লো — প্রতিটি পতনে ক্রেতারা আরও উঁচু দামে কিনে নিচ্ছে")
+    for e_, b_ in m.get("wisdom") or []:
+        add(e_, b_)
+    if not en:
+        add("No strong edge right now — scores are middling across the board",
+            "এই মুহূর্তে বিশেষ সুবিধা নেই — সব সূচকই মাঝারি মানের")
+    return en[:5], bn[:5]
+
+
 def run_analysis():
     tick_cache = load_tickers()
     tickers = tick_cache["tickers"]
@@ -821,7 +1415,15 @@ def run_analysis():
         m["rel_1m"] = round((m.get("r_1m") or 0) - market_r1m, 2)
         apply_news_and_agm(m, t, announcements, agm_notices, today)
         recommend(m, companies.get(t))
+
+    # cross-signal pass: every share checked against today's spikes and its
+    # 2-year range extremes before the final verdicts and pick lists
+    spike = build_spike(results, today)
+    margin = build_margin(results, today)
+    apply_market_wisdom(results, spike, margin)
+    for t, m in results.items():
         buy_plan(m, today)
+        m["why"], m["why_bn"] = build_pick_why(m)
 
     top20 = pick_top(results, n=20, sector_cap=3)
 
@@ -933,9 +1535,9 @@ def run_analysis():
     for m in results.values():
         del m["_code"]
 
-    # market overview
-    latest_dates = sorted({m["last_date"] for m in results.values()})
-    market_date = latest_dates[-1] if latest_dates else None
+    # market overview — same robust market date the spike detector derived
+    # (a single stray row must not claim a newer session than the market had)
+    market_date = spike["date"]
     day_rets = [m["r_1w"] for m in results.values() if m.get("r_1w") is not None]
     overview = {
         "tickers_analyzed": len(results),
@@ -955,6 +1557,8 @@ def run_analysis():
         "market": market,
         "top20": top20,
         "high_profit": high_profit,
+        "margin": margin,
+        "spike": spike,
         "sectors": sectors,
         "signals": signal_index,
         "alerts": alerts,
