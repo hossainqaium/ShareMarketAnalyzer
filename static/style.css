@@ -152,9 +152,9 @@ main { padding: 16px 20px 60px; max-width: 1500px; margin: 0 auto; }
 
 /* ---------- charts grid ---------- */
 .chart-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-.chart-controls .seg { display: flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
-.chart-controls .seg button { border: none; border-radius: 0; padding: 6px 12px; }
-.chart-controls .seg button.active { background: var(--accent); color: #fff; }
+.seg { display: flex; border: 1px solid var(--border); border-radius: 7px; overflow: hidden; }
+.seg button { border: none; border-radius: 0; padding: 6px 12px; font-size: 12.5px; }
+.seg button.active { background: var(--accent); color: #fff; }
 .page-info { color: var(--ink-2); font-size: 12.5px; }
 .grid {
   display: grid; gap: 10px;
@@ -221,9 +221,11 @@ tbody tr:hover { background: var(--chip); }
 .legend .l1::before { background: var(--series-1); }
 .legend .l2::before { background: var(--series-sma20); }
 .legend .l3::before { background: var(--series-sma50); }
-#dPrice { width: 100%; height: 300px; display: block; }
+#dPrice { width: 100%; height: 300px; display: block; cursor: grab; touch-action: none; }
+#dPrice:active { cursor: grabbing; }
 #dVol { width: 100%; height: 70px; display: block; margin-top: 4px; }
 #dRsi { width: 100%; height: 70px; display: block; margin-top: 4px; }
+#sectorBars { width: 100%; height: 480px; display: block; margin-top: 6px; }
 .axis-note { font-size: 11px; color: var(--muted); }
 .mgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 14px 0; }
 .mstat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; }

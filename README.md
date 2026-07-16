@@ -196,8 +196,10 @@ picks below the fold.
   right after). Searchable, star-shortlistable, rows open the detail view.
 - **Today's fresh signals** — technical events on the latest trading day:
   golden cross, MACD cross, 3-month breakout, oversold rebound, volume spike.
-- **Sectors** — sector-rotation table: average returns, breadth, and the best
-  pick per sector.
+- **Sectors** — sector-rotation table plus a **sector performance bar
+  chart** (average 1-month return per sector, horizontal bars growing from
+  zero, green up / red down, sorted strongest-to-weakest, hover for 1w/3m and
+  breadth): average returns, breadth, and the best pick per sector.
 - **Market Update panel** — the real DSEX/DS30/DSES/DSMEX index levels and
   daily change, total exchange turnover, market capitalisation, and the
   **official** advance/decline count by category (A/B/Z/mutual funds) —
@@ -217,8 +219,21 @@ picks below the fold.
 - **Help / সাহায্য** — hover any dotted-underlined term for its meaning in
   English and Bengali; the Help button opens the full glossary.
 - **Charts** — line charts for every share, **100 per page** with Prev/Next,
-  2-year / 1-year toggle, sortable A–Z or by score. Click any chart for a
-  detail view (price + SMA20/50, volume, RSI, fundamentals, scoring cases).
+  2-year / 1-year toggle, sortable A–Z or by score, plus a **Line /
+  Candlestick** toggle (candlestick mode shows the last 60 sessions'
+  open/high/low/close as coloured bodies+wicks; the 2y/1y range toggle is
+  disabled in this mode since it doesn't apply). Click any chart for a
+  detail view (price + SMA20/50, volume, RSI, fundamentals, scoring cases)
+  where a **Line / Candlestick / OHLC Bars** menu switches the main price
+  panel between a plain close-price line, full candlesticks, and classic
+  OHLC tick bars — all three use the real 2-year Open/High/Low/Close data,
+  with the SMA20/50 overlay and hover tooltip (now showing O/H/L too) working
+  identically in every mode. A **zoom control** (1M/3M/6M/1Y/All, defaulting
+  to 6M so candles/bars are readable immediately instead of 2 years being
+  squeezed into one canvas) sits above the chart; scroll the mouse wheel to
+  zoom in/out around the cursor, or click-drag to pan through history —
+  Volume and RSI below scroll in sync. Opening a different share resets the
+  zoom back to the 6M default.
 - **Potential Charts** — for every share (100 per page): the real past
   year in blue, then a **potential next 6 months** in violet, split by a
   dashed vertical line at today (x-axis is time-proportional, divider ~2/3

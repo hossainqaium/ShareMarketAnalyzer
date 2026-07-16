@@ -70,9 +70,14 @@ def get_potential(reload=False):
         return _state["potential"]
 
 
-def series_for(ticker, max_points=None):
+def series_for(ticker, max_points=None, ohlc=False):
+    """dates/closes/volumes for a ticker, optionally with open/high/low too
+    (needed for candlestick/OHLC-bar charts) — High/Low fall back to the
+    close and Open falls back to 0 (treated as "missing") when unavailable,
+    same convention as analysis.py's build_series()."""
     rows = get_history().get(ticker, [])
     dates, closes, vols = [], [], []
+    opens, highs, lows = [], [], []
     for r in rows:
         try:
             c = float(r["CloseP"])
@@ -83,6 +88,16 @@ def series_for(ticker, max_points=None):
             dates.append(r["Date"])
             closes.append(c)
             vols.append(float(r["Volume"] or 0))
+            if ohlc:
+                try:
+                    o = float(r.get("OpenP") or 0)
+                    h = float(r.get("High") or 0)
+                    l = float(r.get("Low") or 0)
+                except (ValueError, TypeError):
+                    o = h = l = 0.0
+                opens.append(o if o > 0 else c)
+                highs.append(h if h > 0 else c)
+                lows.append(l if 0 < l <= (h if h > 0 else c) else c)
         except (ValueError, KeyError):
             continue
     if max_points and len(closes) > max_points:
@@ -91,6 +106,12 @@ def series_for(ticker, max_points=None):
         dates = [dates[i] for i in idx]
         closes = [closes[i] for i in idx]
         vols = [vols[i] for i in idx]
+        if ohlc:
+            opens = [opens[i] for i in idx]
+            highs = [highs[i] for i in idx]
+            lows = [lows[i] for i in idx]
+    if ohlc:
+        return dates, closes, vols, opens, highs, lows
     return dates, closes, vols
 
 
@@ -406,13 +427,20 @@ class Handler(BaseHTTPRequestHandler):
                     codes.sort()
                 total = len(codes)
                 chunk = codes[(page - 1) * per: page * per]
+            n_candles = 60  # compact recent window for the optional candlestick card view
             items = []
             for c in chunk:
                 dates, closes, _ = series_for(c, max_points=150)
+                full_dates, full_closes, _, full_opens, full_highs, full_lows = series_for(c, ohlc=True)
                 items.append({
                     "code": c,
                     "dates": dates,
                     "closes": [round(v, 2) for v in closes],
+                    "cdates": full_dates[-n_candles:],
+                    "copen": [round(v, 2) for v in full_opens[-n_candles:]],
+                    "chigh": [round(v, 2) for v in full_highs[-n_candles:]],
+                    "clow": [round(v, 2) for v in full_lows[-n_candles:]],
+                    "cclose": [round(v, 2) for v in full_closes[-n_candles:]],
                     "price": ana[c]["price"],
                     "r_1y": ana[c].get("r_1y"),
                     "r_2y": ana[c].get("r_2y"),
@@ -484,13 +512,14 @@ class Handler(BaseHTTPRequestHandler):
             ana = get_analysis()["tickers"].get(ticker)
             if not ana:
                 return self.send_json({"error": "unknown ticker"}, 404)
-            dates, closes, vols = series_for(ticker)
+            dates, closes, vols, opens, highs, lows = series_for(ticker, ohlc=True)
             sma20 = rolling_sma(closes, 20)
             sma50 = rolling_sma(closes, 50)
             rsi_series = rolling_rsi(closes, 14)
             prof = get_profiles().get("companies", {}).get(ticker, {})
             return self.send_json({"ticker": ticker, "dates": dates, "closes": closes,
-                                   "volumes": vols, "sma20": sma20, "sma50": sma50,
+                                   "volumes": vols, "opens": opens, "highs": highs, "lows": lows,
+                                   "sma20": sma20, "sma50": sma50,
                                    "rsi": rsi_series, "analysis": ana, "profile": prof})
 
         if route == "/api/update/status":

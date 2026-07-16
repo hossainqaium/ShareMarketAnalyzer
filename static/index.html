@@ -348,6 +348,11 @@
         <button data-sort="short" class="term" data-term="score_short">Short score</button>
         <button data-sort="long" class="term" data-term="score_long">Long score</button>
       </div>
+      <div class="seg" id="chartTypeSeg" data-term="chart_type">
+        <button data-ctype="line" class="active">Line</button>
+        <button data-ctype="candlestick">Candlestick</button>
+      </div>
+      <small class="axis-note hidden" id="candleNote">last 60 sessions</small>
       <div class="spacer"></div>
       <button id="btnPrev">&larr; Prev</button>
       <span class="page-info" id="pageInfo"></span>
@@ -488,6 +493,12 @@
     <p class="disclaimer">Sector rotation view — money moves between sectors; buying strong shares in
       strengthening sectors improves odds. · সেক্টর রোটেশন — টাকা এক খাত থেকে আরেক খাতে যায়; শক্তিশালী খাতের
       শক্তিশালী শেয়ার কিনলে সম্ভাবনা বাড়ে।</p>
+    <div class="panel">
+      <h2><span class="term" data-term="sector_bar_chart">Sector performance · খাত অনুযায়ী পারফরম্যান্স</span></h2>
+      <div class="sub">Average 1-month return per sector — bars grow from zero, green = up, red = down.
+        · প্রতিটি খাতের গড় ১ মাসের রিটার্ন — শূন্য থেকে বার বাড়ে, সবুজ = ঊর্ধ্বমুখী, লাল = নিম্নমুখী।</div>
+      <canvas id="sectorBars"></canvas>
+    </div>
     <div class="tbl-wrap">
       <table id="secTable">
         <thead><tr>
@@ -525,7 +536,24 @@
       </select></label>
       <span id="calcOut" class="plan-text"></span>
     </div>
-    <div class="legend"><span class="l1">Close price</span><span class="l2 term" data-term="sma">SMA 20</span><span class="l3 term" data-term="sma">SMA 50</span></div>
+    <div class="legend" id="dPriceLegend" style="justify-content:space-between">
+      <span><span class="l1">Close price</span><span class="l2 term" data-term="sma">SMA 20</span><span class="l3 term" data-term="sma">SMA 50</span></span>
+      <span class="seg" id="priceChartTypeSeg" data-term="chart_type">
+        <button data-type="line" class="active">Line</button>
+        <button data-type="candlestick">Candlestick</button>
+        <button data-type="ohlc">OHLC Bars</button>
+      </span>
+    </div>
+    <div class="legend" style="justify-content:space-between; margin-top:0">
+      <span class="seg" id="chartZoomSeg" data-term="chart_zoom">
+        <button data-zoom="1m">1M</button>
+        <button data-zoom="3m">3M</button>
+        <button data-zoom="6m" class="active">6M</button>
+        <button data-zoom="1y">1Y</button>
+        <button data-zoom="all">All</button>
+      </span>
+      <small class="axis-note">🖱 scroll to zoom · drag to pan</small>
+    </div>
     <canvas id="dPrice"></canvas>
     <div class="axis-note">Volume</div>
     <canvas id="dVol"></canvas>

@@ -7,6 +7,8 @@ const state = {
   chartsPage: 1, chartsSort: "alpha", chartsRange: "2y", chartsSearch: "", chartsData: null,
   potPage: 1, potSort: "alpha", potSearch: "", potData: null,
   scrSortKey: "score_short", scrSortDir: -1, scrRows: null,
+  priceChartType: "line", chartsChartType: "line",
+  chartZoom: null, chartZoomPreset: "6m", chartDragging: false,
   mgView: "lower", mgSearch: "", mgRange: "3m",
   spSearch: "",
   portfolio: null,
@@ -184,6 +186,9 @@ const GLOSSARY = {
   cross_tab_filter: { t: "Also appears in", en: "Filter to shares that also show up in one of the other analysis tabs right now — e.g. a share that's both eligible here AND currently in the Spike list has extra same-day momentum confirmation.", bn: "যেসব শেয়ার এই মুহূর্তে অন্য কোনো বিশ্লেষণ ট্যাবেও দেখা যাচ্ছে সেগুলো ফিল্টার করুন — যেমন এখানে যোগ্য এবং একই সাথে Spike তালিকায় থাকা শেয়ারের অতিরিক্ত একইদিনের নিশ্চয়তা আছে।" },
   columns_picker: { t: "Columns", en: "Choose which Screener columns are visible — Code is always shown so you can always identify a row. Your choice is remembered in this browser.", bn: "Screener-এ কোন কলামগুলো দেখা যাবে বেছে নিন — Code সবসময় দেখানো হয় যাতে সারি শনাক্ত করা যায়। আপনার পছন্দ এই ব্রাউজারে মনে রাখা হয়।" },
   clear_filters: { t: "Clear all filters", en: "Resets every Screener filter (search, dropdowns, checkboxes, and the More Filters section) back to its default — the full unfiltered list.", bn: "সব Screener ফিল্টার (সার্চ, ড্রপডাউন, চেকবক্স, More Filters) ডিফল্টে ফিরিয়ে দেয় — সম্পূর্ণ তালিকা দেখায়।" },
+  chart_type: { t: "Chart type", en: "Line = the closing price only (smoothest to read trend). Candlestick = each session's open/high/low/close as a coloured body + wick (green = closed above open, red = below) — shows intraday strength/rejection a line hides. OHLC Bars = the same open/high/low/close as classic tick bars (left tick = open, right tick = close). SMA20/50 overlay stays visible in every mode.", bn: "Line = শুধু ক্লোজিং দাম (প্রবণতা বোঝার জন্য সবচেয়ে মসৃণ)। Candlestick = প্রতিটি সেশনের open/high/low/close রঙিন বডি ও উইক আকারে (সবুজ = ক্লোজ ওপেনের উপরে, লাল = নিচে) — লাইনে যা লুকানো থাকে সেই দিনের ভেতরের শক্তি/প্রত্যাখ্যান দেখায়। OHLC Bars = একই তথ্য ক্লাসিক টিক বার আকারে (বাম টিক = ওপেন, ডান টিক = ক্লোজ)। SMA20/50 ওভারলে সব মোডেই দেখা যায়।" },
+  chart_zoom: { t: "Zoom", en: "1M/3M/6M/1Y/All jump to a preset window (defaults to 6M — enough sessions to read individual candles/bars clearly). Scroll the mouse wheel over the chart to zoom in/out around the cursor; click and drag to pan left/right through history. Manual zoom/pan deselects the preset buttons; click one again to snap back. Volume and RSI below scroll in sync.", bn: "1M/3M/6M/1Y/All প্রি-সেট সময়সীমায় লাফ দেয় (ডিফল্ট 6M — পৃথক ক্যান্ডেল/বার স্পষ্ট দেখার জন্য যথেষ্ট)। চার্টের উপর মাউস হুইল স্ক্রল করলে কার্সারকে কেন্দ্র করে জুম ইন/আউট হয়; ক্লিক করে টেনে ধরলে বাম/ডানে ইতিহাসে চলাচল করা যায়। ম্যানুয়াল জুম/প্যান প্রিসেট বাটন থেকে সরিয়ে দেয়; আবার ক্লিক করলে ফিরে আসে। নিচের Volume ও RSI একসাথে স্ক্রল হয়।" },
+  sector_bar_chart: { t: "Sector performance chart", en: "Average 1-month return per sector as horizontal bars growing from zero — green bars (sectors moving up) vs red bars (moving down) make sector rotation visible at a glance, sorted strongest-to-weakest. Hover a bar for its 1w/3m returns and breadth too.", bn: "প্রতিটি খাতের গড় ১ মাসের রিটার্ন অনুভূমিক বার আকারে, শূন্য থেকে বাড়ে — সবুজ বার (বাড়ছে) বনাম লাল বার (কমছে) থেকে সেক্টর রোটেশন এক নজরে বোঝা যায়, শক্তিশালী থেকে দুর্বল ক্রমে সাজানো। বারে মাউস রাখলে ১ সপ্তাহ/৩ মাসের রিটার্ন ও ব্রেডথও দেখা যাবে।" },
   spike_tab: { t: "Spike", en: "Shares that suddenly rose 3%+ today — vs yesterday's close (Δ vs yesterday) or vs the session open (Δ since open). Update Data during trading hours fetches live prices, so the comparison is 'right now vs the start of the day'. Each spike gets a continuation score; most unexplained spikes fade, so the score weighs volume, trend, headroom, catalysts and this share's own follow-through history.", bn: "আজ হঠাৎ ৩%+ বেড়ে যাওয়া শেয়ার — গতকালের ক্লোজ বা আজকের শুরুর দামের তুলনায়। লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। প্রতিটি স্পাইকের ধারাবাহিকতা-স্কোর দেওয়া হয়; কারণহীন স্পাইক সাধারণত মিলিয়ে যায়, তাই ভলিউম, ট্রেন্ড, জায়গা, উপলক্ষ ও ইতিহাস মিলিয়ে স্কোর হয়।" },
   day_change: { t: "Δ vs yesterday", en: "Today's price change vs yesterday's closing price (YCP). The DSE daily circuit limit is ±10%, so 3%+ is a genuine jolt.", bn: "গতকালের ক্লোজিং দামের তুলনায় আজকের পরিবর্তন। DSE-র দৈনিক সীমা ±১০%, তাই ৩%+ মানে সত্যিকারের ঝাঁকুনি।" },
   intraday_change: { t: "Δ since open", en: "Price change from today's opening price to the latest price — during trading hours this is the move from the session start to right now (refresh with Update Data).", bn: "আজকের শুরুর দাম থেকে সর্বশেষ দামের পরিবর্তন — লেনদেন চলাকালে এটি দিনের শুরু থেকে এই মুহূর্ত পর্যন্ত ওঠানামা (Update Data চাপলে হালনাগাদ)।" },
@@ -328,6 +333,170 @@ function drawBars(canvas, dates, values, color) {
   ctx.globalAlpha = 1;
 }
 
+/* Shared axis/grid scaffold for the candlestick and OHLC-bar price charts —
+   mirrors drawLineChart's layout so switching chart type doesn't shift the
+   canvas. Returns the same {x, y, ...} geometry so SMA overlays and the
+   hover tooltip work identically across all three chart types. */
+function drawPriceAxes(ctx, w, h, dates, lo, hi, opts = {}) {
+  const padL = 46, padR = 10, padT = 8, padB = 18;
+  const n = dates.length;
+  const x = (i) => padL + (i / Math.max(n - 1, 1)) * (w - padL - padR);
+  const y = (v) => padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB);
+  ctx.strokeStyle = css("--grid");
+  ctx.fillStyle = css("--muted");
+  ctx.font = "10.5px system-ui, sans-serif";
+  ctx.textAlign = "right";
+  ctx.lineWidth = 1;
+  const ticks = opts.ticks || 4;
+  for (let t = 0; t <= ticks; t++) {
+    const v = lo + ((hi - lo) * t) / ticks;
+    const yy = y(v);
+    ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(w - padR, yy); ctx.stroke();
+    ctx.fillText(v >= 1000 ? (v / 1000).toFixed(1) + "k" : v.toFixed(v < 10 ? 1 : 0), padL - 5, yy + 3.5);
+  }
+  ctx.textAlign = "center";
+  const steps = Math.min(5, n);
+  for (let t = 0; t < steps; t++) {
+    const i = Math.round((t / Math.max(steps - 1, 1)) * (n - 1));
+    ctx.fillText((dates[i] || "").slice(0, 7), x(i), h - 5);
+  }
+  return { x, y, padL, padR, padT, padB, w, h, n };
+}
+
+function drawCandlestick(canvas, dates, opens, highs, lows, closes) {
+  const { ctx, w, h } = prepCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  const n = closes.length;
+  if (!n) return null;
+  const range = highs.concat(lows).filter((v) => v !== null && v !== undefined);
+  let lo = Math.min(...range), hi = Math.max(...range);
+  if (hi === lo) { hi += 1; lo -= 1; }
+  const geo = drawPriceAxes(ctx, w, h, dates, lo, hi);
+  const bw = Math.max(((w - geo.padL - geo.padR) / n) * 0.6, 1);
+  for (let i = 0; i < n; i++) {
+    const o = opens[i], hgh = highs[i], low = lows[i], c = closes[i];
+    if (o == null || hgh == null || low == null || c == null) continue;
+    const color = c >= o ? css("--up") : css("--down");
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(geo.x(i), geo.y(hgh));
+    ctx.lineTo(geo.x(i), geo.y(low));
+    ctx.stroke();
+    const yOpen = geo.y(o), yClose = geo.y(c);
+    const bodyTop = Math.min(yOpen, yClose);
+    const bodyH = Math.max(Math.abs(yClose - yOpen), 1);
+    ctx.fillRect(geo.x(i) - bw / 2, bodyTop, bw, bodyH);
+  }
+  return geo;
+}
+
+function drawOhlcBars(canvas, dates, opens, highs, lows, closes) {
+  const { ctx, w, h } = prepCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  const n = closes.length;
+  if (!n) return null;
+  const range = highs.concat(lows).filter((v) => v !== null && v !== undefined);
+  let lo = Math.min(...range), hi = Math.max(...range);
+  if (hi === lo) { hi += 1; lo -= 1; }
+  const geo = drawPriceAxes(ctx, w, h, dates, lo, hi);
+  const tick = Math.max(((w - geo.padL - geo.padR) / n) * 0.35, 2);
+  for (let i = 0; i < n; i++) {
+    const o = opens[i], hgh = highs[i], low = lows[i], c = closes[i];
+    if (o == null || hgh == null || low == null || c == null) continue;
+    ctx.strokeStyle = c >= o ? css("--up") : css("--down");
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(geo.x(i), geo.y(hgh)); ctx.lineTo(geo.x(i), geo.y(low)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(geo.x(i) - tick, geo.y(o)); ctx.lineTo(geo.x(i), geo.y(o)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(geo.x(i), geo.y(c)); ctx.lineTo(geo.x(i) + tick, geo.y(c)); ctx.stroke();
+  }
+  return geo;
+}
+
+/* Draws extra line series (e.g. SMA20/50) onto a canvas already painted by
+   drawCandlestick/drawOhlcBars, reusing that draw's exact x/y scale — must
+   NOT call prepCanvas again, since resizing the canvas clears it. */
+function drawOverlayLines(canvas, geo, series) {
+  if (!geo) return;
+  const ctx = canvas.getContext("2d");
+  series.forEach((s) => {
+    ctx.beginPath();
+    let started = false;
+    s.values.forEach((v, i) => {
+      if (v === null || v === undefined) return;
+      if (!started) { ctx.moveTo(geo.x(i), geo.y(v)); started = true; }
+      else ctx.lineTo(geo.x(i), geo.y(v));
+    });
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = s.width || 1.5;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  });
+}
+
+/* Compact candlestick renderer for the small Charts-tab grid cards — no
+   axes/labels, mirrors drawSparkline's minimalism at that size. */
+function drawMiniCandles(canvas, opens, highs, lows, closes) {
+  const { ctx, w, h } = prepCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  const n = closes.length;
+  if (n < 2) return;
+  const range = highs.concat(lows);
+  const lo = Math.min(...range), hi = Math.max(...range);
+  const pad = 3, span = hi - lo || 1;
+  const x = (i) => pad + (i / Math.max(n - 1, 1)) * (w - 2 * pad);
+  const y = (v) => h - pad - ((v - lo) / span) * (h - 2 * pad);
+  const bw = Math.max(((w - 2 * pad) / n) * 0.6, 1);
+  for (let i = 0; i < n; i++) {
+    const o = opens[i], hgh = highs[i], low = lows[i], c = closes[i];
+    const color = c >= o ? css("--up") : css("--down");
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x(i), y(hgh)); ctx.lineTo(x(i), y(low)); ctx.stroke();
+    const yo = y(o), yc = y(c);
+    const top = Math.min(yo, yc), bh = Math.max(Math.abs(yc - yo), 1);
+    ctx.fillRect(x(i) - bw / 2, top, bw, bh);
+  }
+}
+
+/* Horizontal bar chart for sector performance (Sectors tab) — sorted order
+   from the caller is preserved; positive/negative bars grow from a zero line. */
+function drawSectorBars(canvas, sectors) {
+  const { ctx, w, h } = prepCanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  if (!sectors.length) return null;
+  const padL = 150, padR = 55, padT = 4, padB = 4;
+  const rowH = (h - padT - padB) / sectors.length;
+  const vals = sectors.map((s) => s.avg_1m || 0);
+  const maxAbs = Math.max(1, ...vals.map((v) => Math.abs(v)));
+  const zeroX = padL + (w - padL - padR) / 2;
+  const scale = ((w - padL - padR) / 2) / maxAbs;
+  ctx.font = "11px system-ui, sans-serif";
+  ctx.strokeStyle = css("--grid");
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(zeroX, padT); ctx.lineTo(zeroX, h - padB); ctx.stroke();
+  const rows = [];
+  sectors.forEach((s, i) => {
+    const y0 = padT + i * rowH;
+    const v = s.avg_1m || 0;
+    const barW = Math.abs(v) * scale;
+    const x0 = v >= 0 ? zeroX : zeroX - barW;
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = v >= 0 ? css("--up") : css("--down");
+    ctx.fillRect(x0, y0 + rowH * 0.2, Math.max(barW, 1), rowH * 0.6);
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = css("--ink-2");
+    ctx.textAlign = "right";
+    const label = s.name.length > 20 ? s.name.slice(0, 19) + "…" : s.name;
+    ctx.fillText(label, padL - 8, y0 + rowH * 0.63);
+    ctx.fillStyle = css("--ink");
+    ctx.textAlign = v >= 0 ? "left" : "right";
+    ctx.fillText(`${v > 0 ? "+" : ""}${v.toFixed(1)}%`, v >= 0 ? x0 + barW + 5 : x0 - 5, y0 + rowH * 0.63);
+    rows.push({ y0, y1: y0 + rowH, sector: s });
+  });
+  return { rows, w, h };
+}
+
 /* ---------------- tooltip ---------------- */
 const tooltip = $("#tooltip");
 function showTooltip(html, cx, cy) {
@@ -421,6 +590,7 @@ function activateTab(tabName) {
     if (!state.potData) loadPotential();
     else { renderPotential(); loadPotentialShortlist(); }
   }
+  if (tabName === "sectors" && state.summary) renderSectors(); // sector bar chart needs real dimensions
 }
 
 document.querySelectorAll(".tab-groups button").forEach((b) => {
@@ -597,6 +767,22 @@ function renderSectors() {
   </tr>`).join("");
   $("#secTable tbody").querySelectorAll(".sig-code").forEach((el) =>
     el.addEventListener("click", () => openDetail(el.dataset.code)));
+
+  const cv = $("#sectorBars");
+  const barsGeo = drawSectorBars(cv, secs);
+  cv.onmousemove = (e) => {
+    if (!barsGeo) return;
+    const rect = cv.getBoundingClientRect();
+    const my = e.clientY - rect.top;
+    const row = barsGeo.rows.find((r) => my >= r.y0 && my < r.y1);
+    if (!row) { hideTooltip(); return; }
+    const s = row.sector;
+    showTooltip(
+      `<b>${s.name}</b><br>1w ${pct(s.avg_1w)} · 1m ${pct(s.avg_1m)} · 3m ${pct(s.avg_3m)}<br>` +
+      `${s.count} shares · ${s.pct_above_sma50}% above SMA50`,
+      e.clientX, e.clientY);
+  };
+  cv.onmouseleave = hideTooltip;
 }
 
 function pickRow(code, m, scoreKey, reasonsKey, rank) {
@@ -1406,17 +1592,30 @@ function wireChartCards(grid, items) {
   wireStarButtons(grid);
   grid.querySelectorAll(".card").forEach((card, i) => {
     const it = items[i];
-    const values = sliceRange(it.dates, it.closes, state.chartsRange);
-    drawSparkline(card.querySelector("canvas"), values);
-    card.addEventListener("click", () => openDetail(it.code));
     const cv = card.querySelector("canvas");
-    cv.addEventListener("mousemove", (e) => {
-      const rect = cv.getBoundingClientRect();
-      const frac = (e.clientX - rect.left) / rect.width;
-      const dates2 = it.dates.slice(it.dates.length - values.length);
-      const idx = Math.max(0, Math.min(values.length - 1, Math.round(frac * (values.length - 1))));
-      showTooltip(`<div class="tt-d">${dates2[idx] || ""}</div><b>${fmt(values[idx], 2)}</b>`, e.clientX, e.clientY);
-    });
+    card.addEventListener("click", () => openDetail(it.code));
+    if (state.chartsChartType === "candlestick" && it.copen && it.copen.length > 1) {
+      drawMiniCandles(cv, it.copen, it.chigh, it.clow, it.cclose);
+      cv.addEventListener("mousemove", (e) => {
+        const rect = cv.getBoundingClientRect();
+        const frac = (e.clientX - rect.left) / rect.width;
+        const idx = Math.max(0, Math.min(it.cclose.length - 1, Math.round(frac * (it.cclose.length - 1))));
+        showTooltip(
+          `<div class="tt-d">${it.cdates[idx] || ""}</div>` +
+          `O ${fmt(it.copen[idx], 2)} H ${fmt(it.chigh[idx], 2)}<br>L ${fmt(it.clow[idx], 2)} C ${fmt(it.cclose[idx], 2)}`,
+          e.clientX, e.clientY);
+      });
+    } else {
+      const values = sliceRange(it.dates, it.closes, state.chartsRange);
+      drawSparkline(cv, values);
+      cv.addEventListener("mousemove", (e) => {
+        const rect = cv.getBoundingClientRect();
+        const frac = (e.clientX - rect.left) / rect.width;
+        const dates2 = it.dates.slice(it.dates.length - values.length);
+        const idx = Math.max(0, Math.min(values.length - 1, Math.round(frac * (values.length - 1))));
+        showTooltip(`<div class="tt-d">${dates2[idx] || ""}</div><b>${fmt(values[idx], 2)}</b>`, e.clientX, e.clientY);
+      });
+    }
     cv.addEventListener("mouseleave", hideTooltip);
   });
 }
@@ -1458,6 +1657,15 @@ $("#sortSeg").querySelectorAll("button").forEach((b) => b.addEventListener("clic
   state.chartsSort = b.dataset.sort;
   state.chartsPage = 1;
   loadCharts();
+}));
+$("#chartTypeSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  $("#chartTypeSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  state.chartsChartType = b.dataset.ctype;
+  const isCandle = state.chartsChartType === "candlestick";
+  $("#candleNote").classList.toggle("hidden", !isCandle);
+  $("#rangeSeg").querySelectorAll("button").forEach((x) => { x.disabled = isCandle; });
+  renderCharts();
+  if (state.shortlist.size) loadChartsShortlist();
 }));
 
 function debounce(fn, ms) {
@@ -1695,6 +1903,7 @@ async function openDetail(code) {
 
   updateCalc();
   $("#modalBg").classList.remove("hidden");
+  resetChartZoom("6m"); // fresh share opens readable-by-default, not the full 2-year squeeze
   requestAnimationFrame(drawDetailCharts);
 }
 
@@ -1718,35 +1927,140 @@ function updateCalc() {
 $("#calcAmount").addEventListener("input", updateCalc);
 $("#calcRisk").addEventListener("change", updateCalc);
 
+/* ---------------- detail-chart zoom (preset buttons + wheel + drag-pan) ---------------- */
+const ZOOM_PRESET_SESSIONS = { "1m": 21, "3m": 63, "6m": 126, "1y": 250, all: Infinity };
+const ZOOM_PAD_L = 46, ZOOM_PAD_R = 10; // must match drawPriceAxes/drawLineChart's own padding
+
+function resetChartZoom(preset) {
+  state.chartZoomPreset = preset;
+  $("#chartZoomSeg").querySelectorAll("button").forEach((b) => b.classList.toggle("active", b.dataset.zoom === preset));
+  const d = state.detail;
+  const n = d ? d.dates.length : 0;
+  const span = Math.max(1, Math.min(ZOOM_PRESET_SESSIONS[preset] || n, n) - 1);
+  state.chartZoom = { start: Math.max(0, n - 1 - span), end: Math.max(0, n - 1) };
+}
+
+function sliceWin(arr) {
+  if (!arr || !state.chartZoom) return arr;
+  return arr.slice(state.chartZoom.start, state.chartZoom.end + 1);
+}
+
 function drawDetailCharts() {
   const d = state.detail;
   if (!d) return;
-  const geo = drawLineChart($("#dPrice"), d.dates, [
-    { values: d.closes, color: css("--series-1"), width: 2 },
-    { values: d.sma20, color: css("--series-sma20"), width: 1.5 },
-    { values: d.sma50, color: css("--series-sma50"), width: 1.5 },
-  ]);
-  drawBars($("#dVol"), d.dates, d.volumes, css("--muted"));
-  drawLineChart($("#dRsi"), d.dates, [
-    { values: d.rsi, color: css("--series-1"), width: 1.5 },
+  if (!state.chartZoom) resetChartZoom(state.chartZoomPreset || "6m");
+  const dates = sliceWin(d.dates), closes = sliceWin(d.closes);
+  const sma20 = sliceWin(d.sma20), sma50 = sliceWin(d.sma50);
+  const volumes = sliceWin(d.volumes), rsi = sliceWin(d.rsi);
+  const opens = sliceWin(d.opens), highs = sliceWin(d.highs), lows = sliceWin(d.lows);
+
+  const chartType = state.priceChartType || "line";
+  const smaOverlay = [
+    { values: sma20, color: css("--series-sma20"), width: 1.5 },
+    { values: sma50, color: css("--series-sma50"), width: 1.5 },
+  ];
+  let geo;
+  if (chartType === "candlestick" && opens) {
+    geo = drawCandlestick($("#dPrice"), dates, opens, highs, lows, closes);
+    drawOverlayLines($("#dPrice"), geo, smaOverlay);
+  } else if (chartType === "ohlc" && opens) {
+    geo = drawOhlcBars($("#dPrice"), dates, opens, highs, lows, closes);
+    drawOverlayLines($("#dPrice"), geo, smaOverlay);
+  } else {
+    geo = drawLineChart($("#dPrice"), dates, [
+      { values: closes, color: css("--series-1"), width: 2 },
+      ...smaOverlay,
+    ]);
+  }
+  drawBars($("#dVol"), dates, volumes, css("--muted"));
+  drawLineChart($("#dRsi"), dates, [
+    { values: rsi, color: css("--series-1"), width: 1.5 },
   ], { min: 0, max: 100, ticks: 2, guides: [30, 70] });
 
   const cv = $("#dPrice");
   cv.onmousemove = (e) => {
-    if (!geo) return;
+    if (state.chartDragging || !geo) return;
     const rect = cv.getBoundingClientRect();
     const fx = e.clientX - rect.left;
     const frac = (fx - geo.padL) / (geo.w - geo.padL - geo.padR);
-    const idx = Math.max(0, Math.min(d.dates.length - 1, Math.round(frac * (d.dates.length - 1))));
+    const idx = Math.max(0, Math.min(dates.length - 1, Math.round(frac * (dates.length - 1))));
+    const ohlcLine = opens
+      ? `O ${fmt(opens[idx], 2)} · H ${fmt(highs[idx], 2)} · L ${fmt(lows[idx], 2)}<br>`
+      : "";
     showTooltip(
-      `<div class="tt-d">${d.dates[idx]}</div>` +
-      `Close <b>${fmt(d.closes[idx], 2)}</b><br>` +
-      `SMA20 ${fmt(d.sma20[idx], 2)} · SMA50 ${fmt(d.sma50[idx], 2)}<br>` +
-      `Vol ${Number(d.volumes[idx]).toLocaleString()}`,
+      `<div class="tt-d">${dates[idx]}</div>` +
+      ohlcLine +
+      `Close <b>${fmt(closes[idx], 2)}</b><br>` +
+      `SMA20 ${fmt(sma20[idx], 2)} · SMA50 ${fmt(sma50[idx], 2)}<br>` +
+      `Vol ${Number(volumes[idx]).toLocaleString()}`,
       e.clientX, e.clientY);
   };
-  cv.onmouseleave = hideTooltip;
+  cv.onmouseleave = () => { if (!state.chartDragging) hideTooltip(); };
 }
+
+$("#priceChartTypeSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  $("#priceChartTypeSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  state.priceChartType = b.dataset.type;
+  drawDetailCharts();
+}));
+
+$("#chartZoomSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  resetChartZoom(b.dataset.zoom);
+  drawDetailCharts();
+}));
+
+const dPriceCanvas = $("#dPrice");
+dPriceCanvas.addEventListener("wheel", (e) => {
+  const d = state.detail;
+  if (!d || !state.chartZoom) return;
+  e.preventDefault();
+  const rect = dPriceCanvas.getBoundingClientRect();
+  const frac = Math.max(0, Math.min(1, (e.clientX - rect.left - ZOOM_PAD_L) / (rect.width - ZOOM_PAD_L - ZOOM_PAD_R)));
+  const { start, end } = state.chartZoom;
+  const span = end - start;
+  const pivot = start + frac * span;
+  const factor = e.deltaY < 0 ? 0.85 : 1 / 0.85; // scroll up = zoom in (shrink window)
+  const maxEnd = d.dates.length - 1;
+  const newSpan = Math.max(9, Math.min(maxEnd, Math.round(span * factor)));
+  let newStart = Math.round(pivot - frac * newSpan);
+  let newEnd = newStart + newSpan;
+  if (newStart < 0) { newEnd -= newStart; newStart = 0; }
+  if (newEnd > maxEnd) { newStart -= (newEnd - maxEnd); newEnd = maxEnd; }
+  state.chartZoom = { start: Math.max(0, newStart), end: Math.min(maxEnd, newEnd) };
+  state.chartZoomPreset = null;
+  $("#chartZoomSeg").querySelectorAll("button").forEach((b) => b.classList.remove("active"));
+  drawDetailCharts();
+}, { passive: false });
+
+let dragStartX = null, dragStartWindow = null;
+dPriceCanvas.addEventListener("mousedown", (e) => {
+  if (!state.detail || !state.chartZoom) return;
+  state.chartDragging = true;
+  dragStartX = e.clientX;
+  dragStartWindow = { ...state.chartZoom };
+  hideTooltip();
+});
+window.addEventListener("mousemove", (e) => {
+  if (!state.chartDragging) return;
+  const d = state.detail;
+  if (!d) return;
+  const rect = dPriceCanvas.getBoundingClientRect();
+  const plotW = rect.width - ZOOM_PAD_L - ZOOM_PAD_R;
+  const span = dragStartWindow.end - dragStartWindow.start;
+  const dxFrac = (e.clientX - dragStartX) / Math.max(plotW, 1);
+  const idxShift = Math.round(-dxFrac * span); // drag right -> reveal earlier dates
+  const maxEnd = d.dates.length - 1;
+  let newStart = dragStartWindow.start + idxShift;
+  let newEnd = dragStartWindow.end + idxShift;
+  if (newStart < 0) { newEnd -= newStart; newStart = 0; }
+  if (newEnd > maxEnd) { newStart -= (newEnd - maxEnd); newEnd = maxEnd; }
+  state.chartZoom = { start: Math.max(0, newStart), end: Math.min(maxEnd, newEnd) };
+  drawDetailCharts();
+});
+window.addEventListener("mouseup", () => {
+  if (!state.chartDragging) return;
+  state.chartDragging = false;
+});
 
 $("#mClose").addEventListener("click", () => { $("#modalBg").classList.add("hidden"); hideTooltip(); });
 $("#modalBg").addEventListener("click", (e) => {
