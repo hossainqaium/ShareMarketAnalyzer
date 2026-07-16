@@ -107,7 +107,18 @@ button:disabled { opacity: 0.55; cursor: default; }
 .progress { height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; width: 180px; margin-top: 3px; }
 .progress > div { height: 100%; background: var(--accent); width: 0%; transition: width .4s; }
 
-nav.tabs { display: flex; gap: 4px; padding: 10px 20px 0; }
+/* group-level nav: Decide / Manage / Explore */
+nav.tab-groups { display: flex; gap: 6px; padding: 12px 20px 0; }
+nav.tab-groups button {
+  border: 1px solid var(--border); background: var(--chip); color: var(--ink-2);
+  padding: 7px 18px; border-radius: 8px 8px 0 0; font-weight: 600; font-size: 13px;
+  border-bottom: none; position: relative; top: 1px;
+}
+nav.tab-groups button.active { background: var(--surface); color: var(--ink); border-color: var(--border); }
+nav.tab-groups button:not(.active):hover { background: var(--grid); }
+
+/* sub-tab nav within a group */
+nav.tabs { display: flex; gap: 4px; padding: 10px 20px 0; background: var(--surface); border-bottom: 1px solid var(--border); }
 nav.tabs button { border: none; background: none; padding: 8px 14px; color: var(--ink-2); border-bottom: 2px solid transparent; border-radius: 0; }
 nav.tabs button.active { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
 
@@ -278,6 +289,55 @@ th[data-term], .mstat[data-term] { cursor: help; }
 }
 .scr-controls label { font-size: 12.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 5px; }
 
+/* ---------- screener: More filters (grouped, collapsible) ---------- */
+details.filter-more {
+  margin-bottom: 10px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0; overflow: hidden;
+}
+details.filter-more summary {
+  cursor: pointer; padding: 9px 14px; font-weight: 600; font-size: 12.5px;
+  color: var(--ink-2); list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details.filter-more summary::-webkit-details-marker { display: none; }
+details.filter-more summary::before { content: "▸"; font-size: 10px; color: var(--muted); transition: transform 0.15s; }
+details.filter-more[open] summary::before { transform: rotate(90deg); }
+details.filter-more summary:hover { color: var(--ink); background: var(--chip); }
+.filter-groups {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px; padding: 12px 14px 14px; border-top: 1px solid var(--border);
+}
+.filter-group { display: flex; flex-direction: column; gap: 7px; }
+.filter-group-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.filter-group select, .filter-group input[type="number"] {
+  font: inherit; font-size: 12.5px; padding: 5px 8px; border: 1px solid var(--border);
+  border-radius: 7px; background: var(--page); color: var(--ink); width: 100%;
+}
+.filter-group label { font-size: 12.5px; color: var(--ink-2); display: inline-flex; align-items: center; gap: 5px; }
+
+/* ---------- screener: active filter chips ---------- */
+.filter-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.filter-chips:empty { margin-bottom: 0; }
+.chip.filter-chip {
+  display: inline-flex; align-items: center; gap: 6px; background: var(--chip);
+  color: var(--ink-2); border-radius: 14px; padding: 4px 6px 4px 10px; font-size: 11.5px;
+}
+.chip.filter-chip button {
+  border: none; background: none; color: var(--muted); cursor: pointer; font-size: 13px;
+  line-height: 1; padding: 0 2px; border-radius: 50%;
+}
+.chip.filter-chip button:hover { color: var(--down); background: var(--surface); }
+
+/* ---------- screener: column picker ---------- */
+.col-picker-wrap { position: relative; }
+.col-picker-pop {
+  position: absolute; top: calc(100% + 4px); right: 0; z-index: 30;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 9px;
+  padding: 10px 12px; box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  display: grid; grid-template-columns: repeat(2, minmax(110px, 1fr)); gap: 5px 14px;
+  max-height: 320px; overflow-y: auto; width: max-content;
+}
+.col-picker-pop label { font-size: 12px; color: var(--ink-2); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+
 /* ---------- today's signals ---------- */
 .panel.signals { margin-bottom: 18px; }
 .sig-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-top: 1px solid var(--grid); }
@@ -293,6 +353,22 @@ th[data-term], .mstat[data-term] { cursor: help; }
 /* ---------- market update panel ---------- */
 .panel.market { margin-bottom: 18px; }
 .panel.market h2 small { color: var(--muted); font-weight: 400; font-size: 11.5px; }
+
+/* ---------- collapsible market overview / report card ---------- */
+details.overview-toggle { margin-bottom: 18px; padding: 0; overflow: hidden; }
+details.overview-toggle summary {
+  cursor: pointer; padding: 12px 16px; font-weight: 600; font-size: 13.5px;
+  color: var(--ink-2); list-style: none; display: flex; align-items: center; gap: 8px;
+}
+details.overview-toggle summary::-webkit-details-marker { display: none; }
+details.overview-toggle summary::before {
+  content: "▸"; font-size: 11px; color: var(--muted); transition: transform 0.15s;
+}
+details.overview-toggle[open] summary::before { transform: rotate(90deg); }
+details.overview-toggle summary:hover { color: var(--ink); background: var(--chip); }
+details.overview-toggle summary .muted-count { font-weight: 400; color: var(--muted); font-size: 11.5px; }
+details.overview-toggle > .panel { border: none; border-top: 1px solid var(--border); border-radius: 0; margin: 0; }
+details.overview-toggle > .panel:first-of-type { border-top: 1px solid var(--border); }
 
 /* ---------- high profit (exceptional setups) ---------- */
 .panel.hp-warn {
@@ -324,6 +400,7 @@ th[data-term], .mstat[data-term] { cursor: help; }
 .hps-breakout { background: color-mix(in srgb, var(--down) 14%, transparent); color: var(--down); }
 .hps-div { background: color-mix(in srgb, var(--up) 12%, var(--chip)); color: var(--ink-2); }
 .hps-signal { background: var(--chip); color: var(--ink-2); }
+.hps-candle { background: color-mix(in srgb, var(--up) 14%, transparent); color: var(--up); }
 .hp-nums { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 8px; }
 .hp-nums .mstat { padding: 6px 8px; }
 .hp-nums .mstat .v { font-size: 13.5px; }

@@ -6,9 +6,10 @@ const state = {
   summary: null,
   chartsPage: 1, chartsSort: "alpha", chartsRange: "2y", chartsSearch: "", chartsData: null,
   potPage: 1, potSort: "alpha", potSearch: "", potData: null,
-  scrSortKey: "score_short", scrSortDir: -1,
-  mgView: "lower", mgSearch: "",
+  scrSortKey: "score_short", scrSortDir: -1, scrRows: null,
+  mgView: "lower", mgSearch: "", mgRange: "3m",
   spSearch: "",
+  portfolio: null,
   detail: null, // cached /api/history payload for the open modal
   shortlist: loadShortlistSet(),
 };
@@ -71,7 +72,7 @@ const GLOSSARY = {
   volatility: { t: "Volatility", en: "Average daily price swing (σ). Higher = riskier; targets and stop-losses scale with it.", bn: "দৈনিক দামের গড় ওঠানামা। বেশি হলে ঝুঁকি বেশি; টার্গেট ও স্টপ-লস এর অনুপাতে ঠিক হয়।" },
   liquidity: { t: "Liquidity", en: "Average daily traded value (mn BDT, 30 days). Below 5mn it's hard to exit without moving the price.", bn: "দৈনিক গড় লেনদেন মূল্য (মিলিয়ন টাকা)। ৫-এর কম হলে দরকারের সময় বেচা কঠিন।" },
   pe: { t: "P/E ratio", en: "Price ÷ earnings per share. 5–25 is reasonable on DSE; very high means expensive vs profit.", bn: "P/E — দাম ভাগ শেয়ারপ্রতি আয়। ৫–২৫ যুক্তিসঙ্গত; খুব বেশি মানে আয়ের তুলনায় দামি।" },
-  eps: { t: "EPS", en: "Earnings per share. Positive and growing EPS = profitable, healthy company.", bn: "EPS — শেয়ারপ্রতি আয়। পজিটিভ ও বাড়ন্ত হলে কোম্পানি লাভজনক।" },
+  eps: { t: "EPS", en: "Earnings per share. Two figures are shown: 'annual' (from the latest audited yearly filing — the correct one for P/E math) and 'last qtr' (the most recently reported quarter alone, ~1/4 the annual figure — useful for spotting momentum, not for valuation). Positive and growing = profitable, healthy company.", bn: "EPS — শেয়ারপ্রতি আয়। দুটি সংখ্যা দেখানো হয়: 'annual' (সর্বশেষ নিরীক্ষিত বার্ষিক প্রতিবেদন থেকে — P/E হিসাবের জন্য সঠিক) এবং 'last qtr' (শুধু সর্বশেষ প্রান্তিক, বার্ষিকের প্রায় ¼ — ভ্যালুয়েশনের জন্য নয়, গতি বোঝার জন্য উপযোগী)। পজিটিভ ও বাড়ন্ত হলে কোম্পানি লাভজনক ও সুস্থ।" },
   dividend_yield: { t: "Dividend yield", en: "Last cash dividend as % of today's price — income you earn just by holding.", bn: "লভ্যাংশ ফলন — আজকের দামের তুলনায় নগদ লভ্যাংশ কত শতাংশ; শুধু ধরে রাখলেই এই আয়।" },
   category: { t: "DSE category", en: "A = pays regular dividends (safest), B = irregular, N = newly listed, Z = pays none / riskiest.", bn: "DSE ক্যাটাগরি: A = নিয়মিত লভ্যাংশ (নিরাপদ), B = অনিয়মিত, N = নতুন তালিকাভুক্ত, Z = লভ্যাংশ দেয় না (ঝুঁকিপূর্ণ)।" },
   rel_1m: { t: "Relative strength", en: "1-month return minus the market average — positive means it's beating the market.", bn: "আপেক্ষিক শক্তি — বাজারের গড়ের তুলনায় ১ মাসের রিটার্ন। পজিটিভ মানে শেয়ারটি বাজারকে হারাচ্ছে।" },
@@ -139,20 +140,64 @@ const GLOSSARY = {
   "hp:breakout": { t: "Volume breakout", en: "Price just cleared its 3-month high (or is pressing the 52-week high) on 1.3×+ volume. Everyone who wanted to sell at that level already has — with sellers cleared and demand proven, breakouts from a base tend to run for weeks.", bn: "১.৩ গুণের বেশি ভলিউমে দাম ৩ মাসের সর্বোচ্চ ভেঙেছে (বা ৫২-সপ্তাহের সর্বোচ্চ ছুঁইছুঁই)। ওই স্তরে বিক্রেতারা বিক্রি করে ফেলেছে — বাধা পরিষ্কার ও চাহিদা প্রমাণিত হলে ব্রেকআউট কয়েক সপ্তাহ ধরে চলে।" },
   "hp:dividend-runner": { t: "Dividend runner", en: "A 3.5%+ cash-yield share in an uptrend with its record date 4–25 days away. Prices typically run up as the record date approaches (buyers want the dividend) — you can ride the run-up AND keep the dividend by holding through the date.", bn: "রেকর্ড ডেটের ৪–২৫ দিন আগে থাকা ৩.৫%+ নগদ লভ্যাংশের ঊর্ধ্বমুখী শেয়ার। রেকর্ড ডেট যত কাছে আসে দাম তত বাড়ে (সবাই লভ্যাংশ চায়) — দাম বাড়ার সুবিধাও নিতে পারেন, আবার ধরে রাখলে লভ্যাংশও পাবেন।" },
   "hp:proven-signal": { t: "Proven signal", en: "A fresh MACD/golden cross on the latest session — but only on shares whose past signals actually worked (60%+ backtested win rate over 2 years). Entering on day one of a historically reliable signal, instead of chasing after the move.", bn: "সর্বশেষ সেশনে নতুন MACD/গোল্ডেন ক্রস — তবে শুধু সেই শেয়ারে যার আগের সংকেতগুলো সত্যিই কাজ করেছে (২ বছরের ব্যাকটেস্টে ৬০%+ সফল)। মুভের পেছনে না ছুটে নির্ভরযোগ্য সংকেতের প্রথম দিনেই ঢোকা।" },
+  portfolio: { t: "Portfolio", en: "Your trade journal: record actual purchases and the app tracks each one with live P&L, target/stop distances, holding time vs plan, and sell alerts from every engine (Margin fall risk, unbacked spikes, bearish divergence, halts/audit news, momentum turns). Stored in data/portfolio.json on this machine.", bn: "আপনার লেনদেন খাতা: প্রকৃত কেনাগুলো লিখে রাখুন — অ্যাপ প্রতিটিতে লাভ-ক্ষতি, টার্গেট/স্টপের দূরত্ব, পরিকল্পনার তুলনায় ধরে রাখার সময় এবং সব ইঞ্জিনের বিক্রি-সতর্কতা দেখাবে। এই কম্পিউটারের data/portfolio.json ফাইলে সংরক্ষিত।" },
+  trailing_stop: { t: "Trailing stop", en: "Highest close since you bought minus 2.5× ATR (the share's true daily range). It ratchets UP as the price rises and never moves down — locking in profit while giving the trade normal breathing room.", bn: "কেনার পর সর্বোচ্চ ক্লোজ বিয়োগ ২.৫ × ATR (শেয়ারটির প্রকৃত দৈনিক পরিসর)। দাম বাড়লে স্টপও উপরে ওঠে, কখনো নামে না — স্বাভাবিক ওঠানামার জায়গা রেখে মুনাফা আটকে রাখে।" },
+  breakeven_stop: { t: "Break-even rule", en: "Once a holding is up 5%+, the stop never sits below your entry price — from that point the worst case is getting out even, not a loss.", bn: "কোনো শেয়ার ৫%+ লাভে গেলে স্টপ আর আপনার কেনা দামের নিচে থাকে না — তখন সবচেয়ে খারাপ ফল হলো সমান-সমানে বেরিয়ে আসা, ক্ষতি নয়।" },
+  time_stop: { t: "Time stop", en: "If a holding is past its planned holding period and still below +2%, the thesis didn't work — exit and move the capital to a live setup. Held shows sessions held vs the plan.", bn: "পরিকল্পিত সময় পেরিয়েও লাভ +২%-এর নিচে থাকলে ধারণাটি কাজ করেনি — বেরিয়ে এসে পুঁজি সক্রিয় সুযোগে দিন। Held কলামে পরিকল্পনার তুলনায় কত সেশন ধরে রেখেছেন তা দেখায়।" },
+  eff_stop: { t: "Effective stop", en: "The highest of three protections: the static volatility stop, the ATR trailing stop, and the break-even rule — with the rule that's currently active shown in brackets. Sell if price closes below it.", bn: "তিনটি সুরক্ষার মধ্যে সর্বোচ্চটি: স্থির স্টপ, ATR ট্রেইলিং স্টপ ও ব্রেক-ইভেন নিয়ম — বন্ধনীতে বর্তমানে কার্যকর নিয়মটি দেখানো হয়। দাম এর নিচে ক্লোজ করলে বিক্রি করুন।" },
+  sell_alerts: { t: "Sell alerts", en: "Signals to exit or lighten a holding: target hit, stop broken, Higher-Margin fall risk, bearish divergence, momentum turned negative, unbacked spike (sell into strength), time stop, or a hard risk flag (halt/audit). Red = act now, amber = decide, blue = information.", bn: "বেরিয়ে আসা বা কমানোর সংকেত: টার্গেট অর্জিত, স্টপ ভাঙা, Higher Margin পতন-ঝুঁকি, বিয়ারিশ ডাইভারজেন্স, নেতিবাচক গতি, সমর্থনহীন স্পাইক, টাইম স্টপ বা গুরুতর ঝুঁকি-চিহ্ন। লাল = এখনই পদক্ষেপ, হলুদ = সিদ্ধান্ত নিন, নীল = তথ্য।" },
+  report_card: { t: "Report card", en: "Self-grading: each analysis run snapshots its Strong Buy / Buy / Top 20 / High Profit lists; later runs measure what those shares actually returned over the next 1w/2w/1m vs the whole-market average. Builds up as you Update Data across days — trust the categories that beat the baseline.", bn: "স্ব-মূল্যায়ন: প্রতিটি বিশ্লেষণ তার সুপারিশ তালিকা সংরক্ষণ করে; পরের রানগুলো মাপে সেই শেয়ারগুলো পরের ১ সপ্তাহ/২ সপ্তাহ/১ মাসে বাজারের গড়ের তুলনায় আসলে কত দিল। দিনে দিনে Update Data চাপলে তথ্য জমে — যে তালিকা বাজারকে হারায় সেটিতে ভরসা করুন।" },
+  atr: { t: "ATR (Average True Range)", en: "The share's real average daily trading range including gaps, from High/Low data — a better risk unit than close-to-close moves. Trailing stops are set 2.5 ATR below the highest close since purchase.", bn: "হাই/লো ডেটা থেকে হিসাব করা প্রকৃত গড় দৈনিক পরিসর (গ্যাপসহ) — ঝুঁকির মাপকাঠি হিসেবে শুধু ক্লোজের চেয়ে ভালো। ট্রেইলিং স্টপ বসে কেনার পরের সর্বোচ্চ ক্লোজের ২.৫ ATR নিচে।" },
+  "flag:bearish-divergence": { t: "bearish-divergence", en: "Price made a higher high but RSI made a lower high — the rally is running on fewer buyers. One of the most reliable early warnings of a top; a reason to take profit, not to enter.", bn: "দাম নতুন চূড়ায় উঠেছে কিন্তু RSI ওঠেনি — কম ক্রেতা নিয়ে দাম বাড়ছে। চূড়ার সবচেয়ে নির্ভরযোগ্য আগাম সংকেতগুলোর একটি; এটি মুনাফা তোলার কারণ, ঢোকার নয়।" },
+  "sig:bullish-divergence": { t: "bullish-divergence", en: "Price made a lower low but RSI made a higher low — selling pressure is exhausting even as price dips. An early bottoming signal, strongest at support in a quality share.", bn: "দাম নতুন নিচে নামলেও RSI নামেনি — দাম কমলেও বিক্রির চাপ ফুরিয়ে আসছে। তলানির আগাম সংকেত; মানসম্পন্ন শেয়ারের সাপোর্টে সবচেয়ে জোরালো।" },
+  candle_pattern: { t: "Candlestick pattern", en: "A classic 1-2 candle reversal shape, only checked right at a recent price extreme. Hammer / bullish-engulfing at a low = buyers rejected further downside. Shooting-star / bearish-engulfing at a high = sellers rejected further upside.", bn: "সাম্প্রতিক দামের প্রান্তে যাচাই করা ক্লাসিক ১-২ ক্যান্ডেল রিভার্সাল আকৃতি। তলানিতে হ্যামার/বুলিশ এনগাল্ফিং = ক্রেতারা আরও পতন ঠেকিয়েছে। চূড়ায় শুটিং স্টার/বিয়ারিশ এনগাল্ফিং = বিক্রেতারা আরও বৃদ্ধি ঠেকিয়েছে।" },
+  "sig:hammer": { t: "hammer", en: "A small body near the top of today's range with a long lower wick (2×+ the body) and little upper wick, right at a recent low — buyers stepped in hard and rejected further downside. One of the most recognised bullish reversal candles.", bn: "আজকের পরিসরের উপরের দিকে ছোট বডি, লম্বা নিচের বাতি (বডির ২ গুণ+), সামান্য উপরের বাতি — সাম্প্রতিক তলানিতে ক্রেতারা জোরালোভাবে ঢুকে আরও পতন ঠেকিয়েছে। সবচেয়ে পরিচিত বুলিশ রিভার্সাল ক্যান্ডেল।" },
+  "sig:bullish-engulfing": { t: "bullish-engulfing", en: "Today's green candle body completely swallows yesterday's red body, right at a recent low — today's buying erased all of yesterday's selling in one session. A strong, fast reversal signal.", bn: "সাম্প্রতিক তলানিতে আজকের সবুজ ক্যান্ডেল-বডি গতকালের লাল বডিকে সম্পূর্ণ গ্রাস করেছে — এক সেশনেই আজকের কেনাকাটা গতকালের সব বিক্রি মুছে দিয়েছে। শক্তিশালী ও দ্রুত রিভার্সাল সংকেত।" },
+  "flag:shooting-star": { t: "shooting-star", en: "A small body near the bottom of today's range with a long upper wick, right at a recent high — buyers pushed up but sellers took it all back. A classic top-warning candle.", bn: "আজকের পরিসরের নিচের দিকে ছোট বডি, লম্বা উপরের বাতি, সাম্প্রতিক চূড়ায় — ক্রেতারা দাম তুললেও বিক্রেতারা সব ফিরিয়ে নিয়েছে। চূড়ার ক্লাসিক সতর্কতা ক্যান্ডেল।" },
+  "flag:bearish-engulfing": { t: "bearish-engulfing", en: "Today's red candle body completely swallows yesterday's green body, right at a recent high — today's selling erased all of yesterday's buying in one session. A strong, fast reversal-down signal.", bn: "সাম্প্রতিক চূড়ায় আজকের লাল ক্যান্ডেল-বডি গতকালের সবুজ বডিকে সম্পূর্ণ গ্রাস করেছে — এক সেশনেই আজকের বিক্রি গতকালের সব কেনাকাটা মুছে দিয়েছে। শক্তিশালী ও দ্রুত পতন-রিভার্সাল সংকেত।" },
+  gap_analysis: { t: "Gap", en: "The % jump between today's opening price and yesterday's close. A gap of 1.5%+ is genuine. 'Follow-through' = the close stayed on the gap's side of yesterday's close (the move held); 'faded' = price fully round-tripped back through yesterday's close by the close — a classic trap for chasers.", bn: "আজকের শুরুর দাম ও গতকালের ক্লোজের মধ্যে %ব্যবধান। ১.৫%+ হলে প্রকৃত গ্যাপ। 'Follow-through' = ক্লোজ গ্যাপের দিকেই থেকে গেছে (মুভ টিকেছে); 'faded' = দাম ক্লোজ পর্যন্ত গতকালের ক্লোজের নিচে ফিরে গেছে — তাড়াহুড়ো করে কেনাদের জন্য ক্লাসিক ফাঁদ।" },
+  "sig:gap-up-held": { t: "gap-up-held", en: "The share gapped up 1.5%+ at the open and the close stayed above yesterday's close — buyers defended the gap through the whole session, a bullish sign of real demand.", bn: "শেয়ারটি শুরুতে ১.৫%+ গ্যাপ-আপ হয়েছে এবং ক্লোজ গতকালের ক্লোজের উপরেই থেকেছে — পুরো সেশন জুড়ে ক্রেতারা গ্যাপ রক্ষা করেছে, প্রকৃত চাহিদার বুলিশ ইঙ্গিত।" },
+  "flag:gap-fade": { t: "gap-fade", en: "The share gapped up 1.5%+ at the open but fully round-tripped back below yesterday's close by the end of the session — a classic trap: it looked like a breakout but sellers took full control.", bn: "শেয়ারটি শুরুতে ১.৫%+ গ্যাপ-আপ হয়েও সেশন শেষে গতকালের ক্লোজের নিচে সম্পূর্ণ ফিরে গেছে — ক্লাসিক ফাঁদ: ব্রেকআউট মনে হলেও বিক্রেতারা পুরো নিয়ন্ত্রণ নিয়ে নিয়েছে।" },
+  close_strength: { t: "Close strength", en: "Where today's price landed within today's own high-low range: 100% = closed at the day's high (buyers won the session), 0% = closed at the day's low (sellers won). A strong close under a spike or breakout is a good sign; a weak one is a warning even if the day's % change looks fine.", bn: "আজকের নিজস্ব হাই-লো পরিসরে দাম কোথায় থেমেছে: ১০০% = দিনের সর্বোচ্চে ক্লোজ (ক্রেতারা জিতেছে), ০% = সর্বনিম্নে ক্লোজ (বিক্রেতারা জিতেছে)। স্পাইক বা ব্রেকআউটের নিচে শক্তিশালী ক্লোজ ভালো লক্ষণ; দুর্বল ক্লোজ সতর্কতা, দিনের %পরিবর্তন ভালো দেখালেও।" },
+  key_level: { t: "Key support / resistance", en: "A price level clustered from actual swing highs/lows the share has reversed at 2+ times over the last year — real support/resistance the market has defended or rejected before, not just a simple period high/low.", bn: "গত ১ বছরে শেয়ারটি যে দামে ২+ বার ঘুরে দাঁড়িয়েছে তার স্তর — শুধু একটি সময়সীমার সর্বোচ্চ/সর্বনিম্ন নয়, বাজার আগে যে দামে সত্যিই রক্ষা বা প্রত্যাখ্যান করেছে তা।" },
+  "flag:near-key-resistance": { t: "near-key-resistance", en: "Within 2% of a resistance level the price has already been rejected at 3+ times — a proven ceiling, not just a recent high. Higher chance of a stall or reversal here.", bn: "এমন একটি রেজিস্ট্যান্স স্তরের ২%-এর মধ্যে যেখানে দাম আগে ৩+ বার প্রত্যাখ্যাত হয়েছে — শুধু সাম্প্রতিক উচ্চতা নয়, প্রমাণিত সীমা। এখানে থমকে যাওয়া বা পতনের সম্ভাবনা বেশি।" },
+  "hp:reversal-candle": { t: "Reversal candle at a proven level", en: "A hammer or bullish-engulfing candle appearing right on a support level the market has defended 2+ times before, in a profitable company. One of the clearest, earliest visual reversal signals — day-one entry, tight stop just below a level that's already proven itself.", bn: "লাভজনক কোম্পানিতে এমন একটি সাপোর্ট স্তরে হ্যামার বা বুলিশ এনগাল্ফিং ক্যান্ডেল যা বাজার আগে ২+ বার রক্ষা করেছে। সবচেয়ে স্পষ্ট ও প্রথম দিকের ভিজ্যুয়াল রিভার্সাল সংকেতগুলোর একটি — প্রথম দিনেই প্রবেশ, প্রমাণিত স্তরের ঠিক নিচে আঁটসাঁট স্টপ।" },
+  nav_per_share: { t: "NAV per share", en: "Net Asset Value per share from the latest audited annual filing — what one share is worth on the company's own books. Compared against the market price as P/NAV.", bn: "সর্বশেষ নিরীক্ষিত বার্ষিক প্রতিবেদন থেকে শেয়ারপ্রতি নিট সম্পদ মূল্য (NAV) — কোম্পানির নিজস্ব হিসাবে এক শেয়ারের মূল্য কত। বাজার দামের সাথে তুলনা করা হয় P/NAV হিসেবে।" },
+  p_nav: { t: "P/NAV", en: "Price ÷ NAV per share. Below 1.0 means the share trades below its own book value — a classic value screen, especially powerful when the company is also profitable (not cheap for a reason). Above 1.0 is normal for a healthy, growing business.", bn: "দাম ÷ শেয়ারপ্রতি NAV। ১.০-এর নিচে মানে শেয়ারটি তার বুক ভ্যালুর নিচে লেনদেন হচ্ছে — একটি ক্লাসিক ভ্যালু স্ক্রিন, বিশেষত কোম্পানি লাভজনক হলে শক্তিশালী (কারণ ছাড়া সস্তা নয়)। ১.০-এর উপরে একটি সুস্থ, বর্ধনশীল ব্যবসার জন্য স্বাভাবিক।" },
+  holding_trend: { t: "Institutional/foreign holding trend", en: "Change in combined institute + foreign ownership % over the last few monthly snapshots from the company's own filings — real 'smart money' flow, not a volume proxy. Builds up as fetch_profiles.py is re-run over time (each page shows only the latest ~3 months). Rising = accumulation, falling = distribution.", bn: "কোম্পানির নিজস্ব ফাইলিং থেকে গত কয়েক মাসের স্ন্যাপশটে প্রাতিষ্ঠানিক + বিদেশি মালিকানার সম্মিলিত %পরিবর্তন — প্রকৃত 'স্মার্ট মানি' প্রবাহ, ভলিউম প্রক্সি নয়। সময়ের সাথে fetch_profiles.py পুনরায় চালালে জমে ওঠে (প্রতি পাতায় শুধু সাম্প্রতিক ~৩ মাস দেখা যায়)। বাড়লে = সঞ্চয়, কমলে = বিতরণ।" },
+  "flag:institutional-accumulation": { t: "institutional-accumulation", en: "Institute + foreign ownership has risen 1.5pp+ over the last few monthly filings — real accumulation confirmed in the company's own shareholding disclosure, a stronger signal than any volume-based proxy.", bn: "গত কয়েক মাসের ফাইলিংয়ে প্রাতিষ্ঠানিক + বিদেশি মালিকানা ১.৫pp+ বেড়েছে — কোম্পানির নিজস্ব শেয়ারহোল্ডিং প্রকাশে নিশ্চিত প্রকৃত সঞ্চয়, যেকোনো ভলিউম-ভিত্তিক প্রক্সির চেয়ে শক্তিশালী সংকেত।" },
+  "flag:institutional-selling": { t: "institutional-selling", en: "Institute + foreign ownership has fallen 1.5pp+ over the last few monthly filings — real distribution confirmed in the company's own shareholding disclosure. Worth understanding why before buying.", bn: "গত কয়েক মাসের ফাইলিংয়ে প্রাতিষ্ঠানিক + বিদেশি মালিকানা ১.৫pp+ কমেছে — কোম্পানির নিজস্ব শেয়ারহোল্ডিং প্রকাশে নিশ্চিত প্রকৃত বিতরণ। কেনার আগে কারণ বোঝা দরকার।" },
+  eps_trend: { t: "Quarterly EPS momentum", en: "Direction of the company's most recently reported quarter's EPS vs the one before it, from the interim financial statements. 'Up'/'turned-profitable' = earnings momentum improving; 'down'/'turned-loss' = deteriorating — a reason to double-check a price rally that isn't backed by better earnings.", bn: "অন্তর্বর্তী আর্থিক বিবরণী থেকে কোম্পানির সর্বশেষ প্রান্তিকের EPS আগের প্রান্তিকের তুলনায় কোন দিকে যাচ্ছে। 'Up'/'turned-profitable' = আয়ের গতি উন্নত হচ্ছে; 'down'/'turned-loss' = অবনতি — আয় দ্বারা অসমর্থিত মূল্যবৃদ্ধি নিয়ে সতর্ক হওয়ার কারণ।" },
+  "flag:eps-declining": { t: "eps-declining", en: "The company's most recently reported quarter's EPS fell (or turned to a loss) vs the quarter before it — a rally happening despite weakening earnings is worth extra scrutiny.", bn: "কোম্পানির সর্বশেষ প্রান্তিকের EPS আগের প্রান্তিকের তুলনায় কমেছে (বা লোকসানে পড়েছে) — দুর্বল আয় সত্ত্বেও দাম বাড়লে বাড়তি যাচাই দরকার।" },
+  beta: { t: "Beta", en: "How much a share tends to move relative to the whole market (an equal-weighted average of every tracked share, since DSEX history is too sparse for this). 1.0 = moves with the market; above ~1.2 = aggressive (bigger swings both ways); below ~0.7 = defensive (steadier). Capped to [-2, 4] since illiquid shares can produce noisy raw values.", bn: "একটি শেয়ার সামগ্রিক বাজারের (প্রতিটি ট্র্যাক করা শেয়ারের সমান-ওজনী গড়, কারণ DSEX ইতিহাস এই হিসাবের জন্য যথেষ্ট নয়) তুলনায় কতটা ওঠানামা করে। ১.০ = বাজারের সাথে চলে; ~১.২-এর বেশি = আক্রমণাত্মক (বড় ওঠানামা); ~০.৭-এর কম = রক্ষণাত্মক (স্থিতিশীল)। কম লেনদেনের শেয়ারে গোলমেলে মান এড়াতে [-2, 4]-এ সীমাবদ্ধ।" },
+  cap_class: { t: "Market cap size", en: "Large (≥৳20,000mn / ~২,০০০ crore), Mid (৳3,000–20,000mn), or Small (<৳3,000mn) — from price × outstanding shares. Larger caps tend to be steadier and more liquid; smaller caps can move faster in both directions.", bn: "মার্কেট ক্যাপ আকার: Large (≥৳২০,০০০ মিলিয়ন), Mid (৳৩,০০০–২০,০০০ মিলিয়ন), Small (<৳৩,০০০ মিলিয়ন) — দাম × মোট শেয়ার সংখ্যা থেকে। বড় ক্যাপ সাধারণত স্থিতিশীল ও তরল; ছোট ক্যাপ দুই দিকেই দ্রুত নড়তে পারে।" },
+  seasonality: { t: "Seasonality", en: "Historical average return for this calendar month, from 2 years of daily price data — context only, NEVER a trading signal or prediction. Market-wide figures (all tracked shares combined) are statistically meaningful; a single share's own monthly figure has a small sample (shown with its count) and should be treated as a curiosity, not a reason to buy or sell.", bn: "এই ক্যালেন্ডার মাসের ঐতিহাসিক গড় রিটার্ন, ২ বছরের দৈনিক দামের তথ্য থেকে — শুধু প্রেক্ষাপট, কখনোই ট্রেডিং সংকেত বা ভবিষ্যদ্বাণী নয়। সামগ্রিক বাজারের (সব শেয়ার মিলিয়ে) হিসাব পরিসংখ্যানগতভাবে অর্থবহ; একটি একক শেয়ারের নিজস্ব মাসিক হিসাব ছোট নমুনার (সংখ্যা দেখানো আছে) এবং কেনা-বেচার কারণ নয়, নিছক কৌতূহলের বিষয় হিসেবে দেখুন।" },
+  portfolio_beta: { t: "Portfolio beta", en: "Your holdings' beta, weighted by current position value — tells you whether your portfolio as a whole is more aggressive or more defensive than the market.", bn: "আপনার হোল্ডিংগুলোর বিটা, বর্তমান অবস্থানের মূল্য দিয়ে ওজনযুক্ত — আপনার পুরো পোর্টফোলিও বাজারের তুলনায় বেশি আক্রমণাত্মক নাকি রক্ষণাত্মক তা বলে।" },
+  diversification: { t: "Diversification check", en: "Pairwise correlation of daily returns among your current holdings, computed from real price history — not just sector labels. A pair at 0.7+ moves together closely: holding both is largely one bet wearing two tickers, not real diversification, even if they're in 'different' sectors.", bn: "আপনার বর্তমান হোল্ডিংগুলোর মধ্যে দৈনিক রিটার্নের জোড়ার-হারে সহসম্পর্ক, প্রকৃত দামের ইতিহাস থেকে হিসাব করা — শুধু সেক্টরের লেবেল নয়। ০.৭+ মানে দুটি একসাথে চলে: 'ভিন্ন' সেক্টরে থাকলেও দুটো ধরে রাখা মূলত একই বাজি দুই টিকারে, প্রকৃত বৈচিত্র্য নয়।" },
+  csv_export: { t: "Export CSV", en: "Downloads the currently filtered and sorted Screener table as a CSV file — exactly what you see on screen, ready for a spreadsheet.", bn: "বর্তমানে ফিল্টার ও সাজানো Screener টেবিলটি CSV ফাইল হিসেবে ডাউনলোড করে — স্ক্রিনে যা দেখছেন ঠিক তাই, স্প্রেডশিটের জন্য প্রস্তুত।" },
+  saved_filters: { t: "Quick screens", en: "A few built-in curated screens (Value picks, Momentum breakouts, Income, Turnarounds, Institutional accumulation) plus any you save yourself under a name — stored in this browser only (localStorage), not shared across devices. Loading a screen replaces your current filters; built-ins can't be deleted.", bn: "কয়েকটি বিল্ট-ইন কিউরেটেড স্ক্রিন (Value picks, Momentum breakouts, Income, Turnarounds, Institutional accumulation) এবং আপনার নিজের সংরক্ষিত ফিল্টার — শুধু এই ব্রাউজারে (localStorage) সংরক্ষিত। স্ক্রিন লোড করলে বর্তমান ফিল্টার প্রতিস্থাপিত হয়; বিল্ট-ইন মোছা যাবে না।" },
+  group_decide: { t: "Decide", en: "Everything that helps you choose what to buy or watch right now: Suggestions (Top 20 + scored picks), ⚡High Profit (aggressive setups), Spike (sudden movers), and Margin (range-extreme reversal candidates).", bn: "এখন কী কিনবেন বা নজরে রাখবেন তা ঠিক করতে সাহায্য করে এমন সবকিছু: Suggestions, ⚡High Profit, Spike, এবং Margin।" },
+  group_manage: { t: "Manage", en: "Your own holdings — the Portfolio tab: trade journal, exit engine, sell alerts, and diversification check.", bn: "আপনার নিজের শেয়ার — Portfolio ট্যাব: লেনদেন খাতা, এক্সিট ইঞ্জিন, বিক্রির সতর্কতা, বৈচিত্র্য পরীক্ষা।" },
+  group_explore: { t: "Explore", en: "Tools for digging through the data yourself: Charts, Potential Charts, the full Screener table, and Sectors.", bn: "নিজে তথ্য ঘেঁটে দেখার সরঞ্জাম: Charts, Potential Charts, পূর্ণ Screener টেবিল, এবং Sectors।" },
+  market_overview_toggle: { t: "Market overview & report card", en: "Click to expand: the official DSEX/DS30/DSES/DSMEX snapshot, turnover, breadth, and the report card grading past recommendations. Collapsed by default to keep the Top 20 and picks front and centre — this is supporting context, not something to check every visit.", bn: "ক্লিক করে বিস্তারিত দেখুন: অফিসিয়াল DSEX/DS30/DSES/DSMEX স্ন্যাপশট, টার্নওভার, ব্রেডথ, এবং অতীত সুপারিশের রিপোর্ট কার্ড। ডিফল্টে সংকুচিত থাকে যাতে Top 20 ও পিকস সামনে থাকে — এটি সহায়ক প্রেক্ষাপট, প্রতিবার দেখার প্রয়োজন নেই।" },
+  more_filters: { t: "More filters", en: "Additional Screener filters grouped by theme: Technical (RSI, score, ATR), Fundamental (size, P/NAV, dividend yield, EPS trend), Risk & ownership (liquidity, flags, institutional accumulation), and cross-tab (also appears in Spike/High Profit/Margin).", bn: "থিম অনুযায়ী গোষ্ঠীবদ্ধ অতিরিক্ত Screener ফিল্টার: টেকনিক্যাল, মৌলভিত্তি, ঝুঁকি ও মালিকানা, এবং ক্রস-ট্যাব (অন্য ট্যাবেও আছে কিনা)।" },
+  cross_tab_filter: { t: "Also appears in", en: "Filter to shares that also show up in one of the other analysis tabs right now — e.g. a share that's both eligible here AND currently in the Spike list has extra same-day momentum confirmation.", bn: "যেসব শেয়ার এই মুহূর্তে অন্য কোনো বিশ্লেষণ ট্যাবেও দেখা যাচ্ছে সেগুলো ফিল্টার করুন — যেমন এখানে যোগ্য এবং একই সাথে Spike তালিকায় থাকা শেয়ারের অতিরিক্ত একইদিনের নিশ্চয়তা আছে।" },
+  columns_picker: { t: "Columns", en: "Choose which Screener columns are visible — Code is always shown so you can always identify a row. Your choice is remembered in this browser.", bn: "Screener-এ কোন কলামগুলো দেখা যাবে বেছে নিন — Code সবসময় দেখানো হয় যাতে সারি শনাক্ত করা যায়। আপনার পছন্দ এই ব্রাউজারে মনে রাখা হয়।" },
+  clear_filters: { t: "Clear all filters", en: "Resets every Screener filter (search, dropdowns, checkboxes, and the More Filters section) back to its default — the full unfiltered list.", bn: "সব Screener ফিল্টার (সার্চ, ড্রপডাউন, চেকবক্স, More Filters) ডিফল্টে ফিরিয়ে দেয় — সম্পূর্ণ তালিকা দেখায়।" },
   spike_tab: { t: "Spike", en: "Shares that suddenly rose 3%+ today — vs yesterday's close (Δ vs yesterday) or vs the session open (Δ since open). Update Data during trading hours fetches live prices, so the comparison is 'right now vs the start of the day'. Each spike gets a continuation score; most unexplained spikes fade, so the score weighs volume, trend, headroom, catalysts and this share's own follow-through history.", bn: "আজ হঠাৎ ৩%+ বেড়ে যাওয়া শেয়ার — গতকালের ক্লোজ বা আজকের শুরুর দামের তুলনায়। লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। প্রতিটি স্পাইকের ধারাবাহিকতা-স্কোর দেওয়া হয়; কারণহীন স্পাইক সাধারণত মিলিয়ে যায়, তাই ভলিউম, ট্রেন্ড, জায়গা, উপলক্ষ ও ইতিহাস মিলিয়ে স্কোর হয়।" },
   day_change: { t: "Δ vs yesterday", en: "Today's price change vs yesterday's closing price (YCP). The DSE daily circuit limit is ±10%, so 3%+ is a genuine jolt.", bn: "গতকালের ক্লোজিং দামের তুলনায় আজকের পরিবর্তন। DSE-র দৈনিক সীমা ±১০%, তাই ৩%+ মানে সত্যিকারের ঝাঁকুনি।" },
   intraday_change: { t: "Δ since open", en: "Price change from today's opening price to the latest price — during trading hours this is the move from the session start to right now (refresh with Update Data).", bn: "আজকের শুরুর দাম থেকে সর্বশেষ দামের পরিবর্তন — লেনদেন চলাকালে এটি দিনের শুরু থেকে এই মুহূর্ত পর্যন্ত ওঠানামা (Update Data চাপলে হালনাগাদ)।" },
   vol_today: { t: "Today's volume ratio", en: "Today's traded volume ÷ the 30-day average. A spike on 2×+ volume has real money behind it; a spike on thin volume is usually a trap.", bn: "আজকের লেনদেন ÷ ৩০ দিনের গড়। ২ গুণের বেশি ভলিউমে স্পাইক মানে সত্যিকারের টাকা ঢুকছে; কম ভলিউমের স্পাইক সাধারণত ফাঁদ।" },
   spike_score: { t: "Continuation score", en: "0–100 chance today's spike keeps rising: volume backing 25%, room to run (circuit distance, RSI, resistance headroom) 20%, trend backdrop 20%, real catalyst (dividend/results/board meeting/record date; exchange query counts against) 20%, this share's signal follow-through history 15%. 60+ = likely to continue; below 40 = likely to fade.", bn: "০–১০০: আজকের স্পাইক চলতে থাকার সম্ভাবনা — ভলিউম ২৫%, বাড়ার জায়গা ২০%, ট্রেন্ড ২০%, প্রকৃত উপলক্ষ ২০%, অতীতের ধারাবাহিকতা ১৫%। ৬০+ = চলার সম্ভাবনা; ৪০-এর নিচে = মিলিয়ে যাওয়ার সম্ভাবনা।" },
-  margin_tab: { t: "Margin", en: "Shares trading at the extremes of their own 2-year price range. Lower Margin = bottom 25% of the range (candidates to buy before a rise); Higher Margin = top 25% (candidates to sell / avoid before a fall). Refreshed on every Update Data.", bn: "নিজের ২ বছরের দামের সীমার প্রান্তে থাকা শেয়ার। Lower Margin = সীমার নিচের ২৫% (বাড়ার আগে কেনার প্রার্থী); Higher Margin = উপরের ২৫% (কমার আগে বেচা/এড়ানোর প্রার্থী)। প্রতি Update Data-তে হালনাগাদ হয়।" },
-  lower_margin: { t: "Lower Margin", en: "All shares in the bottom quarter of their 2-year range, scored 0–100 for the chance the price starts rising: reversal evidence (MACD/RSI turning) 35%, OBV accumulation 20%, support holding 15%, fundamentals 15%, catalysts (record date, dividend/board-meeting news) 15%. Trading halts and audit concerns crush the score — cheap is not the same as safe.", bn: "২ বছরের সীমার নিচের ২৫%-এ থাকা সব শেয়ার, দাম বাড়া শুরুর সম্ভাবনায় ০–১০০ স্কোর: রিভার্সাল প্রমাণ ৩৫%, OBV সঞ্চয় ২০%, সাপোর্ট ধরে রাখা ১৫%, মৌলভিত্তি ১৫%, উপলক্ষ (রেকর্ড ডেট, লভ্যাংশ/বোর্ড মিটিং) ১৫%। লেনদেন বন্ধ বা অডিট উদ্বেগ থাকলে স্কোর প্রায় শূন্য — সস্তা মানেই নিরাপদ নয়।" },
-  higher_margin: { t: "Higher Margin", en: "All shares in the top quarter of their 2-year range, scored 0–100 for the chance the price starts falling: over-extension (RSI, streaks, parabolic month) 35%, momentum fade 20%, OBV distribution 15%, weak valuation 15%, event risk (imminent ex-dividend drop, exchange query, audit concern) 15%. Use it to book profit on holdings and to avoid chasing tops.", bn: "২ বছরের সীমার উপরের ২৫%-এ থাকা সব শেয়ার, দাম কমা শুরুর সম্ভাবনায় ০–১০০ স্কোর: অতিরিক্ত বৃদ্ধি ৩৫%, গতি হ্রাস ২০%, OBV বিতরণ ১৫%, দুর্বল ভ্যালুয়েশন ১৫%, ঘটনা-ঝুঁকি (এক্স-ডিভিডেন্ড পতন, এক্সচেঞ্জ কোয়েরি) ১৫%। ধরে রাখা শেয়ারে মুনাফা তুলতে ও চূড়ায় না কিনতে ব্যবহার করুন।" },
+  margin_tab: { t: "Margin", en: "Shares trading at the extremes of their own price range over a period you pick (1 month – 2 years, default 3 months). Lower Margin = bottom 25% of that range (candidates to buy before a rise); Higher Margin = top 25% (candidates to sell / avoid before a fall). All six ranges are recomputed on every Update Data; switching the filter is instant.", bn: "আপনার বেছে নেওয়া সময়ের (১ মাস – ২ বছর, ডিফল্ট ৩ মাস) দামের সীমার প্রান্তে থাকা শেয়ার। Lower Margin = সীমার নিচের ২৫% (বাড়ার আগে কেনার প্রার্থী); Higher Margin = উপরের ২৫% (কমার আগে বেচা/এড়ানোর প্রার্থী)। প্রতি Update Data-তে ছয়টি সীমাই নতুন করে হিসাব হয়; ফিল্টার বদলানো তাৎক্ষণিক।" },
+  lower_margin: { t: "Lower Margin", en: "All shares in the bottom quarter of the selected period's range, scored 0–100 for the chance the price starts rising: reversal evidence (MACD/RSI turning) 35%, OBV accumulation 20%, support holding 15%, fundamentals 15%, catalysts (record date, dividend/board-meeting news) 15%. The score uses the full 2-year evidence whichever range filter you pick. Trading halts and audit concerns crush the score — cheap is not the same as safe.", bn: "নির্বাচিত সময়ের সীমার নিচের ২৫%-এ থাকা সব শেয়ার, দাম বাড়া শুরুর সম্ভাবনায় ০–১০০ স্কোর: রিভার্সাল প্রমাণ ৩৫%, OBV সঞ্চয় ২০%, সাপোর্ট ধরে রাখা ১৫%, মৌলভিত্তি ১৫%, উপলক্ষ (রেকর্ড ডেট, লভ্যাংশ/বোর্ড মিটিং) ১৫%। যে ফিল্টারই বাছুন, স্কোর পূর্ণ ২ বছরের প্রমাণ ব্যবহার করে। লেনদেন বন্ধ বা অডিট উদ্বেগ থাকলে স্কোর প্রায় শূন্য — সস্তা মানেই নিরাপদ নয়।" },
+  higher_margin: { t: "Higher Margin", en: "All shares in the top quarter of the selected period's range, scored 0–100 for the chance the price starts falling: over-extension (RSI, streaks, parabolic month) 35%, momentum fade 20%, OBV distribution 15%, weak valuation 15%, event risk (imminent ex-dividend drop, exchange query, audit concern) 15%. The score uses the full 2-year evidence whichever range filter you pick. Use it to book profit on holdings and to avoid chasing tops.", bn: "নির্বাচিত সময়ের সীমার উপরের ২৫%-এ থাকা সব শেয়ার, দাম কমা শুরুর সম্ভাবনায় ০–১০০ স্কোর: অতিরিক্ত বৃদ্ধি ৩৫%, গতি হ্রাস ২০%, OBV বিতরণ ১৫%, দুর্বল ভ্যালুয়েশন ১৫%, ঘটনা-ঝুঁকি (এক্স-ডিভিডেন্ড পতন, এক্সচেঞ্জ কোয়েরি) ১৫%। যে ফিল্টারই বাছুন, স্কোর পূর্ণ ২ বছরের প্রমাণ ব্যবহার করে। ধরে রাখা শেয়ারে মুনাফা তুলতে ও চূড়ায় না কিনতে ব্যবহার করুন।" },
   rise_score: { t: "Rise score", en: "0–100 chance this bottom-of-range share starts rising soon. 60+ = reversal underway with support; 40–60 = bottoming, watch; below 40 = no evidence yet, falling knife risk.", bn: "০–১০০: তলানিতে থাকা শেয়ারটির দাম শিগগির বাড়া শুরুর সম্ভাবনা। ৬০+ = রিভার্সাল চলছে; ৪০–৬০ = তলানি গড়ছে, নজরে রাখুন; ৪০-এর নিচে = এখনো প্রমাণ নেই, পড়ন্ত ছুরি ধরার ঝুঁকি।" },
   fall_score: { t: "Fall score", en: "0–100 chance this top-of-range share starts falling soon. 50+ = overheated with fade signs — take profit / don't chase; below 30 = strong trend that may simply continue.", bn: "০–১০০: চূড়ায় থাকা শেয়ারটির দাম শিগগির কমা শুরুর সম্ভাবনা। ৫০+ = অতিরিক্ত গরম, মুনাফা তুলুন / পিছে ছুটবেন না; ৩০-এর নিচে = শক্তিশালী প্রবণতা, চলতেও পারে।" },
   turn_date: { t: "Estimated turn date", en: "A calendar-aware estimate (DSE trades Sunday–Thursday) of when the move could begin: confirmed reversals = next session; MACD-approaching-zero = extrapolated at its current pace; record dates pull the date (run-ups start ~2 weeks before; ex-dividend drops come right after). An estimate to plan around, NOT a guarantee.", bn: "পরিবর্তন কবে শুরু হতে পারে তার আনুমানিক তারিখ (DSE রবি–বৃহস্পতিবার খোলা): নিশ্চিত রিভার্সাল = পরের সেশন; MACD শূন্যের দিকে এগোলে বর্তমান গতিতে হিসাব; রেকর্ড ডেটের ~২ সপ্তাহ আগে দাম বাড়া শুরু হয়, আর ঠিক পরে এক্স-ডিভিডেন্ড পতন আসে। পরিকল্পনার সহায়ক অনুমান, নিশ্চয়তা নয়।" },
-  pos2y: { t: "2-year position", en: "Where the price sits in its 2-year low→high range: 0 = at the 2-year low, 1 = at the 2-year high. ≤ 0.25 lands in Lower Margin, ≥ 0.75 in Higher Margin.", bn: "২ বছরের সর্বনিম্ন→সর্বোচ্চ সীমায় দামের অবস্থান: ০ = সর্বনিম্নে, ১ = সর্বোচ্চে। ≤ ০.২৫ হলে Lower Margin, ≥ ০.৭৫ হলে Higher Margin।" },
-  from_low: { t: "Above 2-year low", en: "How far the price has already recovered above its 2-year low. Small = still at the very bottom.", bn: "২ বছরের সর্বনিম্ন থেকে দাম কতটা উঠেছে। কম মানে এখনো একেবারে তলানিতে।" },
-  from_high: { t: "Below 2-year high", en: "How far the price sits below its 2-year high. Small = right at the top of its range.", bn: "২ বছরের সর্বোচ্চ থেকে দাম কতটা নিচে। কম মানে সীমার একেবারে চূড়ায়।" },
+  pos2y: { t: "Range position", en: "Where the price sits in the selected period's low→high range (pick 1-Month to 2-Year with the filter; default 3-Month): 0 = at the period low, 1 = at the period high. ≤ 0.25 lands in Lower Margin, ≥ 0.75 in Higher Margin.", bn: "নির্বাচিত সময়ের (ফিল্টারে ১ মাস – ২ বছর, ডিফল্ট ৩ মাস) সর্বনিম্ন→সর্বোচ্চ সীমায় দামের অবস্থান: ০ = সর্বনিম্নে, ১ = সর্বোচ্চে। ≤ ০.২৫ হলে Lower Margin, ≥ ০.৭৫ হলে Higher Margin।" },
+  from_low: { t: "Above period low", en: "How far the price has already recovered above the selected period's low. Small = still at the very bottom of that range.", bn: "নির্বাচিত সময়ের সর্বনিম্ন থেকে দাম কতটা উঠেছে। কম মানে ওই সীমার একেবারে তলানিতে।" },
+  from_high: { t: "Below period high", en: "How far the price sits below the selected period's high. Small = right at the top of that range.", bn: "নির্বাচিত সময়ের সর্বোচ্চ থেকে দাম কতটা নিচে। কম মানে ওই সীমার একেবারে চূড়ায়।" },
   potential: { t: "Potential future chart", en: "Left of the divider: the real past year. Right: a deterministic 6-month projection — momentum of the last 60/120/250 sessions, damped over time, plus last year's detrended seasonal shape at half strength. A statistical shape to support your decision, NOT a prediction; regenerated from the freshest history on every Update Data.", bn: "দাগের বাঁয়ে: গত ১ বছরের প্রকৃত দাম। ডানে: পরবর্তী ৬ মাসের গাণিতিক অভিক্ষেপ — সাম্প্রতিক গতি (ক্রমশ ক্ষীয়মাণ) ও গত বছরের ঋতুভিত্তিক আকৃতির অর্ধেক মিলিয়ে। সিদ্ধান্তে সহায়ক পরিসংখ্যানিক আকৃতি, ভবিষ্যদ্বাণী নয়; প্রতি Update Data-তে সর্বশেষ ইতিহাস থেকে নতুন করে তৈরি হয়।" },
 };
 const VERDICT_BN = { "Strong Buy": "জোরালো ক্রয়", "Buy": "ক্রয়", "Watch": "পর্যবেক্ষণ", "Neutral": "নিরপেক্ষ", "Avoid": "এড়িয়ে চলুন" };
@@ -340,24 +385,49 @@ $("#helpBg").addEventListener("click", (e) => {
   if (e.target === $("#helpBg")) $("#helpBg").classList.add("hidden");
 });
 
-/* ---------------- tabs ---------------- */
-document.querySelectorAll("nav.tabs button").forEach((b) => {
-  b.addEventListener("click", () => {
-    document.querySelectorAll("nav.tabs button").forEach((x) => x.classList.toggle("active", x === b));
-    ["suggestions", "spike", "highprofit", "margin", "charts", "screener", "sectors", "potential"].forEach((t) =>
-      $("#tab-" + t).classList.toggle("hidden", t !== b.dataset.tab));
-    // canvases drawn while their tab was hidden (display:none) end up blank —
-    // e.g. a star toggled from another tab redraws the shortlist grid at 0×0.
-    // Redraw from cached data (cheap) now that the section is visible again.
-    if (b.dataset.tab === "charts") {
-      if (!state.chartsData) loadCharts();
-      else { renderCharts(); loadChartsShortlist(); }
-    }
-    if (b.dataset.tab === "potential") {
-      if (!state.potData) loadPotential();
-      else { renderPotential(); loadPotentialShortlist(); }
-    }
-  });
+/* ---------------- tabs (two-level: group -> sub-tab) ---------------- */
+const TAB_GROUPS = {
+  decide: ["suggestions", "highprofit", "spike", "margin"],
+  manage: ["portfolio"],
+  explore: ["charts", "potential", "screener", "sectors"],
+};
+const ALL_TABS = Object.values(TAB_GROUPS).flat();
+function tabGroupOf(tab) {
+  return Object.keys(TAB_GROUPS).find((g) => TAB_GROUPS[g].includes(tab));
+}
+const lastTabInGroup = { decide: "suggestions", manage: "portfolio", explore: "charts" };
+
+function activateTab(tabName) {
+  const group = tabGroupOf(tabName);
+  if (!group) return;
+  lastTabInGroup[group] = tabName;
+  document.querySelectorAll(".tab-groups button").forEach((x) =>
+    x.classList.toggle("active", x.dataset.group === group));
+  document.querySelectorAll("nav.tabs[data-group-tabs]").forEach((nav) =>
+    nav.classList.toggle("hidden", nav.dataset.groupTabs !== group));
+  document.querySelectorAll(`nav.tabs[data-group-tabs="${group}"] button`).forEach((x) =>
+    x.classList.toggle("active", x.dataset.tab === tabName));
+  ALL_TABS.forEach((t) => $("#tab-" + t).classList.toggle("hidden", t !== tabName));
+
+  if (tabName === "portfolio") loadPortfolio(); // always fresh — prices/alerts move
+  // canvases drawn while their tab was hidden (display:none) end up blank —
+  // e.g. a star toggled from another tab redraws the shortlist grid at 0×0.
+  // Redraw from cached data (cheap) now that the section is visible again.
+  if (tabName === "charts") {
+    if (!state.chartsData) loadCharts();
+    else { renderCharts(); loadChartsShortlist(); }
+  }
+  if (tabName === "potential") {
+    if (!state.potData) loadPotential();
+    else { renderPotential(); loadPotentialShortlist(); }
+  }
+}
+
+document.querySelectorAll(".tab-groups button").forEach((b) => {
+  b.addEventListener("click", () => activateTab(lastTabInGroup[b.dataset.group]));
+});
+document.querySelectorAll("nav.tabs[data-group-tabs] button").forEach((b) => {
+  b.addEventListener("click", () => activateTab(b.dataset.tab));
 });
 
 /* ---------------- summary / suggestions / screener ---------------- */
@@ -369,7 +439,13 @@ async function loadSummary() {
   renderHighProfit();
   renderMargin();
   renderSpike();
+  renderReportCard();
   renderMarket();
+  // portfolio add-form helpers: ticker autocomplete + default date
+  $("#pfCodeList").innerHTML = Object.keys(state.summary.tickers).sort()
+    .map((c) => `<option value="${c}">`).join("");
+  if (!$("#pfDate").value) $("#pfDate").value = new Date().toISOString().slice(0, 10);
+  if (state.portfolio) loadPortfolio(); // re-price holdings after fresh analysis
   renderAlerts();
   renderSignals();
   renderSectors();
@@ -392,14 +468,32 @@ function renderOverview() {
 
 function bnTk(v) {
   if (v === null || v === undefined) return "–";
-  if (v >= 1e11) return (v / 1e11).toFixed(2) + " লক্ষ কোটি"; // ~lakh crore
-  if (v >= 1e7) return (v / 1e7).toFixed(1) + " কোটি";
+  if (v >= 1e12) return (v / 1e12).toFixed(2) + " লক্ষ কোটি"; // 1e12 = 1 lakh crore
+  if (v >= 1e7) return (v / 1e7).toFixed(1) + " কোটি"; // 1e7 = 1 crore
   return Number(v).toLocaleString();
 }
 
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+                     "July", "August", "September", "October", "November", "December"];
+const MONTH_NAMES_BN = ["জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+                        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"];
+function renderSeasonalityNote() {
+  const season = state.summary.seasonality || {};
+  const m = new Date().getMonth() + 1;
+  const s = season[String(m)];
+  const el = $("#seasonalityNote");
+  if (!s) { el.innerHTML = ""; return; }
+  const sign = s.approx_monthly > 0 ? "+" : "";
+  el.innerHTML = `<span class="term" data-term="seasonality">Seasonality</span>: ${MONTH_NAMES[m - 1]} has historically ` +
+    `averaged ${sign}${fmt(s.approx_monthly, 1)}% across all tracked shares over 2 years (n=${s.n} daily observations) — ` +
+    `context only, not a prediction. · ${MONTH_NAMES_BN[m - 1]} মাসে ২ বছরে গড়ে ${sign}${fmt(s.approx_monthly, 1)}% ` +
+    `হয়েছে সব শেয়ার মিলিয়ে (n=${s.n}) — শুধু প্রেক্ষাপট, ভবিষ্যদ্বাণী নয়।`;
+}
+
 function renderMarket() {
+  renderSeasonalityNote();
   const mkt = state.summary.market;
-  $("#marketPanel").classList.toggle("hidden", !mkt);
+  $("#marketPanel").classList.toggle("hidden", !mkt && !state.summary.seasonality);
   if (!mkt) return;
   $("#marketAsOf").textContent = mkt.as_of ? `as of ${mkt.as_of}` : "";
 
@@ -474,7 +568,8 @@ function renderAlerts() {
 function renderSignals() {
   const sig = state.summary.signals || {};
   const t = state.summary.tickers;
-  const order = ["golden-cross", "macd-cross", "breakout-3m", "oversold-rebound", "volume-spike"];
+  const order = ["golden-cross", "macd-cross", "breakout-3m", "oversold-rebound", "volume-spike",
+                "bullish-divergence", "hammer", "bullish-engulfing", "gap-up-held"];
   const groups = order.filter((s) => (sig[s] || []).length);
   $("#signalsPanel").classList.toggle("hidden", !groups.length);
   $("#signalGroups").innerHTML = groups.map((s) => {
@@ -578,6 +673,7 @@ const HP_STRATEGY = {
   "breakout": { label: "Volume breakout", bn: "ব্রেকআউট", cls: "hps-breakout" },
   "dividend-runner": { label: "Dividend runner", bn: "ডিভিডেন্ড রানার", cls: "hps-div" },
   "proven-signal": { label: "Proven signal", bn: "প্রমাণিত সংকেত", cls: "hps-signal" },
+  "reversal-candle": { label: "Reversal candle", bn: "রিভার্সাল ক্যান্ডেল", cls: "hps-candle" },
 };
 
 function hpCardHtml(p, rank) {
@@ -622,6 +718,175 @@ function renderHighProfit() {
   wireStarButtons(grid);
   grid.querySelectorAll(".hp-card").forEach((el) =>
     el.addEventListener("click", () => openDetail(el.dataset.code)));
+}
+
+/* ---------------- portfolio (trade journal + exit engine) ---------------- */
+async function loadPortfolio() {
+  const res = await fetch("/api/portfolio");
+  state.portfolio = await res.json();
+  renderPortfolio();
+}
+
+function pfAlertBadge(a) {
+  const cls = { bad: "v-avoid", warn: "v-watch", good: "v-strong", info: "v-buy" }[a.level] || "v-neutral";
+  return `<span class="verdict ${cls}" data-bn="${escAttr(a.bn)}" style="margin:1px 2px 1px 0">${a.kind}</span>`;
+}
+
+function renderPortfolio() {
+  const pf = state.portfolio;
+  if (!pf) return;
+  const s = pf.summary || {};
+  const nf = (v) => v === null || v === undefined ? "–" : Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+  const pcls = (v) => v > 0 ? "pos" : v < 0 ? "neg" : "";
+
+  $("#pfSummary").innerHTML = `
+    <div class="mstat"><div class="k">Invested</div><div class="v">৳${nf(s.invested)}</div></div>
+    <div class="mstat"><div class="k">Current value</div><div class="v">৳${nf(s.value)}</div></div>
+    <div class="mstat"><div class="k">Unrealized P&L</div><div class="v ${pcls(s.unrealized)}">৳${nf(s.unrealized)}${s.unrealized_pct !== null && s.unrealized_pct !== undefined ? ` <small>(${s.unrealized_pct > 0 ? "+" : ""}${fmt(s.unrealized_pct)}%)</small>` : ""}</div></div>
+    <div class="mstat"><div class="k">Realized P&L</div><div class="v ${pcls(s.realized)}">৳${nf(s.realized)}</div></div>
+    <div class="mstat"><div class="k">Closed trades</div><div class="v">${s.closed_trades || 0}${s.closed_win_rate !== null && s.closed_win_rate !== undefined ? ` <small>(${s.closed_win_rate}% wins)</small>` : ""}</div></div>
+    <div class="mstat" data-term="portfolio_beta"><div class="k">Portfolio beta</div><div class="v">${s.portfolio_beta !== null && s.portfolio_beta !== undefined ? fmt(s.portfolio_beta, 2) : "–"}</div></div>`;
+
+  // diversification: pairwise correlation among current holdings
+  const div = pf.diversification || { pairs: [], concentration_risk: false };
+  $("#pfDiversify").classList.toggle("hidden", div.pairs.length === 0);
+  if (div.pairs.length) {
+    const rows = div.pairs.slice(0, 8).map((p) => `<div class="sig-row">
+      <span>${p.a} × ${p.b}</span>
+      <b class="${p.corr >= 0.7 ? "neg" : ""}">${p.corr.toFixed(2)}</b>
+    </div>`).join("");
+    $("#pfDiversifyBody").innerHTML = (div.concentration_risk
+      ? `<div class="axis-note neg" style="margin-bottom:6px">⚠ Some holdings move together closely (0.7+) — that's one bet wearing two tickers, not real diversification.
+         · কিছু হোল্ডিং একসাথে চলে (০.৭+) — এটি একই বাজি দুই টিকারে, প্রকৃত বৈচিত্র্য নয়।</div>`
+      : `<div class="axis-note" style="margin-bottom:6px">No pair moves together strongly — your holdings look reasonably diversified.
+         · কোনো জোড়া জোরালোভাবে একসাথে চলছে না — আপনার হোল্ডিং মোটামুটি বৈচিত্র্যময়।</div>`) + rows;
+  }
+
+  // cross-holding alert strip
+  const alerts = pf.alerts || [];
+  $("#pfAlertsPanel").classList.toggle("hidden", !alerts.length);
+  $("#pfAlerts").innerHTML = alerts.map((a) =>
+    `<div class="sig-row"><a class="sig-code" data-code="${a.code}"><b>${a.code}</b></a>
+      <span class="chip sig ${a.level === "bad" ? "alert-bad" : ""}" data-bn="${escAttr(a.bn)}">${a.kind}</span>
+      <span style="font-size:12.5px;color:var(--ink-2)">${a.en}</span></div>`).join("");
+  $("#pfAlerts").querySelectorAll(".sig-code").forEach((el) =>
+    el.addEventListener("click", () => openDetail(el.dataset.code)));
+
+  const rows = pf.holdings || [];
+  $("#pfCount").textContent = rows.length ? `(${rows.length})` : "";
+  $("#pfTable tbody").innerHTML = rows.map((h) => `<tr data-code="${h.code}">
+    <td class="lft"><b>${h.code}</b><br><small style="color:var(--muted)">${h.sector || ""}</small></td>
+    <td>${h.qty}</td>
+    <td class="lft">${h.buy_date}</td>
+    <td>${fmt(h.buy_price)}</td>
+    <td><b>${fmt(h.price)}</b></td>
+    <td>${nf(h.value)}</td>
+    <td class="${pcls(h.pnl)}">${nf(h.pnl)}</td>
+    <td class="${pcls(h.pnl_pct)}"><b>${h.pnl_pct > 0 ? "+" : ""}${fmt(h.pnl_pct)}%</b></td>
+    <td>${h.sessions_held}<small style="color:var(--muted)">/${h.horizon_sessions}d</small></td>
+    <td class="pos">${fmt(h.target_price, 1)}</td>
+    <td class="neg">${fmt(h.eff_stop, 1)}<br><small style="color:var(--muted)">${h.stop_rule || ""}</small></td>
+    <td class="lft" style="white-space:normal;max-width:260px">${(h.alerts || []).map(pfAlertBadge).join("") || '<small style="color:var(--muted)">none — holding is healthy</small>'}</td>
+    <td class="lft">
+      <button class="pf-sell" data-id="${h.id}" data-price="${h.price}">Sell</button>
+      <button class="pf-del" data-id="${h.id}" title="Remove without recording a sale">✕</button>
+    </td>
+  </tr>`).join("") || `<tr><td colspan="13" class="loading">No holdings yet — add your first purchase above. · এখনো কিছু নেই — উপরে প্রথম কেনাটি যোগ করুন।</td></tr>`;
+
+  $("#pfTable tbody").querySelectorAll("tr[data-code]").forEach((tr) => {
+    tr.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      openDetail(tr.dataset.code);
+    });
+  });
+  $("#pfTable").querySelectorAll(".pf-sell").forEach((b) => b.addEventListener("click", async () => {
+    const p = prompt("Sell price ৳ · বিক্রির দাম", b.dataset.price);
+    if (p === null) return;
+    const r = await (await fetch("/api/portfolio/sell", { method: "POST",
+      body: JSON.stringify({ id: b.dataset.id, sell_price: parseFloat(p) }) })).json();
+    if (!r.ok) alert(r.error || "Failed");
+    loadPortfolio();
+  }));
+  $("#pfTable").querySelectorAll(".pf-del").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm("Remove this holding without recording a sale?")) return;
+    await fetch("/api/portfolio/delete", { method: "POST", body: JSON.stringify({ id: b.dataset.id }) });
+    loadPortfolio();
+  }));
+
+  const closed = pf.closed || [];
+  $("#pfClosedPanel").classList.toggle("hidden", !closed.length);
+  $("#pfClosedCount").textContent = closed.length ? `(${closed.length})` : "";
+  $("#pfClosedTable tbody").innerHTML = closed.map((c) => {
+    const pnl = c.qty * (c.sell_price - c.buy_price);
+    const pct = (c.sell_price / c.buy_price - 1) * 100;
+    return `<tr>
+      <td class="lft"><b>${c.code}</b></td><td>${c.qty}</td>
+      <td class="lft">${c.buy_date}</td><td>${fmt(c.buy_price)}</td>
+      <td class="lft">${c.sell_date}</td><td>${fmt(c.sell_price)}</td>
+      <td class="${pcls(pnl)}">${nf(pnl)}</td>
+      <td class="${pcls(pct)}">${pct > 0 ? "+" : ""}${fmt(pct)}%</td>
+      <td class="lft">${c.id ? `<button class="pf-del-closed" data-id="${c.id}" title="Delete this closed trade — it leaves realized P&L and win rate">✕</button>` : ""}</td>
+    </tr>`;
+  }).join("");
+  $("#pfClosedTable").querySelectorAll(".pf-del-closed").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm("Delete this closed trade? It will no longer count in realized P&L and win rate. · এই সম্পন্ন লেনদেনটি মুছবেন?")) return;
+    await fetch("/api/portfolio/delete", { method: "POST", body: JSON.stringify({ id: b.dataset.id }) });
+    loadPortfolio();
+  }));
+}
+
+$("#pfAdd").addEventListener("click", async () => {
+  const body = {
+    code: ($("#pfCode").value || "").trim().toUpperCase(),
+    qty: parseInt($("#pfQty").value, 10),
+    buy_price: parseFloat($("#pfPrice").value),
+    buy_date: $("#pfDate").value || undefined,
+  };
+  const r = await (await fetch("/api/portfolio/add", { method: "POST", body: JSON.stringify(body) })).json();
+  $("#pfAddMsg").textContent = r.ok ? `Added ${body.code} ✓` : (r.error || "Failed");
+  if (r.ok) { $("#pfCode").value = ""; loadPortfolio(); }
+});
+$("#pfCode").addEventListener("input", () => {
+  const code = $("#pfCode").value.trim().toUpperCase();
+  const m = state.summary && state.summary.tickers[code];
+  if (m && !$("#pfPrice").value) $("#pfPrice").value = m.price;
+});
+
+/* ---------------- report card (self-grading) ---------------- */
+const RC_LABELS = { strong_buy: "Strong Buy calls", buy: "Buy calls",
+                    top20: "Top 20 list", high_profit: "⚡ High Profit picks" };
+
+function renderReportCard() {
+  const rc = state.summary.report_card;
+  if (!rc) { $("#reportCardPanel").classList.add("hidden"); return; }
+  $("#reportCardPanel").classList.remove("hidden");
+  if (!rc.graded_snapshots) {
+    $("#rcMeta").textContent = `${rc.snapshots} snapshot${rc.snapshots === 1 ? "" : "s"} recorded (since ${rc.first_date})`;
+    $("#rcBody").innerHTML = `<div class="axis-note">Grades appear once recommendations are at least a week old —
+      keep clicking Update Data across trading days and this fills in automatically.
+      · সুপারিশগুলোর বয়স অন্তত এক সপ্তাহ হলে নম্বর আসবে — প্রতিদিন Update Data চাপতে থাকুন, নিজে নিজেই পূরণ হবে।</div>`;
+    return;
+  }
+  $("#rcMeta").textContent = `${rc.graded_snapshots} graded day${rc.graded_snapshots === 1 ? "" : "s"} since ${rc.first_date}`;
+  const cell = (a, baseAvg) => {
+    if (!a) return "<td>–</td>";
+    const beat = baseAvg !== null && baseAvg !== undefined && a.avg > baseAvg;
+    return `<td><b class="${a.avg > 0 ? "pos" : a.avg < 0 ? "neg" : ""}">${a.avg > 0 ? "+" : ""}${fmt(a.avg)}%</b>
+      <small style="color:var(--muted)"> ${a.win_rate}% win · n=${a.n}</small>${beat ? " ✓" : ""}</td>`;
+  };
+  const rows = Object.entries(RC_LABELS).map(([k, label]) => {
+    const c = rc.categories[k] || {};
+    return `<tr><td class="lft"><b>${label}</b></td>
+      ${cell(c["1w"], rc.baseline["1w"])}${cell(c["2w"], rc.baseline["2w"])}${cell(c["1m"], rc.baseline["1m"])}</tr>`;
+  }).join("");
+  const baseRow = `<tr style="color:var(--muted)"><td class="lft">Market baseline (all shares)</td>
+    <td>${rc.baseline["1w"] !== null ? (rc.baseline["1w"] > 0 ? "+" : "") + fmt(rc.baseline["1w"]) + "%" : "–"}</td>
+    <td>${rc.baseline["2w"] !== null ? (rc.baseline["2w"] > 0 ? "+" : "") + fmt(rc.baseline["2w"]) + "%" : "–"}</td>
+    <td>${rc.baseline["1m"] !== null ? (rc.baseline["1m"] > 0 ? "+" : "") + fmt(rc.baseline["1m"]) + "%" : "–"}</td></tr>`;
+  $("#rcBody").innerHTML = `<div class="tbl-wrap"><table>
+    <thead><tr><th class="lft">Category</th><th>Next 1w</th><th>Next 2w</th><th>Next 1m</th></tr></thead>
+    <tbody>${rows}${baseRow}</tbody></table></div>
+    <div class="axis-note" style="margin-top:6px">✓ = beat the market baseline · avg return, win = &gt;+${fmt(rc.win_threshold, 0)}%</div>`;
 }
 
 /* ---------------- spike (sudden risers today) ---------------- */
@@ -689,7 +954,7 @@ function mgRowHtml(e, i, dir) {
     <td class="lft">${e.sector || "–"}</td>
     <td class="lft">${e.category || "–"}</td>
     <td>${fmt(e.price)}</td>
-    <td>${fmt(e.pos_2y, 2)}</td>
+    <td>${fmt(e.pos, 2)}</td>
     <td>${dist}</td>
     <td>${fmt(e.rsi14, 0)}</td>
     <td>${pct(e.r_1w)}</td><td>${pct(e.r_1m)}</td>
@@ -699,27 +964,57 @@ function mgRowHtml(e, i, dir) {
   </tr>`;
 }
 
+const MG_RANGE_LABEL = { "1m": "1-month", "2m": "2-month", "3m": "3-month",
+                         "6m": "6-month", "1y": "1-year", "2y": "2-year" };
+
+/* join a window's membership entry with the shared per-ticker assessment
+   and the main analysis record into one row object */
+function mgAssemble(list, dir) {
+  const T = state.summary.tickers;
+  const MT = state.summary.margin.tickers || {};
+  return list.map((e) => {
+    const t = T[e.code] || {};
+    const mt = MT[e.code] || {};
+    const common = { ...e, price: t.price, sector: t.sector, category: t.category,
+                     rsi14: t.rsi14, r_1w: t.r_1w, r_1m: t.r_1m, flags: t.flags };
+    return dir === "lower"
+      ? { ...common, score: mt.rise_score, turn_date: mt.rise_date, turn_note: mt.rise_note,
+          why: mt.rise_why, why_bn: mt.rise_why_bn }
+      : { ...common, score: mt.fall_score, turn_date: mt.fall_date, turn_note: mt.fall_note,
+          why: mt.fall_why, why_bn: mt.fall_why_bn };
+  });
+}
+
 function renderMargin() {
   const mg = state.summary.margin;
-  if (!mg) return;
+  if (!mg || !mg.windows) return;
+  const rk = state.mgRange;
+  const label = MG_RANGE_LABEL[rk] || rk;
+  const win = mg.windows[rk] || { lower: [], higher: [] };
   const q = (state.mgSearch || "").toUpperCase();
   const filt = (list) => q
     ? list.filter((e) => e.code.includes(q) || (e.sector || "").toUpperCase().includes(q))
     : list;
-  const lower = filt(mg.lower || []);
-  const higher = filt(mg.higher || []);
+  const lower = filt(mgAssemble(win.lower || [], "lower"));
+  const higher = filt(mgAssemble(win.higher || [], "higher"));
   const isLower = state.mgView === "lower";
   $("#mgLowerPanel").classList.toggle("hidden", !isLower);
   $("#mgHigherPanel").classList.toggle("hidden", isLower);
+  $("#mgLowerTitle").textContent = `▼ Lower Margin — bottom 25% of the ${label} range`;
+  $("#mgHigherTitle").textContent = `▲ Higher Margin — top 25% of the ${label} range`;
+  $("#mgLowerPosTh").textContent = `${rk} pos`;
+  $("#mgLowerDistTh").textContent = `Above ${rk} low`;
+  $("#mgHigherPosTh").textContent = `${rk} pos`;
+  $("#mgHigherDistTh").textContent = `Below ${rk} high`;
   $("#mgCount").textContent = isLower
-    ? `${lower.length} shares in the bottom 25% of their 2-year range`
-    : `${higher.length} shares in the top 25% of their 2-year range`;
+    ? `${lower.length} shares in the bottom 25% of their ${label} range`
+    : `${higher.length} shares in the top 25% of their ${label} range`;
   $("#mgLowerTable tbody").innerHTML =
     lower.map((e, i) => mgRowHtml(e, i, "lower")).join("") ||
-    `<tr><td colspan="14" class="loading">No shares in the lower margin right now</td></tr>`;
+    `<tr><td colspan="14" class="loading">No shares in the lower margin of the ${label} range right now</td></tr>`;
   $("#mgHigherTable tbody").innerHTML =
     higher.map((e, i) => mgRowHtml(e, i, "higher")).join("") ||
-    `<tr><td colspan="14" class="loading">No shares in the higher margin right now</td></tr>`;
+    `<tr><td colspan="14" class="loading">No shares in the higher margin of the ${label} range right now</td></tr>`;
   wireScreenerTable($("#mgLowerTable"));
   wireScreenerTable($("#mgHigherTable"));
 }
@@ -729,26 +1024,85 @@ $("#mgSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click"
   state.mgView = b.dataset.mg;
   renderMargin();
 }));
+$("#mgRangeSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  $("#mgRangeSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  state.mgRange = b.dataset.range;
+  renderMargin();
+}));
 $("#mgSearch").addEventListener("input", debounce(() => {
   state.mgSearch = $("#mgSearch").value;
   renderMargin();
 }, 250));
 
+/* Each column: key (matches ticker field, mostly), label, header class, glossary
+   term, def (shown by default), td (full <td> renderer). Star and Code are
+   fixed/always-shown, outside this list, so a user can never hide the one
+   thing that identifies a row. */
 const SCR_COLS = [
-  ["star", "★", "", null],
-  ["code", "Code", "lft", null], ["sector", "Sector", "lft", "sector"], ["category", "Cat", "lft", "category"],
-  ["flags", "Flags", "lft", "flags"],
-  ["price", "Price", "", null],
-  ["target_price", "Target", "", "target"], ["stop_price", "Stop", "", "stop"],
-  ["r_1w", "1w%", "", "returns"], ["r_1m", "1m%", "", "returns"],
-  ["r_3m", "3m%", "", "returns"], ["r_1y", "1y%", "", "returns"], ["rel_1m", "RelStr", "", "rel_1m"],
-  ["rsi14", "RSI", "", "rsi"], ["vol_ratio", "Vol×", "", "vol_ratio"], ["pe", "P/E", "", "pe"],
-  ["dividend_yield", "DivY%", "", "dividend_yield"], ["avg_value_mn_30d", "Liq mn", "", "liquidity"],
-  ["pos_52w", "52w pos", "", "pos52"], ["dist_resistance", "Headroom%", "", "support"],
-  ["score_short", "S-score", "", "score_short"], ["score_long", "L-score", "", "score_long"],
-  ["composite", "Score", "", "composite"], ["verdict", "Verdict", "lft", "verdict"],
-  ["rr", "R/R", "", "rr"], ["win_rate", "Win%", "", "win_rate"],
+  { key: "sector", label: "Sector", cls: "lft", term: "sector", def: true, td: (r) => `<td class="lft">${r.sector || "–"}</td>` },
+  { key: "category", label: "Cat", cls: "lft", term: "category", def: false, td: (r) => `<td class="lft">${r.category || "–"}</td>` },
+  { key: "cap_class", label: "Cap", cls: "lft", term: "cap_class", def: false, td: (r) => `<td class="lft">${r.cap_class || "–"}</td>` },
+  { key: "flags", label: "Flags", cls: "lft", term: "flags", def: true,
+    td: (r) => `<td class="lft">${(r.flags || []).map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ")}</td>` },
+  { key: "price", label: "Price", cls: "", term: null, def: true, td: (r) => `<td>${fmt(r.price)}</td>` },
+  { key: "target_price", label: "Target", cls: "", term: "target", def: true,
+    td: (r) => `<td class="pos">${fmt(r.target_price, 1)}<br><small>+${fmt(r.target_pct, 0)}%</small></td>` },
+  { key: "stop_price", label: "Stop", cls: "", term: "stop", def: true,
+    td: (r) => `<td class="neg">${fmt(r.stop_price, 1)}<br><small>−${fmt(r.stop_pct, 0)}%</small></td>` },
+  { key: "r_1w", label: "1w%", cls: "", term: "returns", def: false, td: (r) => `<td>${pct(r.r_1w)}</td>` },
+  { key: "r_1m", label: "1m%", cls: "", term: "returns", def: true, td: (r) => `<td>${pct(r.r_1m)}</td>` },
+  { key: "r_3m", label: "3m%", cls: "", term: "returns", def: false, td: (r) => `<td>${pct(r.r_3m)}</td>` },
+  { key: "r_1y", label: "1y%", cls: "", term: "returns", def: false, td: (r) => `<td>${pct(r.r_1y)}</td>` },
+  { key: "rel_1m", label: "RelStr", cls: "", term: "rel_1m", def: false, td: (r) => `<td>${pct(r.rel_1m)}</td>` },
+  { key: "rsi14", label: "RSI", cls: "", term: "rsi", def: true, td: (r) => `<td>${fmt(r.rsi14, 0)}</td>` },
+  { key: "vol_ratio", label: "Vol×", cls: "", term: "vol_ratio", def: false, td: (r) => `<td>${fmt(r.vol_ratio, 2)}</td>` },
+  { key: "pe", label: "P/E", cls: "", term: "pe", def: false, td: (r) => `<td>${fmt(r.pe)}</td>` },
+  { key: "p_nav", label: "P/NAV", cls: "", term: "p_nav", def: false,
+    td: (r) => `<td class="${r.p_nav !== null && r.p_nav !== undefined && r.p_nav < 1 ? "pos" : ""}">${fmt(r.p_nav, 2)}</td>` },
+  { key: "dividend_yield", label: "DivY%", cls: "", term: "dividend_yield", def: false, td: (r) => `<td>${fmt(r.dividend_yield)}</td>` },
+  { key: "avg_value_mn_30d", label: "Liq mn", cls: "", term: "liquidity", def: false, td: (r) => `<td>${fmt(r.avg_value_mn_30d)}</td>` },
+  { key: "pos_52w", label: "52w pos", cls: "", term: "pos52", def: false, td: (r) => `<td>${fmt(r.pos_52w, 2)}</td>` },
+  { key: "dist_resistance", label: "Headroom%", cls: "", term: "support", def: false, td: (r) => `<td>${fmt(r.dist_resistance)}</td>` },
+  { key: "score_short", label: "S-score", cls: "", term: "score_short", def: true, td: (r) => `<td><b>${fmt(r.score_short, 0)}</b></td>` },
+  { key: "score_long", label: "L-score", cls: "", term: "score_long", def: true, td: (r) => `<td><b>${fmt(r.score_long, 0)}</b></td>` },
+  { key: "composite", label: "Score", cls: "", term: "composite", def: true, td: (r) => `<td><b>${fmt(r.composite, 0)}</b></td>` },
+  { key: "verdict", label: "Verdict", cls: "lft", term: "verdict", def: true, td: (r) => `<td class="lft">${r.verdict || "–"}</td>` },
+  { key: "rr", label: "R/R", cls: "", term: "rr", def: false, td: (r) => `<td>${fmt(r.rr, 1)}</td>` },
+  { key: "win_rate", label: "Win%", cls: "", term: "win_rate", def: false,
+    td: (r) => `<td>${r.win_rate !== null && r.win_rate !== undefined ? r.win_rate + `<small style="color:var(--muted)">/${r.signal_trades}</small>` : "–"}</td>` },
+  { key: "beta", label: "Beta", cls: "", term: "beta", def: false, td: (r) => `<td>${fmt(r.beta, 2)}</td>` },
 ];
+
+function loadVisibleCols() {
+  try {
+    const saved = JSON.parse(localStorage.getItem("dse_screener_cols") || "null");
+    if (Array.isArray(saved) && saved.length) return saved;
+  } catch { /* fall through to defaults */ }
+  return SCR_COLS.filter((c) => c.def).map((c) => c.key);
+}
+let scrVisibleCols = loadVisibleCols();
+function saveVisibleCols() { localStorage.setItem("dse_screener_cols", JSON.stringify(scrVisibleCols)); }
+function currentVisibleCols() { return SCR_COLS.filter((c) => scrVisibleCols.includes(c.key)); }
+
+function renderColumnPicker() {
+  $("#colPickerPop").innerHTML = SCR_COLS.map((c) =>
+    `<label><input type="checkbox" data-col="${c.key}" ${scrVisibleCols.includes(c.key) ? "checked" : ""}> ${c.label}</label>`).join("");
+  $("#colPickerPop").querySelectorAll("input").forEach((cb) => cb.addEventListener("change", () => {
+    const key = cb.dataset.col;
+    scrVisibleCols = cb.checked
+      ? [...new Set([...scrVisibleCols, key])]
+      : scrVisibleCols.filter((k) => k !== key);
+    saveVisibleCols();
+    renderScreener();
+  }));
+}
+$("#btnColumns").addEventListener("click", () => {
+  renderColumnPicker();
+  $("#colPickerPop").classList.toggle("hidden");
+});
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".col-picker-wrap")) $("#colPickerPop").classList.add("hidden");
+});
 
 function populateSectorFilter() {
   const sectors = [...new Set(Object.values(state.summary.tickers)
@@ -759,12 +1113,27 @@ function populateSectorFilter() {
     sectors.map((s) => `<option${s === cur ? " selected" : ""}>${s}</option>`).join("");
 }
 
+/* which shares currently appear in each of the other analysis tabs — powers
+   the "also appears in" cross-tab filters */
+function crossTabSets() {
+  const s = state.summary;
+  const spike = new Set((s.spike?.spikes || []).map((x) => x.code));
+  const highProfit = new Set((s.high_profit?.picks || []).map((x) => x.code));
+  const marginLower = new Set(), marginHigher = new Set();
+  for (const w of Object.values(s.margin?.windows || {})) {
+    (w.lower || []).forEach((x) => marginLower.add(x.code));
+    (w.higher || []).forEach((x) => marginHigher.add(x.code));
+  }
+  return { spike, highProfit, marginLower, marginHigher };
+}
+
 function renderScreener() {
+  const cols = currentVisibleCols();
   const head = $("#scrTable thead tr");
-  head.innerHTML = SCR_COLS.map(([k, label, cls, term]) =>
-    `<th class="${cls || ""}" data-key="${k}" ${term ? `data-term="${term}"` : ""}>${label}${state.scrSortKey === k ? (state.scrSortDir < 0 ? " ↓" : " ↑") : ""}</th>`).join("");
-  head.querySelectorAll("th").forEach((th) => {
-    if (th.dataset.key === "star") return; // not sortable
+  head.innerHTML = `<th>★</th><th class="lft" data-key="code">Code${state.scrSortKey === "code" ? (state.scrSortDir < 0 ? " ↓" : " ↑") : ""}</th>` +
+    cols.map((c) =>
+      `<th class="${c.cls || ""}" data-key="${c.key}" ${c.term ? `data-term="${c.term}"` : ""}>${c.label}${state.scrSortKey === c.key ? (state.scrSortDir < 0 ? " ↓" : " ↑") : ""}</th>`).join("");
+  head.querySelectorAll("th[data-key]").forEach((th) => {
     th.addEventListener("click", () => {
       const k = th.dataset.key;
       if (state.scrSortKey === k) state.scrSortDir *= -1;
@@ -782,6 +1151,16 @@ function renderScreener() {
   const fLiq = parseFloat($("#fltLiq").value);
   const fComp = parseFloat($("#fltComposite").value);
   const noFlags = $("#fltNoFlags").checked;
+  const fCap = $("#fltCapClass").value;
+  const fPnav = parseFloat($("#fltPnav").value);
+  const fAtr = parseFloat($("#fltAtr").value);
+  const fInstAccum = $("#fltInstAccum").checked;
+  const fDivYield = parseFloat($("#fltDivYield").value);
+  const fEpsTrend = $("#fltEpsTrend").value;
+  const fAlsoSpike = $("#fltAlsoSpike").checked;
+  const fAlsoHp = $("#fltAlsoHp").checked;
+  const fAlsoMgLower = $("#fltAlsoMgLower").checked;
+  const fAlsoMgHigher = $("#fltAlsoMgHigher").checked;
 
   let rows = Object.entries(state.summary.tickers).map(([code, m]) => ({ code, ...m }));
   if (eligibleOnly) rows = rows.filter((r) => r.eligible);
@@ -797,6 +1176,18 @@ function renderScreener() {
   if (!isNaN(fLiq)) rows = rows.filter((r) => (r.avg_value_mn_30d || 0) >= fLiq);
   if (!isNaN(fComp)) rows = rows.filter((r) => (r.composite || 0) >= fComp);
   if (noFlags) rows = rows.filter((r) => !(r.flags || []).length);
+  if (fCap) rows = rows.filter((r) => r.cap_class === fCap);
+  if (!isNaN(fPnav)) rows = rows.filter((r) => r.p_nav !== null && r.p_nav !== undefined && r.p_nav <= fPnav);
+  if (!isNaN(fAtr)) rows = rows.filter((r) => r.atr_pct !== null && r.atr_pct !== undefined && r.atr_pct <= fAtr);
+  if (fInstAccum) rows = rows.filter((r) => (r.flags || []).includes("institutional-accumulation"));
+  if (!isNaN(fDivYield)) rows = rows.filter((r) => (r.dividend_yield || 0) >= fDivYield);
+  if (fEpsTrend) rows = rows.filter((r) => r.eps_trend === fEpsTrend);
+  if (fAlsoSpike || fAlsoHp || fAlsoMgLower || fAlsoMgHigher) {
+    const sets = crossTabSets();
+    rows = rows.filter((r) =>
+      (fAlsoSpike && sets.spike.has(r.code)) || (fAlsoHp && sets.highProfit.has(r.code)) ||
+      (fAlsoMgLower && sets.marginLower.has(r.code)) || (fAlsoMgHigher && sets.marginHigher.has(r.code)));
+  }
 
   const k = state.scrSortKey, dir = state.scrSortDir;
   rows.sort((a, b) => {
@@ -807,30 +1198,19 @@ function renderScreener() {
     return (typeof va === "string" ? va.localeCompare(vb) : va - vb) * dir;
   });
   $("#scrCount").textContent = `${rows.length} shares`;
-  $("#scrTable tbody").innerHTML = rows.map(screenerRowHtml).join("");
+  $("#scrTable tbody").innerHTML = rows.map((r) => screenerRowHtml(r, cols)).join("");
   wireScreenerTable($("#scrTable"));
-  renderScreenerShortlist();
+  renderScreenerShortlist(cols);
+  renderFilterChips();
+  state.scrRows = rows; // last filtered+sorted set, for CSV export
+  state.scrCols = cols;
 }
 
-function screenerRowHtml(r) {
+function screenerRowHtml(r, cols = currentVisibleCols()) {
   return `<tr data-code="${r.code}">
     <td>${starBtn(r.code)}</td>
     <td class="lft"><b>${r.code}</b></td>
-    <td class="lft">${r.sector || "–"}</td><td class="lft">${r.category || "–"}</td>
-    <td class="lft">${(r.flags || []).map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ")}</td>
-    <td>${fmt(r.price)}</td>
-    <td class="pos">${fmt(r.target_price, 1)}<br><small>+${fmt(r.target_pct, 0)}%</small></td>
-    <td class="neg">${fmt(r.stop_price, 1)}<br><small>−${fmt(r.stop_pct, 0)}%</small></td>
-    <td>${pct(r.r_1w)}</td><td>${pct(r.r_1m)}</td>
-    <td>${pct(r.r_3m)}</td><td>${pct(r.r_1y)}</td><td>${pct(r.rel_1m)}</td>
-    <td>${fmt(r.rsi14, 0)}</td><td>${fmt(r.vol_ratio, 2)}</td><td>${fmt(r.pe)}</td>
-    <td>${fmt(r.dividend_yield)}</td><td>${fmt(r.avg_value_mn_30d)}</td>
-    <td>${fmt(r.pos_52w, 2)}</td><td>${fmt(r.dist_resistance)}</td>
-    <td><b>${fmt(r.score_short, 0)}</b></td><td><b>${fmt(r.score_long, 0)}</b></td>
-    <td><b>${fmt(r.composite, 0)}</b></td>
-    <td class="lft">${r.verdict || "–"}</td>
-    <td>${fmt(r.rr, 1)}</td>
-    <td>${r.win_rate !== null && r.win_rate !== undefined ? r.win_rate + `<small style="color:var(--muted)">/${r.signal_trades}</small>` : "–"}</td>
+    ${cols.map((c) => c.td(r)).join("")}
   </tr>`;
 }
 
@@ -840,7 +1220,7 @@ function wireScreenerTable(table) {
     tr.addEventListener("click", () => openDetail(tr.dataset.code)));
 }
 
-function renderScreenerShortlist() {
+function renderScreenerShortlist(cols = currentVisibleCols()) {
   const panel = $("#scrShortlistPanel");
   const codes = [...state.shortlist];
   if (!codes.length || !state.summary) { panel.classList.add("hidden"); return; }
@@ -851,14 +1231,148 @@ function renderScreenerShortlist() {
   const table = $("#scrShortlistTable");
   table.querySelector("thead tr").innerHTML = $("#scrTable thead tr").innerHTML
     .replace(/<th/g, '<th style="cursor:default"').replace(/ ↓| ↑/g, "");
-  table.querySelector("tbody").innerHTML = rows.map(screenerRowHtml).join("");
+  table.querySelector("tbody").innerHTML = rows.map((r) => screenerRowHtml(r, cols)).join("");
   wireScreenerTable(table);
   panel.classList.remove("hidden");
 }
-["#scrSearch", "#fltLiq", "#fltComposite"].forEach((s) =>
+["#scrSearch", "#fltLiq", "#fltComposite", "#fltPnav", "#fltAtr", "#fltDivYield"].forEach((s) =>
   $(s).addEventListener("input", renderScreener));
-["#scrEligible", "#fltNoFlags", "#fltSector", "#fltCategory", "#fltVerdict", "#fltRsi"].forEach((s) =>
+["#scrEligible", "#fltNoFlags", "#fltSector", "#fltCategory", "#fltVerdict", "#fltRsi",
+ "#fltCapClass", "#fltInstAccum", "#fltEpsTrend",
+ "#fltAlsoSpike", "#fltAlsoHp", "#fltAlsoMgLower", "#fltAlsoMgHigher"].forEach((s) =>
   $(s).addEventListener("change", renderScreener));
+
+/* ---- active filter chips (what's narrowing the table right now) ---- */
+const RSI_LABELS = { oversold: "Oversold <30", neutral: "Neutral 30–70", sweet: "Sweet spot 45–65", overbought: "Overbought >70" };
+const EPS_TREND_LABELS = { up: "Improving", "turned-profitable": "Turned profitable", down: "Declining", "turned-loss": "Turned loss" };
+const FILTER_DEFS = [
+  { id: "scrSearch", label: (v) => `Search "${v}"`, get: () => $("#scrSearch").value.trim(), clear: () => { $("#scrSearch").value = ""; } },
+  { id: "fltSector", label: (v) => `Sector: ${v}`, get: () => $("#fltSector").value, clear: () => { $("#fltSector").value = ""; } },
+  { id: "fltCategory", label: (v) => `Category ${v}`, get: () => $("#fltCategory").value, clear: () => { $("#fltCategory").value = ""; } },
+  { id: "fltVerdict", label: (v) => `Verdict: ${v}`, get: () => $("#fltVerdict").value, clear: () => { $("#fltVerdict").value = ""; } },
+  { id: "scrEligible", label: () => "Eligible only", get: () => $("#scrEligible").checked, clear: () => { $("#scrEligible").checked = false; } },
+  { id: "fltRsi", label: (v) => `RSI: ${RSI_LABELS[v] || v}`, get: () => $("#fltRsi").value, clear: () => { $("#fltRsi").value = ""; } },
+  { id: "fltComposite", label: (v) => `Min score ${v}`, get: () => $("#fltComposite").value, clear: () => { $("#fltComposite").value = ""; } },
+  { id: "fltAtr", label: (v) => `Max ATR ${v}%`, get: () => $("#fltAtr").value, clear: () => { $("#fltAtr").value = ""; } },
+  { id: "fltCapClass", label: (v) => `${v} cap`, get: () => $("#fltCapClass").value, clear: () => { $("#fltCapClass").value = ""; } },
+  { id: "fltPnav", label: (v) => `Max P/NAV ${v}`, get: () => $("#fltPnav").value, clear: () => { $("#fltPnav").value = ""; } },
+  { id: "fltDivYield", label: (v) => `Min DivY ${v}%`, get: () => $("#fltDivYield").value, clear: () => { $("#fltDivYield").value = ""; } },
+  { id: "fltEpsTrend", label: (v) => `EPS trend: ${EPS_TREND_LABELS[v] || v}`, get: () => $("#fltEpsTrend").value, clear: () => { $("#fltEpsTrend").value = ""; } },
+  { id: "fltLiq", label: (v) => `Min liq ${v}mn`, get: () => $("#fltLiq").value, clear: () => { $("#fltLiq").value = ""; } },
+  { id: "fltNoFlags", label: () => "No risk flags", get: () => $("#fltNoFlags").checked, clear: () => { $("#fltNoFlags").checked = false; } },
+  { id: "fltInstAccum", label: () => "Institutional accumulation", get: () => $("#fltInstAccum").checked, clear: () => { $("#fltInstAccum").checked = false; } },
+  { id: "fltAlsoSpike", label: () => "Also in Spike", get: () => $("#fltAlsoSpike").checked, clear: () => { $("#fltAlsoSpike").checked = false; } },
+  { id: "fltAlsoHp", label: () => "Also in High Profit", get: () => $("#fltAlsoHp").checked, clear: () => { $("#fltAlsoHp").checked = false; } },
+  { id: "fltAlsoMgLower", label: () => "Also in Margin (lower)", get: () => $("#fltAlsoMgLower").checked, clear: () => { $("#fltAlsoMgLower").checked = false; } },
+  { id: "fltAlsoMgHigher", label: () => "Also in Margin (higher)", get: () => $("#fltAlsoMgHigher").checked, clear: () => { $("#fltAlsoMgHigher").checked = false; } },
+];
+function renderFilterChips() {
+  const active = FILTER_DEFS.filter((f) => {
+    const v = f.get();
+    return typeof v === "boolean" ? v : (v !== "" && v !== null && !(typeof v === "number" && isNaN(v)));
+  });
+  $("#filterChips").innerHTML = active.map((f) =>
+    `<span class="chip filter-chip">${f.label(f.get())}<button data-id="${f.id}" title="Remove this filter">✕</button></span>`).join("");
+  $("#filterChips").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    FILTER_DEFS.find((f) => f.id === b.dataset.id).clear();
+    renderScreener();
+  }));
+}
+$("#btnClearFilters").addEventListener("click", () => {
+  FILTER_DEFS.forEach((f) => f.clear());
+  renderScreener();
+});
+
+/* ---- CSV export (current filtered+sorted view, respecting visible columns) ---- */
+function csvEscape(v) {
+  const s = v === null || v === undefined ? "" : String(v);
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+$("#btnExportCsv").addEventListener("click", () => {
+  const rows = state.scrRows || [];
+  const cols = state.scrCols || currentVisibleCols();
+  const flatten = (r, key) => (key === "flags" ? (r.flags || []).join("; ") : r[key]);
+  const lines = [["Code", ...cols.map((c) => c.label)].map(csvEscape).join(",")];
+  for (const r of rows) lines.push([r.code, ...cols.map((c) => flatten(r, c.key))].map(csvEscape).join(","));
+  const blob = new Blob([lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `dse_screener_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+/* ---- filter presets: a few curated built-in screens + user-saved (localStorage) ---- */
+const PRESET_FIELDS = ["scrSearch:#scrSearch", "fltSector:#fltSector", "fltCategory:#fltCategory",
+  "fltVerdict:#fltVerdict", "fltRsi:#fltRsi", "fltLiq:#fltLiq", "fltComposite:#fltComposite",
+  "scrEligible:#scrEligible:checked", "fltNoFlags:#fltNoFlags:checked",
+  "fltCapClass:#fltCapClass", "fltPnav:#fltPnav", "fltAtr:#fltAtr", "fltInstAccum:#fltInstAccum:checked",
+  "fltDivYield:#fltDivYield", "fltEpsTrend:#fltEpsTrend",
+  "fltAlsoSpike:#fltAlsoSpike:checked", "fltAlsoHp:#fltAlsoHp:checked",
+  "fltAlsoMgLower:#fltAlsoMgLower:checked", "fltAlsoMgHigher:#fltAlsoMgHigher:checked"];
+const BUILTIN_PRESETS = {
+  "★ Value picks": { scrEligible: true, fltPnav: "1" },
+  "★ Momentum breakouts": { fltAlsoSpike: true, fltComposite: "60" },
+  "★ Income": { scrEligible: true, fltDivYield: "3" },
+  "★ Turnarounds": { fltEpsTrend: "turned-profitable" },
+  "★ Institutional accumulation": { fltInstAccum: true, scrEligible: true },
+};
+function loadPresets() {
+  try { return JSON.parse(localStorage.getItem("dse_screener_presets") || "{}"); }
+  catch { return {}; }
+}
+function savePresets(p) { localStorage.setItem("dse_screener_presets", JSON.stringify(p)); }
+function refreshPresetSelect() {
+  const presets = loadPresets();
+  const sel = $("#presetSelect");
+  const cur = sel.value;
+  const builtinOpts = Object.keys(BUILTIN_PRESETS).map((n) => `<option${n === cur ? " selected" : ""}>${n}</option>`).join("");
+  const userOpts = Object.keys(presets).sort().map((n) => `<option${n === cur ? " selected" : ""}>${n}</option>`).join("");
+  sel.innerHTML = `<option value="">Quick screens…</option>${builtinOpts}` +
+    (Object.keys(presets).length ? `<optgroup label="Your saved filters">${userOpts}</optgroup>` : "");
+}
+function applyPreset(preset) {
+  FILTER_DEFS.forEach((f) => f.clear()); // start clean so presets don't layer onto stale filters
+  for (const spec of PRESET_FIELDS) {
+    const [key, sel, prop] = spec.split(":");
+    if (!(key in preset)) continue;
+    if (prop === "checked") $(sel).checked = preset[key];
+    else $(sel).value = preset[key];
+  }
+}
+$("#presetSave").addEventListener("click", () => {
+  const name = prompt("Save current filters as · নাম দিন");
+  if (!name) return;
+  if (BUILTIN_PRESETS[name]) { alert("That name is reserved for a built-in screen — pick another. · এই নামটি সংরক্ষিত, অন্য নাম দিন।"); return; }
+  const presets = loadPresets();
+  const st = {};
+  for (const spec of PRESET_FIELDS) {
+    const [key, sel, prop] = spec.split(":");
+    st[key] = prop === "checked" ? $(sel).checked : $(sel).value;
+  }
+  presets[name] = st;
+  savePresets(presets);
+  refreshPresetSelect();
+  $("#presetSelect").value = name;
+});
+$("#presetLoad").addEventListener("click", () => {
+  const name = $("#presetSelect").value;
+  const preset = BUILTIN_PRESETS[name] || loadPresets()[name];
+  if (!name || !preset) return;
+  applyPreset(preset);
+  renderScreener();
+});
+$("#presetDelete").addEventListener("click", () => {
+  const name = $("#presetSelect").value;
+  if (!name) return;
+  if (BUILTIN_PRESETS[name]) { alert("Built-in screens can't be deleted. · বিল্ট-ইন স্ক্রিন মোছা যাবে না।"); return; }
+  if (!confirm(`Delete saved filter "${name}"? · এই সংরক্ষিত ফিল্টারটি মুছবেন?`)) return;
+  const presets = loadPresets();
+  delete presets[name];
+  savePresets(presets);
+  refreshPresetSelect();
+});
+refreshPresetSelect();
 
 /* ---------------- charts tab ---------------- */
 async function loadCharts() {
@@ -1125,7 +1639,8 @@ async function openDetail(code) {
     ["Quality", fmt(a.quality, 0) + "/100", "quality"],
     ["Target", a.target_price ? fmt(a.target_price, 1) + ` (+${fmt(a.target_pct, 0)}%)` : "–", "target"],
     ["Stop-loss", a.stop_price ? fmt(a.stop_price, 1) + ` (−${fmt(a.stop_pct, 0)}%)` : "–", "stop"],
-    ["EPS", fmt(a.eps, 2), "eps"], ["P/E", fmt(a.pe), "pe"],
+    ["EPS (annual)", a.eps_annual ? fmt(a.eps_annual, 2) : "–", "eps"],
+    ["EPS (last qtr)", fmt(a.eps, 2), "eps"], ["P/E", fmt(a.pe), "pe"],
     ["Dividend yield", a.dividend_yield ? a.dividend_yield + "%" : "–", "dividend_yield"],
     ["RSI 14", fmt(a.rsi14, 0), "rsi"], ["Volume ×30d", fmt(a.vol_ratio, 2), "vol_ratio"],
     ["Avg traded/day", fmt(a.avg_value_mn_30d) + " mn", "liquidity"],
@@ -1134,9 +1649,27 @@ async function openDetail(code) {
     ["Above support", fmt(a.dist_support) + "%", "support"],
     ["Below resistance", fmt(a.dist_resistance) + "%", "support"],
     ["Volatility (daily σ)", fmt(a.volatility, 2) + "%", "volatility"],
+    ["ATR (14)", a.atr_pct !== null && a.atr_pct !== undefined ? fmt(a.atr_pct) + "%" : "–", "atr"],
     ["Risk/Reward", fmt(a.rr, 1), "rr"],
     ["Signal win rate", a.win_rate !== null && a.win_rate !== undefined
       ? `${a.win_rate}% <small>of ${a.signal_trades} signals, avg ${a.signal_avg > 0 ? "+" : ""}${a.signal_avg}%</small>` : "–", "win_rate"],
+    ["Candle pattern", a.candle_pattern ? a.candle_pattern.replace("-", " ") : "– none today", "candle_pattern"],
+    ["Gap today", a.gap_status ? `${fmt(a.gap_pct, 1)}% (${a.gap_status})` : (a.gap_pct ? fmt(a.gap_pct, 1) + "%" : "–"), "gap_analysis"],
+    ["Close strength", a.close_strength !== null && a.close_strength !== undefined ? fmt(a.close_strength * 100, 0) + "%" : "–", "close_strength"],
+    ["Key support", a.key_support ? `${fmt(a.key_support, 1)} <small>(${a.key_support_touches}× touched)</small>` : "–", "key_level"],
+    ["Key resistance", a.key_resistance ? `${fmt(a.key_resistance, 1)} <small>(${a.key_resistance_touches}× touched)</small>` : "–", "key_level"],
+    ["NAV per share", a.nav_per_share ? fmt(a.nav_per_share, 1) : "–", "nav_per_share"],
+    ["P/NAV", a.p_nav !== null && a.p_nav !== undefined ? fmt(a.p_nav, 2) : "–", "p_nav"],
+    ["Institutional/foreign trend", a.holding_trend_3m !== null && a.holding_trend_3m !== undefined
+      ? `${a.holding_trend_3m > 0 ? "+" : ""}${fmt(a.holding_trend_3m, 1)}pp` : "– building up", "holding_trend"],
+    ["Quarterly EPS momentum", a.eps_trend
+      ? a.eps_trend.replace("-", " ") + (a.eps_qoq_growth ? ` (${a.eps_qoq_growth > 0 ? "+" : ""}${fmt(a.eps_qoq_growth, 0)}%)` : "")
+      : "– building up", "eps_trend"],
+    ["Beta", a.beta !== null && a.beta !== undefined
+      ? `${fmt(a.beta, 2)} <small>(${a.beta >= 1.2 ? "aggressive" : a.beta <= 0.7 ? "defensive" : "market-like"})</small>` : "–", "beta"],
+    ["Market cap", a.market_cap_mn ? `${bnTk(a.market_cap_mn * 1e6)} <small>(${a.cap_class})</small>` : "–", "cap_class"],
+    ["Seasonality (this month)", a.season_this_month
+      ? `${a.season_this_month.approx_monthly > 0 ? "+" : ""}${fmt(a.season_this_month.approx_monthly, 1)}% <small>(n=${a.season_this_month.n}, context only)</small>` : "– building up", "seasonality"],
     ["Sponsor holding", p.holding ? fmt(p.holding.sponsor, 1) + "%" : "–", null],
   ];
   $("#mStats").innerHTML = stats.map(([k, v, term]) =>
@@ -1267,8 +1800,8 @@ applyTheme(localStorage.getItem("dse_theme") || "auto");
 /* ---------------- init ---------------- */
 loadSummary().then(() => {
   const tab = location.hash.replace("#", "");
-  if (["spike", "highprofit", "margin", "charts", "screener", "sectors", "potential"].includes(tab)) {
-    document.querySelector(`nav.tabs button[data-tab="${tab}"]`).click();
+  if (ALL_TABS.includes(tab)) {
+    activateTab(tab);
   } else if (tab.startsWith("t:")) {
     openDetail(decodeURIComponent(tab.slice(2)));
   } else if (tab === "help") {

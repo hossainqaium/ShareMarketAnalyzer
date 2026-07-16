@@ -1778,6 +1778,12 @@
     "title": "UNIONCAP: Qualified Opinion and Emphasis of Matter",
     "text": "The auditor of the company has given the Qualified Opinion and Emphasis of Matter paragraph in the auditor's report for the year ended December 31, 2025. To view the details, please visit: https://www.dsebd.org/Auditors_opinion/2025/UNIONCAP.pdf",
     "category": "audit-concern"
+   },
+   {
+    "date": "2026-07-16",
+    "title": "UNIONCAP: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 21, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
    }
   ],
   "AOL": [
@@ -2174,6 +2180,12 @@
     "title": "NATLIFEINS: Board Meeting schedule under LR 16(1)",
     "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 19, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
     "category": "board-meeting"
+   },
+   {
+    "date": "2026-07-16",
+    "title": "NATLIFEINS: Reschedule of Board Meeting under LR 16(1)",
+    "text": "The Company has further informed that due to unavoidable circumstances, the meeting of the Board of Directors of the Company as per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, will be held on July 20, 2026 at 3:00 pm instead of earlier declared July 19, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "other"
    }
   ],
   "NRBBANK": [
@@ -2401,7 +2413,23 @@
     "text": "Record Date for entitlement of coupon payment of 20Y BGTB 27/07/2031 Government Securities is 26.07.2026.",
     "category": "record-date"
    }
+  ],
+  "LINDEBD": [
+   {
+    "date": "2026-07-16",
+    "title": "LINDEBD: Dividend Disbursement",
+    "text": "The Company has informed that it has disbursed the Cash Dividend for the year ended December 31, 2025 to the respective shareholders.",
+    "category": "dividend"
+   }
+  ],
+  "STANDARINS": [
+   {
+    "date": "2026-07-16",
+    "title": "STANDARINS: Dividend Disbursement",
+    "text": "The Company has informed that it has disbursed the Cash Dividend for the year ended December 31, 2025 to the respective shareholders.",
+    "category": "dividend"
+   }
   ]
  },
- "fetched_at": "2026-07-16 12:27:25"
+ "fetched_at": "2026-07-16 17:28:53"
 }

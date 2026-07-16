@@ -632,7 +632,7 @@
     "record_date": "2026-07-20"
    }
   ],
-  "PRAGATIINS": [
+  "PRAGATILIF": [
    {
     "company_name": "Pragati Life Insurance PLC.",
     "purpose": "15% Cash and 10% Stock Dividend",
@@ -849,6 +849,16 @@
  },
  "unmatched": [
   {
+   "company_name": "Bengal Biscuits Ltd.",
+   "purpose": "10% Cash Dividend",
+   "dividend_pct": 10.0,
+   "dividend_kind": "cash",
+   "agm_date_text": "3-Sep-26",
+   "agm_date": "2026-09-03",
+   "record_date_text": "6-Aug-26",
+   "record_date": "2026-08-06"
+  },
+  {
    "company_name": "LankaBangla Securities PLC.",
    "purpose": "No Dividend",
    "dividend_pct": 0.0,
@@ -879,7 +889,7 @@
    "record_date": "2024-06-06"
   }
  ],
- "total_rows": 74,
+ "total_rows": 75,
  "matched_count": 71,
- "fetched_at": "2026-07-16 12:27:26"
+ "fetched_at": "2026-07-16 17:28:54"
 }

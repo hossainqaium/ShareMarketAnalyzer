@@ -14,8 +14,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import analysis as analysis_mod
 import sync as sync_mod
-from dse_common import (ANALYSIS_JSON, POTENTIAL_CSV, PROFILES_JSON, ROOT,
-                        load_history, load_json)
+from dse_common import (ANALYSIS_JSON, PORTFOLIO_JSON, POTENTIAL_CSV,
+                        PROFILES_JSON, ROOT, load_history, load_json,
+                        save_json)
 
 STATIC_DIR = os.path.join(ROOT, "static")
 
@@ -120,6 +121,223 @@ def run_update_job():
         st["message"] = f"Update failed: {e}"
     finally:
         st["running"] = False
+
+
+# ================= PORTFOLIO (trade journal + exit engine) =================
+TRAIL_ATR_MULT = 2.5       # trailing stop = highest close since buy − 2.5×ATR
+BREAKEVEN_TRIGGER = 5.0    # after +5%, the stop never sits below your entry
+TIME_STOP_GAIN = 2.0       # "thesis failed" if below +2% past the horizon
+HORIZON_SESSIONS = {"short": 10, "swing": 25, "long": 42}
+
+
+def load_portfolio():
+    pf = load_json(PORTFOLIO_JSON, None)
+    if not isinstance(pf, dict):
+        pf = {}
+    pf.setdefault("holdings", [])
+    pf.setdefault("closed", [])
+    return pf
+
+
+def closes_since(code, buy_date):
+    rows = get_history().get(code) or []
+    out = []
+    for r in rows:
+        if r["Date"] < buy_date:
+            continue
+        try:
+            c = float(r["CloseP"])
+            if c <= 0:
+                c = float(r["LTP"])
+            if c > 0:
+                out.append(c)
+        except (ValueError, KeyError):
+            continue
+    return out
+
+
+def pearson_correlation(dates_a, closes_a, dates_b, closes_b, window=120):
+    """Pearson correlation of daily returns between two price series, over
+    the last `window` common trading sessions."""
+    da, db = dict(zip(dates_a, closes_a)), dict(zip(dates_b, closes_b))
+    common = sorted(set(da) & set(db))
+    if len(common) < 30:
+        return None
+    common = common[-(window + 1):]
+    xs, ys = [], []
+    for i in range(1, len(common)):
+        d0, d1 = common[i - 1], common[i]
+        if da[d0] > 0 and db[d0] > 0:
+            xs.append(da[d1] / da[d0] - 1)
+            ys.append(db[d1] / db[d0] - 1)
+    if len(xs) < 25:
+        return None
+    mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+    vx = sum((x - mx) ** 2 for x in xs)
+    vy = sum((y - my) ** 2 for y in ys)
+    if vx <= 0 or vy <= 0:
+        return None
+    cov = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    return round(cov / (vx ** 0.5 * vy ** 0.5), 2)
+
+
+def portfolio_diversification(codes):
+    """Pairwise daily-return correlation among current holdings — flags
+    concentration risk: several 'different' picks that actually move
+    together are one bet wearing multiple tickers, not real diversification."""
+    if len(codes) < 2:
+        return {"pairs": [], "concentration_risk": False}
+    series = {}
+    for c in set(codes):
+        dates, closes, _ = series_for(c)
+        if len(closes) >= 30:
+            series[c] = (dates, closes)
+    pairs = []
+    ordered = sorted(series)
+    for i in range(len(ordered)):
+        for j in range(i + 1, len(ordered)):
+            a, b = ordered[i], ordered[j]
+            corr = pearson_correlation(*series[a], *series[b])
+            if corr is not None:
+                pairs.append({"a": a, "b": b, "corr": corr})
+    pairs.sort(key=lambda p: -p["corr"])
+    return {"pairs": pairs, "concentration_risk": any(p["corr"] >= 0.7 for p in pairs)}
+
+
+def portfolio_view():
+    pf = load_portfolio()
+    full = get_analysis()
+    ana = full.get("tickers", {})
+    mg = full.get("margin", {})
+    mg_t = mg.get("tickers", {})
+    higher_now = set()
+    for w in ("3m", "2y"):
+        for e in (mg.get("windows", {}).get(w, {}) or {}).get("higher", []):
+            higher_now.add(e["code"])
+
+    holdings, alerts_all = [], []
+    invested = value = 0.0
+    for h in pf["holdings"]:
+        code = h["code"]
+        m = ana.get(code) or {}
+        cs = closes_since(code, h["buy_date"])
+        price = m.get("price") or (cs[-1] if cs else h["buy_price"])
+        qty = h["qty"]
+        pnl_pct = (price / h["buy_price"] - 1) * 100 if h["buy_price"] else 0.0
+        sessions_held = max(0, len(cs) - 1)
+        horizon_s = HORIZON_SESSIONS.get(m.get("horizon_key") or "swing", 25)
+        flags = set(m.get("flags") or [])
+
+        # exit engine: static stop / ATR trailing stop / break-even, take the highest
+        hi_since = max(cs + [h["buy_price"]]) if cs else h["buy_price"]
+        cand = []
+        if m.get("stop_price"):
+            cand.append((m["stop_price"], "static"))
+        if m.get("atr14"):
+            cand.append((hi_since - TRAIL_ATR_MULT * m["atr14"], "trailing"))
+        if pnl_pct >= BREAKEVEN_TRIGGER:
+            cand.append((h["buy_price"], "break-even"))
+        eff_stop, stop_rule = max(cand) if cand else (None, None)
+
+        alerts = []
+
+        def alert(kind, level, en, bn):
+            alerts.append({"kind": kind, "level": level, "en": en, "bn": bn})
+
+        if flags & {"trading-halt", "audit-concern"}:
+            alert("hard-risk", "bad",
+                  "Hard risk flag (halt/audit) — plan an exit as soon as trading allows",
+                  "গুরুতর ঝুঁকি-চিহ্ন (হল্ট/অডিট) — লেনদেন সম্ভব হলেই বেরিয়ে আসার পরিকল্পনা করুন")
+        if eff_stop and price <= eff_stop:
+            alert("stop-hit", "bad",
+                  f"Below your {stop_rule} stop ({eff_stop:.1f}) — exit to cap the loss",
+                  f"আপনার {stop_rule} স্টপের ({eff_stop:.1f}) নিচে — ক্ষতি সীমিত করতে বিক্রি করুন")
+        if m.get("target_price") and price >= m["target_price"]:
+            alert("target-hit", "good",
+                  f"Target {m['target_price']:.1f} reached — book profit, at least partially",
+                  f"লক্ষ্যমূল্য {m['target_price']:.1f} অর্জিত — অন্তত আংশিক মুনাফা তুলুন")
+        fall = mg_t.get(code, {}).get("fall_score")
+        if code in higher_now and (fall or 0) >= 50:
+            alert("fall-risk", "warn",
+                  f"Entered the Higher Margin zone with fall risk {fall:.0f}/100 — profit-taking zone",
+                  f"Higher Margin অঞ্চলে ঢুকেছে, পতনের ঝুঁকি {fall:.0f}/100 — মুনাফা তোলার জায়গা")
+        if "bearish-divergence" in flags:
+            alert("divergence", "warn",
+                  "Bearish RSI divergence — the rally is losing internal strength",
+                  "বিয়ারিশ RSI ডাইভারজেন্স — ঊর্ধ্বগতির ভেতরের শক্তি কমছে")
+        if m.get("candle_pattern") in ("shooting-star", "bearish-engulfing"):
+            cp = m["candle_pattern"].replace("-", " ")
+            alert("candle", "warn",
+                  f"{cp.title()} candle today — a classic reversal warning at these levels",
+                  f"আজ {cp} ক্যান্ডেল — এই স্তরে ক্লাসিক পতনের সংকেত")
+        if "gap-fade" in flags:
+            alert("gap-fade", "warn",
+                  "Gapped up today but fully faded back below yesterday's close — a trap for chasers, not a hold signal",
+                  "আজ গ্যাপ-আপ হয়েও গতকালের ক্লোজের নিচে ফিরে গেছে — ধরে রাখার সংকেত নয়")
+        if "near-key-resistance" in flags:
+            alert("key-resistance", "warn",
+                  f"At a resistance level rejected {m.get('key_resistance_touches')}× before (at {m.get('key_resistance')}) — consider taking profit here",
+                  f"একটি রেজিস্ট্যান্স স্তরে যা আগে {m.get('key_resistance_touches')}বার প্রত্যাখ্যাত হয়েছে — এখানে মুনাফা তোলার কথা ভাবুন")
+        if (m.get("macd_hist") or 0) < 0 and (m.get("macd_slope") or 0) < 0:
+            alert("momentum", "warn",
+                  "MACD negative and falling — momentum has turned against you",
+                  "MACD নেগেটিভ ও কমছে — গতি এখন আপনার বিপক্ষে")
+        if "spike-fade-risk" in flags:
+            alert("spike-fade", "warn",
+                  "Spiked today without backing — consider selling into the strength",
+                  "আজ সমর্থন ছাড়া স্পাইক করেছে — বাড়তি দামেই বিক্রির কথা ভাবুন")
+        if sessions_held > horizon_s and pnl_pct < TIME_STOP_GAIN:
+            alert("time-stop", "warn",
+                  f"Time stop: {sessions_held} sessions held (plan was ~{horizon_s}) and still flat — the thesis isn't working",
+                  f"টাইম স্টপ: {sessions_held} সেশন ধরে রেখেছেন (পরিকল্পনা ছিল ~{horizon_s}), লাভ নেই — ধারণাটি কাজ করছে না")
+        dtr = m.get("days_to_record_date")
+        if dtr is not None and 0 < dtr <= 5:
+            alert("record-date", "info",
+                  f"Record date {m.get('upcoming_record_date')} in {dtr}d — holding through it captures the dividend",
+                  f"রেকর্ড ডেট {m.get('upcoming_record_date')}, {dtr} দিন বাকি — ধরে রাখলে লভ্যাংশ পাবেন")
+
+        invested += qty * h["buy_price"]
+        value += qty * price
+        holdings.append({
+            **h, "price": round(price, 2), "value": round(qty * price, 2),
+            "pnl": round(qty * (price - h["buy_price"]), 2),
+            "pnl_pct": round(pnl_pct, 2),
+            "sessions_held": sessions_held, "horizon_sessions": horizon_s,
+            "target_price": m.get("target_price"),
+            "eff_stop": round(eff_stop, 2) if eff_stop else None,
+            "stop_rule": stop_rule,
+            "verdict": m.get("verdict"), "sector": m.get("sector"),
+            "beta": m.get("beta"),
+            "alerts": alerts,
+        })
+        for a in alerts:
+            if a["level"] in ("bad", "warn"):
+                alerts_all.append({**a, "code": code})
+
+    closed = pf["closed"]
+    realized = sum(c["qty"] * (c["sell_price"] - c["buy_price"]) for c in closed)
+    wins = sum(1 for c in closed if c["sell_price"] > c["buy_price"])
+
+    weighted_beta = None
+    betas = [(h["beta"], h["value"]) for h in holdings if h.get("beta") is not None and h["value"]]
+    if betas and value:
+        weighted_beta = round(sum(b * v for b, v in betas) / sum(v for _, v in betas), 2)
+
+    return {
+        "holdings": holdings,
+        "closed": sorted(closed, key=lambda c: c.get("sell_date") or "", reverse=True),
+        "alerts": alerts_all,
+        "diversification": portfolio_diversification([h["code"] for h in pf["holdings"]]),
+        "summary": {
+            "invested": round(invested, 2), "value": round(value, 2),
+            "unrealized": round(value - invested, 2),
+            "unrealized_pct": round((value / invested - 1) * 100, 2) if invested else None,
+            "realized": round(realized, 2),
+            "closed_trades": len(closed),
+            "closed_win_rate": round(100 * wins / len(closed)) if closed else None,
+            "portfolio_beta": weighted_beta,
+        },
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -278,10 +496,77 @@ class Handler(BaseHTTPRequestHandler):
         if route == "/api/update/status":
             return self.send_json(_state["update"])
 
+        if route == "/api/portfolio":
+            return self.send_json(portfolio_view())
+
         self.send_error(404)
+
+    def read_json_body(self):
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+            return json.loads(self.rfile.read(length).decode()) if length else {}
+        except (ValueError, json.JSONDecodeError):
+            return {}
 
     def do_POST(self):
         route = urllib.parse.urlparse(self.path).path
+        if route == "/api/portfolio/add":
+            b = self.read_json_body()
+            code = (b.get("code") or "").strip().upper()
+            try:
+                buy_price = float(b.get("buy_price") or 0)
+                qty = int(b.get("qty") or 0)
+            except (ValueError, TypeError):
+                buy_price, qty = 0, 0
+            if code not in get_analysis().get("tickers", {}):
+                return self.send_json({"ok": False, "error": f"Unknown ticker: {code}"}, 400)
+            if buy_price <= 0 or qty < 1:
+                return self.send_json({"ok": False, "error": "Need a positive price and quantity"}, 400)
+            import time as _time
+            from datetime import date as _date
+            pf = load_portfolio()
+            pf["holdings"].append({
+                "id": str(int(_time.time() * 1000)),
+                "code": code, "qty": qty, "buy_price": round(buy_price, 2),
+                "buy_date": b.get("buy_date") or _date.today().isoformat(),
+            })
+            save_json(PORTFOLIO_JSON, pf)
+            return self.send_json({"ok": True})
+
+        if route == "/api/portfolio/sell":
+            b = self.read_json_body()
+            try:
+                sell_price = float(b.get("sell_price") or 0)
+            except (ValueError, TypeError):
+                sell_price = 0
+            if sell_price <= 0:
+                return self.send_json({"ok": False, "error": "Need a positive sell price"}, 400)
+            from datetime import date as _date
+            pf = load_portfolio()
+            h = next((x for x in pf["holdings"] if x["id"] == b.get("id")), None)
+            if not h:
+                return self.send_json({"ok": False, "error": "Holding not found"}, 404)
+            pf["holdings"].remove(h)
+            pf["closed"].append({**h, "sell_price": round(sell_price, 2),
+                                 "sell_date": b.get("sell_date") or _date.today().isoformat()})
+            save_json(PORTFOLIO_JSON, pf)
+            return self.send_json({"ok": True})
+
+        if route == "/api/portfolio/delete":
+            # removes a record by id from holdings or the closed-trades ledger
+            b = self.read_json_body()
+            pf = load_portfolio()
+            found = False
+            for key in ("holdings", "closed"):
+                before = len(pf[key])
+                pf[key] = [x for x in pf[key] if x.get("id") != b.get("id")]
+                if len(pf[key]) != before:
+                    found = True
+            if not found:
+                return self.send_json({"ok": False, "error": "Record not found"}, 404)
+            save_json(PORTFOLIO_JSON, pf)
+            return self.send_json({"ok": True})
+
         if route == "/api/update":
             st = _state["update"]
             if st["running"]:

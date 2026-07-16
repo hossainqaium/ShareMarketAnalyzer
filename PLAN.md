@@ -96,12 +96,12 @@ Python 3 stdlib + vanilla JS/canvas throughout, with one pip dependency
 | `dse_common.py` | fetch with retries, HTML/PDF-adjacent parsing helpers, paths, ticker/JSON cache, name matching |
 | `scrape_dse.py` | one-off full 2-year scrape (bootstrap only) |
 | `sync.py` | orchestrates every sync step (price gap-fill, live overlay, market snapshot, news, AGM), progress callbacks |
-| `fetch_profiles.py` | per-company fundamentals + full name scrape + bulk trailing P/E; checkpointed |
+| `fetch_profiles.py` | per-company fundamentals + full name scrape + bulk trailing P/E; checkpointed; also parses NAV/annual-EPS (audited table) and interim quarterly EPS, and accumulates shareholding-split + distinct quarterly-EPS history into `data/fundamentals_history.json` |
 | `fetch_news.py` | announcements fetch + categorization + 60-day merge |
 | `fetch_agm.py` | AGM/EGM PDF download + `pdfplumber` table extraction + name matching |
-| `analysis.py` | indicators, two scores, `recommend()` (quality/composite/verdict/target/stop), news/AGM overlay, alerts, sectors, regime, `build_high_profit()` (7 exceptional-setup strategies over `accum_20d` OBV slope + `squeeze_pctile` bandwidth percentile, edge-ranked with strategy/sector caps), `build_margin()` (2y-range extremes: rise/fall scores + calendar-aware turn-date estimates), `build_spike()` (3%+ session jumps vs YCP/open, continuation-scored), `apply_market_wisdom()` (spike/margin cross-signal composite adjustments + verdict re-derivation), `build_pick_why()` (detailed EN+BN reason pairs per ticker) |
-| `server.py` | HTTP API + static serving + background update job |
-| `static/*` | UI: eight tabs (incl. Spike, ⚡ High Profit strategy cards, Margin lower/higher sub-tabs), modal detail view with position calculator, update progress, EN+BN glossary |
+| `analysis.py` | indicators, two scores, `recommend()` (quality/composite/verdict/target/stop), news/AGM overlay, alerts, sectors, regime, `build_high_profit()` (7 exceptional-setup strategies over `accum_20d` OBV slope + `squeeze_pctile` bandwidth percentile, edge-ranked with strategy/sector caps), `build_margin()` (2y-range extremes: rise/fall scores + calendar-aware turn-date estimates), `build_spike()` (3%+ session jumps vs YCP/open, continuation-scored), `apply_market_wisdom()` (spike/margin cross-signal composite adjustments + verdict re-derivation), `build_pick_why()` (detailed EN+BN reason pairs per ticker), ATR(14) + RSI divergence detection, `snapshot_and_grade()` (report card: rec_history.json snapshots graded by forward returns), `detect_candle()` (hammer/engulfing/shooting-star at a recent extreme), `detect_gap()` (open vs YCP, follow-through/faded), `close_strength()` (today's close position in today's H-L range), `support_resistance_levels()` (swing-high/low clustering, 2+ touches), `holding_trend()` (institute+foreign % change over stored snapshots), `eps_momentum()` (latest-vs-previous distinct interim EPS reading), `build_market_returns()`/`compute_beta()` (equal-weighted synthetic market index + 180-session beta regression, capped [-2,4]), `build_seasonality()`/`ticker_month_seasonality()` (calendar-month average return, market-wide and per-ticker, context only), market cap + Large/Mid/Small size class |
+| `server.py` | HTTP API + static serving + background update job + portfolio engine (`/api/portfolio` view with ATR trailing/break-even/time stops and sell alerts; add/sell/delete POST routes over data/portfolio.json; `pearson_correlation()`/`portfolio_diversification()` for pairwise holding-correlation concentration risk) |
+| `static/*` | UI: two-level nav (Decide/Manage/Explore groups → 9 sub-tabs, remembers last tab per group), Suggestions split into always-visible picks + collapsed Market Overview/Report Card `<details>`, Screener with object-driven `SCR_COLS` (column visibility picker + localStorage), themed collapsible "More filters", active-filter chips, curated + user-saved Quick Screens, CSV export; modal detail view with position calculator, update progress, EN+BN glossary |
 
 ## API surface
 
@@ -162,8 +162,10 @@ Python 3 stdlib + vanilla JS/canvas throughout, with one pip dependency
 
 ## Future ideas (not committed)
 
-- Portfolio tracking (holdings, cost basis, P&L vs suggestions).
 - Backtesting harness to tune scoring weights against the stored history.
+- Block/bulk transaction page scraping (large negotiated deals often precede
+  news) — deferred from the fundamentals phase since it needs a new,
+  unverified page format rather than reusing the already-fetched company page.
 - Parse announcement *body* text (not just title) for more nuanced signals
   (e.g. extracting the exact dividend % from a Dividend Declaration's text).
 - Historical announcement backfill beyond the rolling 60-day window, for a

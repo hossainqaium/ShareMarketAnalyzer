@@ -21,12 +21,23 @@
   </div>
 </header>
 
-<nav class="tabs">
+<nav class="tab-groups">
+  <button data-group="decide" class="active" data-term="group_decide">Decide</button>
+  <button data-group="manage" data-term="group_manage">Manage</button>
+  <button data-group="explore" data-term="group_explore">Explore</button>
+</nav>
+
+<nav class="tabs" data-group-tabs="decide">
   <button data-tab="suggestions" class="active">Suggestions</button>
-  <button data-tab="spike">Spike</button>
   <button data-tab="highprofit">⚡ High Profit</button>
+  <button data-tab="spike">Spike</button>
   <button data-tab="margin">Margin</button>
-  <button data-tab="charts">Charts</button>
+</nav>
+<nav class="tabs hidden" data-group-tabs="manage">
+  <button data-tab="portfolio" class="active">Portfolio</button>
+</nav>
+<nav class="tabs hidden" data-group-tabs="explore">
+  <button data-tab="charts" class="active">Charts</button>
   <button data-tab="potential">Potential Charts</button>
   <button data-tab="screener">Screener</button>
   <button data-tab="sectors">Sectors</button>
@@ -67,11 +78,6 @@
       </div>
     </div>
 
-    <div class="panel market" id="marketPanel">
-      <h2><span class="term" data-term="market_update">Market Update · বাজার পরিস্থিতি</span> <small id="marketAsOf"></small></h2>
-      <div id="marketBody"></div>
-    </div>
-
     <div class="panel alerts" id="alertsPanel">
       <h2><span class="term" data-term="company_alerts">Company Alerts · কোম্পানির সতর্কতা</span></h2>
       <div class="sub">From DSE's announcement feed and the AGM/EGM record-date PDF, refreshed on Update Data.
@@ -86,6 +92,24 @@
       <div id="signalGroups"></div>
     </div>
 
+    <details class="panel overview-toggle" id="overviewDetails">
+      <summary data-term="market_overview_toggle">Market overview &amp; report card · বাজার ও পারফরম্যান্স বিস্তারিত <span class="muted-count">(তথ্য দেখতে ক্লিক করুন)</span></summary>
+      <div class="panel market" id="marketPanel">
+        <h2><span class="term" data-term="market_update">Market Update · বাজার পরিস্থিতি</span> <small id="marketAsOf"></small></h2>
+        <div id="marketBody"></div>
+        <div id="seasonalityNote" class="axis-note" style="margin-top:8px"></div>
+      </div>
+
+      <div class="panel" id="reportCardPanel">
+        <h2><span class="term" data-term="report_card">Report card — how reliable are my calls? · আমার পরামর্শ কতটা নির্ভরযোগ্য?</span>
+          <small class="muted-count" id="rcMeta"></small></h2>
+        <div class="sub">Every Update Data snapshots what was recommended; later runs grade those snapshots against what
+          prices actually did over the next 1w / 2w / 1m, next to the whole-market baseline. Win = more than +2%.
+          · প্রতি Update Data-তে সুপারিশ সংরক্ষণ হয়; পরের রানগুলো সেগুলোকে প্রকৃত দামের সাথে মিলিয়ে নম্বর দেয়। জয় = +২%-এর বেশি।</div>
+        <div id="rcBody"></div>
+      </div>
+    </details>
+
     <div class="sug-wrap">
       <div class="panel">
         <h2><span class="term" data-term="score_short">Short-term picks · 1–2 weeks · স্বল্পমেয়াদি</span></h2>
@@ -96,6 +120,77 @@
         <h2><span class="term" data-term="score_long">Long-term picks · 1–2 months · দীর্ঘমেয়াদি</span></h2>
         <div class="sub"><span class="term" data-term="sma">trend 25%</span> · <span class="term" data-term="pe">fundamentals 25%</span> · <span class="term" data-term="pos52">52-week position 20%</span> · <span class="term" data-term="volatility">consistency 15%</span> · <span class="term" data-term="momentum">momentum 15%</span></div>
         <div id="longPicks" class="loading">Loading…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PORTFOLIO ============ -->
+  <section id="tab-portfolio" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="portfolio">Your trade journal and exit engine</span> — record
+      what you actually bought and the app watches every holding with all its analysis: live P&amp;L, a rising
+      <span class="term" data-term="trailing_stop">trailing stop</span> (never moves down), a
+      <span class="term" data-term="breakeven_stop">break-even rule</span>, a
+      <span class="term" data-term="time_stop">time stop</span>, and sell alerts from the Margin/Spike/news engines.
+      Saved in <b>data/portfolio.json</b> on this computer only. Amateurs decide what to buy; professionals decide when
+      to sell. · আপনি যা কিনেছেন তা লিখে রাখুন — অ্যাপ প্রতিটি শেয়ারে নজর রাখবে: লাভ-ক্ষতি, ক্রমশ-ওঠা ট্রেইলিং স্টপ,
+      ব্রেক-ইভেন নিয়ম, টাইম স্টপ এবং বিক্রির সতর্কতা। শুধু এই কম্পিউটারে data/portfolio.json ফাইলে সংরক্ষিত।</p>
+
+    <div class="panel" id="pfAddPanel">
+      <h2>Add a purchase · কেনা যোগ করুন</h2>
+      <div class="scr-controls" style="margin:8px 0 2px">
+        <input type="text" id="pfCode" placeholder="Code e.g. GP" list="pfCodeList" style="width:140px; text-transform:uppercase">
+        <datalist id="pfCodeList"></datalist>
+        <label>Qty <input type="number" id="pfQty" min="1" step="1" value="100" style="width:90px"></label>
+        <label>Buy price ৳ <input type="number" id="pfPrice" min="0.1" step="0.1" style="width:110px"></label>
+        <label>Buy date <input type="date" id="pfDate" style="width:150px"></label>
+        <button class="primary" id="pfAdd">Add · যোগ করুন</button>
+        <span id="pfAddMsg" class="page-info"></span>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pfAlertsPanel">
+      <h2><span class="term" data-term="sell_alerts">⚠ Sell alerts · বিক্রির সতর্কতা</span></h2>
+      <div id="pfAlerts"></div>
+    </div>
+
+    <div class="panel hidden" id="pfDiversify">
+      <h2><span class="term" data-term="diversification">Diversification check · বৈচিত্র্য পরীক্ষা</span></h2>
+      <div id="pfDiversifyBody"></div>
+    </div>
+
+    <div class="panel" id="pfHoldingsPanel">
+      <h2>Holdings · আপনার শেয়ার <span class="muted-count" id="pfCount"></span></h2>
+      <div class="mgrid" id="pfSummary" style="margin:8px 0 10px"></div>
+      <div class="tbl-wrap">
+        <table id="pfTable">
+          <thead><tr>
+            <th class="lft">Code</th><th>Qty</th>
+            <th class="lft">Buy date</th><th>Buy ৳</th><th>Now ৳</th>
+            <th>Value ৳</th><th>P&amp;L ৳</th><th>P&amp;L %</th>
+            <th data-term="time_stop">Held</th>
+            <th data-term="target">Target</th>
+            <th data-term="eff_stop">Stop (rule)</th>
+            <th class="lft" data-term="sell_alerts">Alerts</th>
+            <th class="lft">Actions</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="pfClosedPanel">
+      <h2>Closed trades · সম্পন্ন লেনদেন <span class="muted-count" id="pfClosedCount"></span></h2>
+      <div class="tbl-wrap">
+        <table id="pfClosedTable">
+          <thead><tr>
+            <th class="lft">Code</th><th>Qty</th>
+            <th class="lft">Buy date</th><th>Buy ৳</th>
+            <th class="lft">Sell date</th><th>Sell ৳</th>
+            <th>P&amp;L ৳</th><th>P&amp;L %</th>
+            <th class="lft">Actions</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -164,23 +259,32 @@
 
   <!-- ============ MARGIN (2-year range extremes) ============ -->
   <section id="tab-margin" class="hidden">
-    <p class="disclaimer"><span class="term" data-term="margin_tab">Shares at the extremes of their 2-year price range</span> —
-      the bottom quarter (<b>Lower Margin</b>) scored for the chance the price starts <b>rising</b>, the top quarter
-      (<b>Higher Margin</b>) scored for the chance it starts <b>falling</b>, using 2 years of history, announcements,
-      record dates and AGM/EGM data. The "from" date is a calendar-aware estimate of when the turn could begin —
-      a decision aid, not a prediction. · ২ বছরের দামের সীমার প্রান্তে থাকা শেয়ার — নিচের ২৫% (Lower Margin) দাম বাড়ার
-      সম্ভাবনা অনুযায়ী, উপরের ২৫% (Higher Margin) দাম কমার সম্ভাবনা অনুযায়ী স্কোর করা। তারিখটি পরিবর্তন শুরুর আনুমানিক
-      সময় — সিদ্ধান্তে সহায়ক, ভবিষ্যদ্বাণী নয়।</p>
+    <p class="disclaimer"><span class="term" data-term="margin_tab">Shares at the extremes of their price range over a
+      period you choose</span> (1 month – 2 years, default <b>3 months</b>) — the bottom quarter (<b>Lower Margin</b>)
+      scored for the chance the price starts <b>rising</b>, the top quarter (<b>Higher Margin</b>) scored for the
+      chance it starts <b>falling</b>, using 2 years of history, announcements, record dates and AGM/EGM data.
+      The "from" date is a calendar-aware estimate of when the turn could begin — a decision aid, not a prediction.
+      · আপনার বেছে নেওয়া সময়ের (১ মাস – ২ বছর, ডিফল্ট ৩ মাস) দামের সীমার প্রান্তে থাকা শেয়ার — নিচের ২৫% (Lower Margin)
+      দাম বাড়ার সম্ভাবনা অনুযায়ী, উপরের ২৫% (Higher Margin) দাম কমার সম্ভাবনা অনুযায়ী স্কোর করা। তারিখটি পরিবর্তন শুরুর
+      আনুমানিক সময় — সিদ্ধান্তে সহায়ক, ভবিষ্যদ্বাণী নয়।</p>
     <div class="chart-controls">
       <div class="seg" id="mgSeg">
         <button data-mg="lower" class="active term" data-term="lower_margin">▼ Lower Margin · নিম্ন প্রান্ত</button>
         <button data-mg="higher" class="term" data-term="higher_margin">▲ Higher Margin · উচ্চ প্রান্ত</button>
       </div>
+      <div class="seg" id="mgRangeSeg" data-term="pos2y">
+        <button data-range="1m">1-Month</button>
+        <button data-range="2m">2-Month</button>
+        <button data-range="3m" class="active">3-Month</button>
+        <button data-range="6m">6-Month</button>
+        <button data-range="1y">1-Year</button>
+        <button data-range="2y">2-Year</button>
+      </div>
       <input type="text" id="mgSearch" placeholder="Filter by code or sector…">
       <span class="page-info" id="mgCount"></span>
     </div>
     <div class="panel" id="mgLowerPanel">
-      <h2><span class="term" data-term="lower_margin">▼ Lower Margin — bottom 25% of the 2-year range</span></h2>
+      <h2><span class="term" data-term="lower_margin" id="mgLowerTitle">▼ Lower Margin — bottom 25% of the 3-month range</span></h2>
       <div class="sub">Sorted by <span class="term" data-term="rise_score">rise score</span> — the chance the price
         turns up soon. High scores mean reversal evidence + accumulation + a catalyst; ⚠-flagged shares are cheap for
         a reason. · দাম শিগগিরই বাড়ার সম্ভাবনা অনুযায়ী সাজানো; ⚠ চিহ্নিত শেয়ার কারণ ছাড়া সস্তা নয়।</div>
@@ -190,8 +294,8 @@
             <th>#</th><th>★</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
             <th>Price</th>
-            <th data-term="pos2y">2y pos</th>
-            <th data-term="from_low">Above 2y low</th>
+            <th data-term="pos2y" id="mgLowerPosTh">3m pos</th>
+            <th data-term="from_low" id="mgLowerDistTh">Above 3m low</th>
             <th data-term="rsi">RSI</th>
             <th data-term="returns">1w%</th><th data-term="returns">1m%</th>
             <th data-term="rise_score">Rise score</th>
@@ -203,7 +307,7 @@
       </div>
     </div>
     <div class="panel hidden" id="mgHigherPanel">
-      <h2><span class="term" data-term="higher_margin">▲ Higher Margin — top 25% of the 2-year range</span></h2>
+      <h2><span class="term" data-term="higher_margin" id="mgHigherTitle">▲ Higher Margin — top 25% of the 3-month range</span></h2>
       <div class="sub">Sorted by <span class="term" data-term="fall_score">fall score</span> — the chance the price
         turns down soon. Useful for taking profit on shares you hold, and for knowing what NOT to chase.
         · দাম শিগগিরই কমার সম্ভাবনা অনুযায়ী সাজানো — ধরে রাখা শেয়ারে মুনাফা তোলার এবং কোনটির পেছনে না ছোটার নির্দেশনা।</div>
@@ -213,8 +317,8 @@
             <th>#</th><th>★</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
             <th>Price</th>
-            <th data-term="pos2y">2y pos</th>
-            <th data-term="from_high">Below 2y high</th>
+            <th data-term="pos2y" id="mgHigherPosTh">3m pos</th>
+            <th data-term="from_high" id="mgHigherDistTh">Below 3m high</th>
             <th data-term="rsi">RSI</th>
             <th data-term="returns">1w%</th><th data-term="returns">1m%</th>
             <th data-term="fall_score">Fall score</th>
@@ -271,21 +375,79 @@
         <option>Strong Buy</option><option>Buy</option><option>Watch</option>
         <option>Neutral</option><option>Avoid</option>
       </select>
-      <select id="fltRsi" data-term="rsi">
-        <option value="">Any RSI</option>
-        <option value="oversold">Oversold &lt;30</option>
-        <option value="neutral">Neutral 30–70</option>
-        <option value="sweet">Sweet spot 45–65</option>
-        <option value="overbought">Overbought &gt;70</option>
-      </select>
-      <label class="term" data-term="liquidity">Min liq
-        <input type="number" id="fltLiq" min="0" step="1" placeholder="mn" style="width:60px"></label>
-      <label class="term" data-term="composite">Min score
-        <input type="number" id="fltComposite" min="0" max="100" step="5" placeholder="0" style="width:56px"></label>
       <label class="term" data-term="eligible"><input type="checkbox" id="scrEligible"> eligible only</label>
-      <label class="term" data-term="flags"><input type="checkbox" id="fltNoFlags"> no risk flags</label>
+      <div class="spacer"></div>
+      <div class="col-picker-wrap">
+        <button id="btnColumns" data-term="columns_picker">Columns ▾</button>
+        <div class="col-picker-pop hidden" id="colPickerPop"></div>
+      </div>
+      <button id="btnExportCsv" data-term="csv_export">⭳ Export CSV</button>
       <span class="page-info" id="scrCount"></span>
     </div>
+
+    <div class="scr-controls">
+      <select id="presetSelect" data-term="saved_filters"><option value="">Quick screens…</option></select>
+      <button id="presetLoad" title="Load selected preset">Load</button>
+      <button id="presetSave" title="Save the current filters under a name">Save current…</button>
+      <button id="presetDelete" title="Delete selected saved preset (built-in screens can't be deleted)">Delete</button>
+      <div class="spacer"></div>
+      <button id="btnClearFilters" data-term="clear_filters">Clear all filters</button>
+    </div>
+
+    <details class="filter-more">
+      <summary data-term="more_filters">More filters · আরও ফিল্টার</summary>
+      <div class="filter-groups">
+        <div class="filter-group">
+          <div class="filter-group-label">Technical · টেকনিক্যাল</div>
+          <select id="fltRsi" data-term="rsi">
+            <option value="">Any RSI</option>
+            <option value="oversold">Oversold &lt;30</option>
+            <option value="neutral">Neutral 30–70</option>
+            <option value="sweet">Sweet spot 45–65</option>
+            <option value="overbought">Overbought &gt;70</option>
+          </select>
+          <label class="term" data-term="composite">Min score
+            <input type="number" id="fltComposite" min="0" max="100" step="5" placeholder="0" style="width:56px"></label>
+          <label class="term" data-term="atr">Max ATR%
+            <input type="number" id="fltAtr" min="0" step="0.5" placeholder="any" style="width:60px"></label>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">Fundamental · মৌলভিত্তি</div>
+          <select id="fltCapClass" data-term="cap_class">
+            <option value="">Any size</option>
+            <option value="Large">Large cap</option><option value="Mid">Mid cap</option><option value="Small">Small cap</option>
+          </select>
+          <label class="term" data-term="p_nav">Max P/NAV
+            <input type="number" id="fltPnav" min="0" step="0.1" placeholder="any" style="width:60px"></label>
+          <label class="term" data-term="dividend_yield">Min DivY%
+            <input type="number" id="fltDivYield" min="0" step="0.5" placeholder="any" style="width:60px"></label>
+          <select id="fltEpsTrend" data-term="eps_trend">
+            <option value="">Any EPS trend</option>
+            <option value="up">Improving</option>
+            <option value="turned-profitable">Turned profitable</option>
+            <option value="down">Declining</option>
+            <option value="turned-loss">Turned loss</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label">Risk &amp; ownership · ঝুঁকি ও মালিকানা</div>
+          <label class="term" data-term="liquidity">Min liq
+            <input type="number" id="fltLiq" min="0" step="1" placeholder="mn" style="width:60px"></label>
+          <label class="term" data-term="flags"><input type="checkbox" id="fltNoFlags"> no risk flags</label>
+          <label class="term" data-term="flag:institutional-accumulation"><input type="checkbox" id="fltInstAccum"> institutional accumulation</label>
+        </div>
+        <div class="filter-group">
+          <div class="filter-group-label" data-term="cross_tab_filter">Also appears in · অন্যান্য ট্যাবে</div>
+          <label class="term" data-term="spike_tab"><input type="checkbox" id="fltAlsoSpike"> Spike</label>
+          <label class="term" data-term="high_profit"><input type="checkbox" id="fltAlsoHp"> High Profit</label>
+          <label class="term" data-term="lower_margin"><input type="checkbox" id="fltAlsoMgLower"> Margin (lower)</label>
+          <label class="term" data-term="higher_margin"><input type="checkbox" id="fltAlsoMgHigher"> Margin (higher)</label>
+        </div>
+      </div>
+    </details>
+
+    <div class="filter-chips" id="filterChips"></div>
+
     <div class="tbl-wrap tall">
       <table id="scrTable">
         <thead><tr></tr></thead>

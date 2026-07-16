@@ -33,6 +33,17 @@ nohup python3 server.py > server.log 2>&1 &
 
 ## Using the app
 
+**Navigation** is grouped by decision, not by build order: three top-level
+groups — **Decide** (Suggestions, ⚡High Profit, Spike, Margin — "what should
+I buy/watch right now"), **Manage** (Portfolio — "what do I already own"),
+and **Explore** (Charts, Potential Charts, Screener, Sectors — "let me dig
+through the data myself") — each with its own row of sub-tabs. Switching
+groups remembers the last sub-tab you were on within that group. The
+Suggestions tab keeps the Top 20 and picks front and centre; Market Update
+and the Report Card are supporting context, tucked behind a **"Market
+overview & report card"** collapsible toggle so they don't push the actual
+picks below the fold.
+
 - **Top 20 preferred shares** — the analyst view: best overall picks across
   price history, announcements and AGM/EGM record dates (diversified, max 3
   per sector), each with a verdict (Strong Buy/Buy), a suggested **purchase
@@ -51,6 +62,96 @@ nohup python3 server.py > server.log 2>&1 &
   same way.
 - **Suggestions** — top short-term (1–2 week) and long-term (1–2 month) picks,
   each with a 0–100 score, the reasons behind it, and risk flags.
+- **Portfolio** — your trade journal and exit engine. Record actual purchases
+  (code, qty, price, date; saved in `data/portfolio.json`) and every holding
+  is watched with the full analysis: live P&L, an **ATR trailing stop**
+  (highest close since buy − 2.5× Average True Range, ratchets up and never
+  down), a **break-even rule** (after +5% the stop never sits below entry),
+  a **time stop** (past the planned holding period and still flat = thesis
+  failed), and **sell alerts** from every engine — target hit, stop broken,
+  Higher-Margin fall risk, bearish RSI divergence, momentum turned negative,
+  unbacked spike (sell into strength), trading halt / audit concern. Selling
+  a holding moves it to a closed-trades ledger with realized P&L and win
+  rate. All alerts have Bengali hover meanings.
+- **Report card** (Suggestions tab) — the app grades itself: every analysis
+  run snapshots its Strong Buy / Buy / Top 20 / High Profit lists
+  (`data/rec_history.json`), and later runs measure what those shares
+  actually returned over the following 1w/2w/1m against the whole-market
+  baseline. Builds up as Update Data is clicked across trading days — trust
+  the categories that beat the baseline.
+- **ATR & divergence** — the engine computes true Average True Range from
+  High/Low data (the risk unit for trailing stops) and detects fresh **RSI
+  divergences**: bearish (price higher high, RSI lower high — feeds the fall
+  score, a risk flag and spike penalties) and bullish (price lower low, RSI
+  higher low — feeds the rise score and today's fresh signals).
+- **Candlestick reversal patterns** — hammer / bullish-engulfing (bottom
+  reversal) and shooting-star / bearish-engulfing (top reversal), detected
+  only right at a recent price extreme so they mean something. Bullish
+  patterns strengthen the Margin rise score, unlock a new High Profit
+  **reversal-candle** strategy (a hammer/bullish-engulfing right on a support
+  level touched 2+ times before, in a profitable company), and surface as
+  fresh signals; bearish patterns add a risk flag, weaken the Margin fall
+  score, and trigger a Portfolio sell alert.
+- **Gap analysis** — today's open vs yesterday's close, classified as
+  **follow-through** (the move held through the close — a real catalyst) or
+  **faded** (fully round-tripped back through yesterday's close — a classic
+  trap for chasers). Feeds the Spike continuation score, the Margin rise/fall
+  scores, and a `gap-fade` Portfolio sell alert.
+- **Intraday close-strength** — where today's close landed within today's
+  own high-low range (0–100%). A strong close under a spike or breakout
+  confirms buyers won the session; a weak close is a warning even when the
+  day's headline % change looks fine. Feeds the Spike continuation score.
+- **Clustered support/resistance levels** — real price levels the share has
+  reversed at 2+ times over the last year (swing highs/lows clustered by
+  proximity), not just a simple period high/low. Strengthens support in the
+  Margin rise score and headroom in the High Profit breakout strategy;
+  proximity to a proven resistance (`near-key-resistance` flag) weakens the
+  Margin rise/fall balance and triggers a Portfolio sell alert. Shown in the
+  detail view alongside the touch count.
+- **NAV, P/NAV & institutional holding trend** — `fetch_profiles.py` now also
+  parses each company's **NAV per share** and true **annual EPS** from its
+  audited annual filing (fixing a real bug where 150/393 companies missing
+  a `latest_PE.php` entry had their P/E computed from a *quarterly* EPS
+  mistaken for annual, inflating it ~4×), plus the **shareholding-split
+  history** (Sponsor/Govt/Institute/Foreign/Public) and distinct
+  **quarterly-EPS readings**, both accumulated across repeated runs into
+  `data/fundamentals_history.json`. This powers: **P/NAV** (price below book
+  value while profitable is a classic value screen — a Screener column and a
+  Suggestions/Margin reason), an **institutional/foreign holding trend**
+  (`institutional-accumulation`/`institutional-selling` flags — real filing
+  data, not a volume proxy, blended into the Margin accumulation/distribution
+  signal and the High Profit accumulation strategy), and **quarterly EPS
+  momentum** (`eps-declining` flag; up/down/turned-profitable/turned-loss
+  reasons in Suggestions and Margin). EPS momentum needs at least two
+  `fetch_profiles.py --refresh` runs across a company's reporting calendar
+  to populate (the interim table only shows this fiscal year's quarters as a
+  snapshot); the holding trend and NAV populate immediately.
+- **Beta** — every share's beta against a synthetic, equal-weighted market
+  index built from all ~395 tracked shares' own 2-year price history (the
+  real DSEX only accumulates on days someone clicks Update Data, far too
+  sparse for a 180-session regression). Classified Aggressive (≥1.2) /
+  Market-like / Defensive (≤0.7), capped to [-2, 4] to stop an illiquid
+  share's noisy raw regression from distorting the label. Shown in the
+  Screener, the detail view, and as your **portfolio beta** (value-weighted
+  across current holdings) on the Portfolio tab.
+- **Market cap & size class** — price × outstanding shares, bucketed Large
+  (≥৳20,000mn) / Mid (৳3,000–20,000mn) / Small (<৳3,000mn); a Screener
+  column, filter, and detail-view stat.
+- **Seasonality** (context only, never a trading signal) — historical average
+  return by calendar month, from the full 2-year daily history. The
+  market-wide figure (all ~395 shares combined, tens of thousands of daily
+  observations per month) is shown as a note on the Suggestions tab; each
+  share's own current-month figure is shown in its detail view with its
+  sample size (~40 daily observations per share per month) so you can judge
+  how much to trust it — deliberately never fed into any score.
+- **Portfolio diversification check** — pairwise correlation of daily returns
+  among your actual holdings (not sector labels), flagging pairs at 0.7+ as
+  a concentration warning: two "different" picks that move together are one
+  bet wearing two tickers, not real diversification.
+- **Screener upgrades** — new filters (max P/NAV, max ATR%, institutional-
+  accumulation-only, cap size), a **CSV export** button (downloads exactly
+  the currently filtered/sorted view), and **saved filter presets** (name,
+  save, load, delete — stored in this browser only).
 - **Spike** — shares that suddenly jumped **3%+ this session**, vs yesterday's
   close and vs the session open (clicking Update Data during trading hours
   makes this "right now vs the start of the day", since live prices are
@@ -76,8 +177,11 @@ nohup python3 server.py > server.log 2>&1 &
   sector; a warning banner appears when the market regime is Bearish.
   Higher bar than the regular lists (≥ 8 mn BDT daily liquidity, no hard risk
   flags) — but higher reward means higher risk: use the stop and the 2% rule.
-- **Margin** — every share at an extreme of its own 2-year price range, in two
-  sub-tabs. **Lower Margin** (bottom 25% of the range) scores each share 0–100
+- **Margin** — every share at an extreme of its own price range over a
+  **selectable period** (1-Month / 2-Month / 3-Month / 6-Month / 1-Year /
+  2-Year filter buttons; default 3-Month — all six windows are recomputed on
+  every Update Data, so switching is instant), in two sub-tabs.
+  **Lower Margin** (bottom 25% of the range) scores each share 0–100
   for the chance the price starts *rising* — reversal evidence (MACD/RSI
   turning) 35%, OBV accumulation 20%, support holding 15%, fundamentals 15%,
   catalysts (record dates, dividend/board-meeting news) 15%; trading halts and
@@ -126,6 +230,21 @@ nohup python3 server.py > server.log 2>&1 &
   AGM/EGM PDF) have been refreshed.
 - **Screener** — sortable, searchable table of every share × every indicator.
   Tick *eligible only* to hide funds, bonds, and illiquid/category-Z shares.
+  A **Columns** picker shows/hides any of the 25+ available columns (Code is
+  always shown); only ~12 are visible by default to keep the table scannable,
+  and your choice is remembered. A second control row groups the less common
+  filters — Technical (RSI zone, min score, max ATR%), Fundamental (cap size,
+  max P/NAV, min dividend yield, EPS trend), Risk & ownership (min liquidity,
+  no risk flags, institutional accumulation), and **cross-tab** ("also
+  appears in Spike / High Profit / Margin lower / Margin higher") — behind a
+  collapsible **"More filters"** toggle. Every active filter shows as a
+  removable chip above the table, with a **Clear all filters** button.
+  **Quick screens** offers five curated one-click presets (★ Value picks,
+  ★ Momentum breakouts, ★ Income, ★ Turnarounds, ★ Institutional
+  accumulation) alongside any filter combination you save yourself under a
+  name (stored in this browser only; built-ins can't be deleted). An
+  **Export CSV** button downloads exactly the currently filtered, sorted,
+  and visible-columns view.
 - **Shortlist** — click the ☆ on any chart card, screener row, or the detail
   view's header to pin a share. Shortlisted shares appear in their own
   highlighted **★ Shortlisted** section at the top of the **Charts**,
@@ -179,8 +298,10 @@ python3 scrape_dse.py         # FULL 2-year re-scrape (~20 min) — only needed 
 ```
 
 Typical routine: just click **Update Data** in the app (it runs sync + analysis
-for you). Re-run `fetch_profiles.py` occasionally (e.g. monthly, or after
-earnings season) to pick up new EPS/dividend/category data.
+for you). Re-run `fetch_profiles.py --refresh` occasionally (e.g. monthly, or
+after earnings season) to pick up new EPS/dividend/category data — this is
+also what builds up the institutional-holding-trend and quarterly-EPS-momentum
+history over time, so a monthly cadence directly improves those two signals.
 
 ## Scoring rules (analysis.py)
 
@@ -203,7 +324,7 @@ as flags. **Rule-based signals, not financial advice.**
 | `server.py` | backend web server + API (`/api/summary`, `/api/charts`, `/api/history`, `/api/update`) |
 | `analysis.py` | indicators + scoring → `data/analysis.json` |
 | `sync.py` | incremental price sync (gap-fill + new-listing backfill) |
-| `fetch_profiles.py` | company fundamentals + full company name scraper → `data/profiles.json` |
+| `fetch_profiles.py` | company fundamentals + full company name scraper → `data/profiles.json`; also parses NAV per share, annual EPS, quarterly EPS, and shareholding-split snapshots, accumulating the latter two into `data/fundamentals_history.json` |
 | `fetch_news.py` | company announcements scraper + categorizer → `data/announcements.json` |
 | `fetch_agm.py` | AGM/EGM & record-date PDF parser + name-to-ticker matcher → `data/agm_notices.json` |
 | `scrape_dse.py` | original full 2-year scraper (bootstrap/rebuild only) |
@@ -216,6 +337,7 @@ as flags. **Rule-based signals, not financial advice.**
 | `data/market_history.json` | daily official market snapshots (DSEX/DS30/etc, growing over time) |
 | `data/announcements.json` | categorized company announcements, rolling 60-day window |
 | `data/agm_notices.json` | parsed AGM/EGM PDF matched to tickers (record dates, dividends) |
+| `data/fundamentals_history.json` | accumulating monthly institutional/foreign shareholding snapshots and distinct quarterly-EPS readings per ticker, built up over repeated `fetch_profiles.py` runs |
 
 ## Requirements
 

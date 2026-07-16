@@ -32,6 +32,9 @@ ANNOUNCEMENTS_JSON = os.path.join(DATA_DIR, "announcements.json")
 AGM_JSON = os.path.join(DATA_DIR, "agm_notices.json")
 PROFILES_JSON = os.path.join(DATA_DIR, "profiles.json")
 ANALYSIS_JSON = os.path.join(DATA_DIR, "analysis.json")
+PORTFOLIO_JSON = os.path.join(DATA_DIR, "portfolio.json")
+REC_HISTORY_JSON = os.path.join(DATA_DIR, "rec_history.json")
+FUNDAMENTALS_HISTORY_JSON = os.path.join(DATA_DIR, "fundamentals_history.json")
 
 CSV_HEADER = ["Ticker", "Date", "LTP", "High", "Low", "OpenP", "CloseP", "YCP",
               "Trades", "ValueMn", "Volume"]

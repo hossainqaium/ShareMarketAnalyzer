@@ -19,7 +19,8 @@ import time
 from datetime import date, datetime, timedelta
 
 from dse_common import (AGM_JSON, ANALYSIS_JSON, ANNOUNCEMENTS_JSON,
-                        MARKET_HISTORY_JSON, PROFILES_JSON, load_history,
+                        FUNDAMENTALS_HISTORY_JSON, MARKET_HISTORY_JSON,
+                        PROFILES_JSON, REC_HISTORY_JSON, load_history,
                         load_json, load_tickers, save_json)
 
 NEWS_LOOKBACK_DAYS = 30
@@ -142,8 +143,11 @@ def up_streak(closes):
 
 
 def build_series(rows):
-    """Extract clean (dates, closes, volumes, values_mn) skipping non-traded days."""
-    dates, closes, vols, vals = [], [], [], []
+    """Extract clean (dates, closes, volumes, values_mn, highs, lows, opens)
+    skipping non-traded days. High/Low fall back to the close when missing;
+    Open is 0 for a live intraday row (DSE doesn't publish it until day-end —
+    candle/gap logic below skips a session with no real open)."""
+    dates, closes, vols, vals, highs, lows, opens = [], [], [], [], [], [], []
     for r in rows:
         try:
             close = float(r["CloseP"])
@@ -155,13 +159,192 @@ def build_series(rows):
             closes.append(close)
             vols.append(float(r["Volume"] or 0))
             vals.append(float(r["ValueMn"] or 0))
+            try:
+                h = float(r.get("High") or 0)
+                l = float(r.get("Low") or 0)
+                o = float(r.get("OpenP") or 0)
+            except (ValueError, TypeError):
+                h = l = o = 0.0
+            highs.append(h if h > 0 else close)
+            lows.append(l if 0 < l <= (h if h > 0 else close) else close)
+            opens.append(o if o > 0 else 0.0)
         except (ValueError, KeyError):
             continue
-    return dates, closes, vols, vals
+    return dates, closes, vols, vals, highs, lows, opens
 
 
-def analyze_ticker(ticker, rows, profile, pe_map, today):
-    dates, closes, vols, vals = build_series(rows)
+def atr(highs, lows, closes, n=14):
+    """Wilder Average True Range — the real daily trading range including
+    gaps, from High/Low data (better risk unit than close-only volatility)."""
+    if len(closes) < n + 1:
+        return None
+    trs = []
+    for i in range(1, len(closes)):
+        trs.append(max(highs[i] - lows[i],
+                       abs(highs[i] - closes[i - 1]),
+                       abs(lows[i] - closes[i - 1])))
+    a = sum(trs[:n]) / n
+    for t in trs[n:]:
+        a = (a * (n - 1) + t) / n
+    return a
+
+
+def detect_divergence(closes):
+    """RSI divergence over the last ~60 sessions, only if the second extreme
+    is fresh (last 10 sessions). Bearish: price higher high but RSI lower
+    high from overbought. Bullish: price lower low but RSI higher low from
+    oversold. One of the most reliable early turn warnings."""
+    n = len(closes)
+    if n < 45:
+        return None
+    win = closes[-60:]
+    w = len(win)
+    peaks = [i for i in range(3, w - 3) if win[i] == max(win[i - 3:i + 4])]
+    troughs = [i for i in range(3, w - 3) if win[i] == min(win[i - 3:i + 4])]
+
+    def rsi_at(i):
+        return rsi(closes[:n - w + i + 1][-80:])
+
+    def last_two(idx):
+        out = []
+        for i in reversed(idx):
+            if not out or out[-1] - i >= 5:
+                out.append(i)
+            if len(out) == 2:
+                break
+        return (out[1], out[0]) if len(out) == 2 else None
+
+    p = last_two(peaks)
+    if p and p[1] >= w - 10 and win[p[1]] > win[p[0]] * 1.01:
+        ra, rb = rsi_at(p[0]), rsi_at(p[1])
+        if ra is not None and rb is not None and ra > 60 and rb < ra - 3:
+            return "bearish"
+    t = last_two(troughs)
+    if t and t[1] >= w - 10 and win[t[1]] < win[t[0]] * 0.99:
+        ra, rb = rsi_at(t[0]), rsi_at(t[1])
+        if ra is not None and rb is not None and ra < 40 and rb > ra + 3:
+            return "bullish"
+    return None
+
+
+def close_strength(high, low, close):
+    """Where today's close landed in today's high-low range: 1.0 = closed at
+    the high (buyers won the day), 0.0 = closed at the low (sellers won)."""
+    if high <= low:
+        return 0.5
+    return clamp((close - low) / (high - low))
+
+
+def detect_candle(opens, highs, lows, closes, near_low, near_high):
+    """Classic 1-2 candle reversal pattern on the latest session, only
+    meaningful (and only checked) right at a recent extreme: hammer/bullish-
+    engulfing near a low, shooting-star/bearish-engulfing near a high."""
+    i = len(closes) - 1
+    if i < 1 or opens[i] <= 0 or not (near_low or near_high):
+        return None
+    o, h, l, c = opens[i], highs[i], lows[i], closes[i]
+    rng = h - l
+    if rng <= 0:
+        return None
+    body = abs(c - o)
+    upper_wick = h - max(o, c)
+    lower_wick = min(o, c) - l
+    if near_low and body <= 0.35 * rng and lower_wick >= 2 * body and upper_wick <= 0.15 * rng:
+        return "hammer"
+    if near_high and body <= 0.35 * rng and upper_wick >= 2 * body and lower_wick <= 0.15 * rng:
+        return "shooting-star"
+    if opens[i - 1] > 0:
+        po, pc = opens[i - 1], closes[i - 1]
+        if near_low and pc < po and c > o and c >= po and o <= pc:
+            return "bullish-engulfing"
+        if near_high and pc > po and c < o and c <= po and o >= pc:
+            return "bearish-engulfing"
+    return None
+
+
+def detect_gap(openp, ycp, price):
+    """Gap % of today's open vs yesterday's close, and whether the move held
+    (still on the gap side of yesterday's close) or faded (fully round-tripped
+    back through it — a classic trap for chasers). None if too small to call
+    a real gap, or the open isn't published yet (live intraday row)."""
+    if openp <= 0 or ycp <= 0:
+        return None, None
+    gap_pct = (openp / ycp - 1) * 100
+    if abs(gap_pct) < 1.5:
+        return round(gap_pct, 2), None
+    if gap_pct > 0:
+        status = "follow-through" if price > ycp else "faded"
+    else:
+        status = "follow-through" if price < ycp else "faded"
+    return round(gap_pct, 2), status
+
+
+def support_resistance_levels(highs, lows, lookback=250, tolerance=0.015, window=4):
+    """Cluster swing highs/lows (local extrema, ±window sessions) into price
+    levels touched 2+ times — real support/resistance from where the market
+    has actually reversed before, not just a simple period high/low."""
+    n = len(highs)
+    if n < window * 2 + 10:
+        return None
+    lb = min(lookback, n)
+    h, l = highs[-lb:], lows[-lb:]
+    swings = []
+    for i in range(window, lb - window):
+        if h[i] == max(h[i - window:i + window + 1]):
+            swings.append(h[i])
+        if l[i] == min(l[i - window:i + window + 1]):
+            swings.append(l[i])
+    if not swings:
+        return None
+    swings.sort()
+    clusters, cur = [], [swings[0]]
+    for v in swings[1:]:
+        if v <= cur[-1] * (1 + tolerance):
+            cur.append(v)
+        else:
+            clusters.append(cur)
+            cur = [v]
+    clusters.append(cur)
+    levels = [{"price": sum(c) / len(c), "touches": len(c)} for c in clusters if len(c) >= 2]
+    return levels or None
+
+
+def holding_trend(hist, months_back=3):
+    """Change in institute+foreign holding % over the last few stored
+    snapshots — a simple 'smart money' accumulation/distribution signal.
+    None until at least 2 monthly snapshots have accumulated (fetch_profiles
+    only shows ~3 months per page; this builds up over repeated runs)."""
+    if not hist or len(hist) < 2:
+        return None
+    latest = hist[-1]
+    baseline = hist[max(0, len(hist) - 1 - months_back)]
+    li = (latest.get("institute") or 0) + (latest.get("foreign") or 0)
+    bi = (baseline.get("institute") or 0) + (baseline.get("foreign") or 0)
+    return round(li - bi, 2)
+
+
+def eps_momentum(eps_interim_hist):
+    """(growth_pct, direction) from the latest vs. previous DISTINCT interim
+    EPS reading. growth_pct is None when either figure isn't positive (a
+    sign flip is reported as a direction label instead — dividing through a
+    near-zero or negative base produces a meaningless percentage)."""
+    if not eps_interim_hist or len(eps_interim_hist) < 2:
+        return None, None
+    latest, prev = eps_interim_hist[-1]["values"], eps_interim_hist[-2]["values"]
+    if not latest or not prev:
+        return None, None
+    a, b = latest[0], prev[0]
+    if b > 0 and a > 0:
+        return round((a / b - 1) * 100, 1), ("up" if a > b else "down" if a < b else "flat")
+    if b <= 0 < a:
+        return None, "turned-profitable"
+    if b > 0 >= a:
+        return None, "turned-loss"
+    return None, None
+
+
+def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
+    dates, closes, vols, vals, highs, lows, opens = build_series(rows)
     if len(closes) < 15:
         return None
 
@@ -232,16 +415,60 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     pos52 = (price - lo52) / (hi52 - lo52) if hi52 > lo52 else 0.5
     m["hi_52w"], m["lo_52w"], m["pos_52w"] = round(hi52, 2), round(lo52, 2), round(pos52, 2)
 
-    # full-history (up to 2y) range position — the "margin" the share trades at
-    hi2, lo2 = max(closes), min(closes)
-    m["hi_2y"], m["lo_2y"] = round(hi2, 2), round(lo2, 2)
-    m["pos_2y"] = round((price - lo2) / (hi2 - lo2), 3) if hi2 > lo2 else None
+    # range position across multiple windows (trading sessions) — the Margin
+    # tab's selectable basis; 0 = at the window low, 1 = at the window high
+    ranges = {}
+    for key, nd in (("1m", 21), ("2m", 42), ("3m", 63),
+                    ("6m", 126), ("1y", 250), ("2y", None)):
+        win = closes if nd is None else closes[-nd:]
+        hi_w, lo_w = max(win), min(win)
+        ranges[key] = {"lo": round(lo_w, 2), "hi": round(hi_w, 2),
+                       "pos": round((price - lo_w) / (hi_w - lo_w), 3) if hi_w > lo_w else None}
+    m["ranges"] = ranges
+    m["hi_2y"], m["lo_2y"] = ranges["2y"]["hi"], ranges["2y"]["lo"]
+    m["pos_2y"] = ranges["2y"]["pos"]
 
     # support / resistance over the last quarter (~63 trading days)
     qtr = closes[-63:]
     hi3m, lo3m = max(qtr), min(qtr)
     m["dist_support"] = round((price - lo3m) / price * 100, 1) if price else None
     m["dist_resistance"] = round((hi3m - price) / price * 100, 1) if price else None
+
+    # gap analysis: today's open vs yesterday's close, and whether the move
+    # held through the close or fully round-tripped (a classic chasers' trap)
+    gap_pct, gap_status = detect_gap(openp, ycp, price)
+    m["gap_pct"], m["gap_status"] = gap_pct, gap_status
+
+    # intraday close-strength: where today's close sits in today's own
+    # high-low range — near the top means buyers won the session
+    m["close_strength"] = round(
+        close_strength(highs[-1] if highs else price, lows[-1] if lows else price, price), 2)
+
+    # candlestick reversal pattern — only meaningful (and only checked) right
+    # at a recent extreme, using the 3-month range position as "recent"
+    near_low = ranges["3m"]["pos"] is not None and ranges["3m"]["pos"] <= 0.12
+    near_high = ranges["3m"]["pos"] is not None and ranges["3m"]["pos"] >= 0.88
+    m["candle_pattern"] = detect_candle(opens, highs, lows, closes, near_low, near_high)
+
+    # clustered support/resistance: real levels the price has reversed at
+    # multiple times, not just a simple period high/low
+    sr_levels = support_resistance_levels(highs, lows)
+    m["key_support"] = m["key_resistance"] = None
+    m["key_support_touches"] = m["key_resistance_touches"] = None
+    m["dist_key_support"] = m["dist_key_resistance"] = None
+    if sr_levels:
+        below = [lv for lv in sr_levels if lv["price"] < price]
+        above = [lv for lv in sr_levels if lv["price"] > price]
+        if below:
+            lv = sorted(below, key=lambda x: (-x["touches"], price - x["price"]))[0]
+            m["key_support"] = round(lv["price"], 2)
+            m["key_support_touches"] = lv["touches"]
+            m["dist_key_support"] = round((price - lv["price"]) / price * 100, 1)
+        if above:
+            lv = sorted(above, key=lambda x: (-x["touches"], x["price"] - price))[0]
+            m["key_resistance"] = round(lv["price"], 2)
+            m["key_resistance_touches"] = lv["touches"]
+            m["dist_key_resistance"] = round((lv["price"] - price) / price * 100, 1)
 
     bpos = bollinger_pos(closes)
     m["boll_pos"] = round(bpos, 2) if bpos is not None else None
@@ -285,13 +512,26 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     m["volatility"] = round(vol_daily, 2) if vol_daily is not None else None
     pos_days = sum(1 for r in rets if r > 0) / len(rets) if rets else 0.5
 
+    # ATR(14): the true daily trading range including gaps — the risk unit
+    # for trailing stops (from the last ~120 sessions)
+    a14 = atr(highs[-120:], lows[-120:], closes[-120:])
+    m["atr14"] = round(a14, 3) if a14 else None
+    m["atr_pct"] = round(a14 / price * 100, 2) if a14 and price else None
+
+    # RSI divergence — early warning that a trend is exhausting
+    m["divergence"] = detect_divergence(closes)
+
     # ---- fundamentals ----
     prof = profile or {}
-    eps = prof.get("eps_basic")
+    eps = prof.get("eps_basic")          # latest REPORTED QUARTER's EPS (sign-only gate)
+    eps_annual = prof.get("eps_annual")  # true annual EPS (continuing ops, basic) — for P/E
     pe = pe_map.get(ticker)
-    if pe is None and eps and eps > 0:
-        pe = price / eps
+    if pe is None and eps_annual and eps_annual > 0:
+        pe = price / eps_annual
+    elif pe is None and eps and eps > 0:
+        pe = price / eps      # last-resort: still better than no P/E at all
     m["eps"] = eps
+    m["eps_annual"] = eps_annual
     m["pe"] = round(pe, 2) if pe else None
     m["sector"] = prof.get("sector")
     m["category"] = prof.get("category")
@@ -300,6 +540,26 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     div_yield = (m["dividend_pct"] / 10 / price * 100) if m["dividend_pct"] and price else None
     m["dividend_yield"] = round(div_yield, 2) if div_yield else None
     is_equity = (prof.get("instrument_type") or "Equity") == "Equity"
+
+    # NAV per share (from the audited annual filing) → P/NAV, a classic
+    # value screen: trading below book value with profitable operations
+    nav = prof.get("nav_per_share")
+    m["nav_per_share"] = nav
+    m["p_nav"] = round(price / nav, 2) if nav and nav > 0 and price else None
+
+    # market capitalisation & size class (outstanding shares × price)
+    shares_out = prof.get("outstanding_shares")
+    cap_mn = (price * shares_out / 1e6) if shares_out and price else None
+    m["market_cap_mn"] = round(cap_mn, 1) if cap_mn else None
+    m["cap_class"] = ("Large" if cap_mn and cap_mn >= 20000 else
+                      "Mid" if cap_mn and cap_mn >= 3000 else
+                      "Small" if cap_mn else None)
+
+    # institutional/foreign holding trend + interim-EPS momentum — both build
+    # up from repeated fetch_profiles.py runs (data/fundamentals_history.json)
+    fh = fund_hist or {}
+    m["holding_trend_3m"] = holding_trend(fh.get("holding") or [])
+    m["eps_qoq_growth"], m["eps_trend"] = eps_momentum(fh.get("eps_interim") or [])
 
     # ================= SHORT-TERM SCORE =================
     sr, s_reasons = {}, []
@@ -372,7 +632,23 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
             f += 0.2
         if prof.get("category") == "A":
             f += 0.2
-        lr["fundamentals"] = f
+        p_nav = m.get("p_nav")
+        if p_nav is not None and 0 < p_nav < 1 and eps and eps > 0:
+            f += 0.2
+            l_reasons.append(f"Trading below book value (P/NAV {p_nav:.2f}) while profitable")
+        ht = m.get("holding_trend_3m")
+        if ht is not None and ht >= 1.5:
+            f += 0.15
+            l_reasons.append(f"Institutional/foreign holding rising (+{ht:.1f}pp over recent snapshots)")
+        elif ht is not None and ht <= -1.5:
+            f -= 0.15
+        if m.get("eps_trend") in ("up", "turned-profitable") and (
+                m.get("eps_qoq_growth") is None or m["eps_qoq_growth"] > 5):
+            f += 0.15
+            l_reasons.append("Quarterly EPS improving — earnings momentum, not just price momentum")
+        elif m.get("eps_trend") in ("down", "turned-loss"):
+            f -= 0.1
+        lr["fundamentals"] = clamp(f)
         if eps and eps > 0 and prof.get("last_cash_dividend_pct"):
             l_reasons.append(f"Profitable, pays dividend ({prof['last_cash_dividend_pct']:.0f}%)")
     else:
@@ -423,6 +699,12 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     m["rsi_prev"] = round(prev_rsi, 1) if prev_rsi is not None else None
     if rsi14 is not None and prev_rsi is not None and prev_rsi < 30 <= rsi14:
         signals.append("oversold-rebound")
+    if m["divergence"] == "bullish":
+        signals.append("bullish-divergence")
+    if m["candle_pattern"] in ("hammer", "bullish-engulfing"):
+        signals.append(m["candle_pattern"])
+    if m["gap_status"] == "follow-through" and (m["gap_pct"] or 0) > 0:
+        signals.append("gap-up-held")
     m["signals"] = signals
     if signals:
         s_reasons.append("Fresh signal today: " + ", ".join(signals))
@@ -441,6 +723,22 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
         flags.append("high-volatility")
     if m["up_streak"] >= 7:
         flags.append("extended-rally")
+    if m["divergence"] == "bearish":
+        flags.append("bearish-divergence")
+    if m["candle_pattern"] in ("shooting-star", "bearish-engulfing"):
+        flags.append(m["candle_pattern"])
+    if m["gap_status"] == "faded" and (m["gap_pct"] or 0) > 0:
+        flags.append("gap-fade")
+    if (m["dist_key_resistance"] is not None and m["dist_key_resistance"] <= 2
+            and (m["key_resistance_touches"] or 0) >= 3):
+        flags.append("near-key-resistance")
+    ht = m.get("holding_trend_3m")
+    if ht is not None and ht >= 1.5:
+        flags.append("institutional-accumulation")
+    elif ht is not None and ht <= -1.5:
+        flags.append("institutional-selling")
+    if m.get("eps_trend") in ("down", "turned-loss"):
+        flags.append("eps-declining")
     if not is_equity:
         flags.append("not-equity")
     last_dt = datetime.strptime(dates[-1], "%Y-%m-%d").date()
@@ -455,6 +753,7 @@ def analyze_ticker(ticker, rows, profile, pe_map, today):
     m["eligible"] = ("illiquid" not in flags and "not-equity" not in flags
                      and "stale-data" not in flags
                      and prof.get("category") != "Z")
+    m["_series"] = (dates, closes)  # popped by run_analysis for the report card
     return m
 
 
@@ -699,44 +998,57 @@ def hp_candidates(m):
                  f"RSI {(rsi14 or 50):.0f} — strong but not yet overbought"]))
 
     # 3. Quiet accumulation: volume flowing in while price hasn't moved yet.
+    ht = m.get("holding_trend_3m")
     if (accum is not None and accum >= 0.30 and abs(r1m) <= 6 and m.get("sma50")
             and abs(price / m["sma50"] - 1) <= 0.06 and m.get("category") in ("A", "B")):
+        why3 = [f"On-balance volume rising ({accum:+.2f}) while price moved only {r1m:+.1f}% — someone is buying quietly",
+                "Price basing at SMA50 — the markup phase often follows this pattern",
+                f"Category {m['category']} company, so the accumulation is credible"]
+        if ht is not None and ht >= 1.5:
+            why3.insert(0, f"Confirmed by the actual filing: institutional/foreign holding up "
+                        f"+{ht:.1f}pp, not just an OBV proxy")
         out.append(dict(
             strategy="accumulation",
-            conf=1 + (accum >= 0.5) + ((m.get("vol_ratio") or 0) >= 1.2),
+            conf=1 + (accum >= 0.5 or (ht or 0) >= 1.5) + ((m.get("vol_ratio") or 0) >= 1.2),
             hold="4–8 weeks",
             target_pct=clamp(5 * vol, 9, 22), stop_pct=clamp(2 * vol, 3.5, 7),
-            why=[f"On-balance volume rising ({accum:+.2f}) while price moved only {r1m:+.1f}% — someone is buying quietly",
-                 "Price basing at SMA50 — the markup phase often follows this pattern",
-                 f"Category {m['category']} company, so the accumulation is credible"]))
+            why=why3[:3]))
 
     # 4. Oversold rebound in a quality uptrend: buy the dip at support.
     if (rsi14 is not None and rsi14 <= 40 and m.get("sma200") and price > m["sma200"]
             and (m.get("dist_support") or 99) <= 6 and (m.get("eps") or 0) > 0):
         sma20v = m.get("sma20")
         snap = (sma20v / price - 1) * 100 if sma20v and sma20v > price else 0
+        cp_bonus = m.get("candle_pattern") in ("hammer", "bullish-engulfing")
+        why4 = [f"RSI {rsi14:.0f} oversold inside a long-term uptrend (still above SMA200)",
+                f"Only {m.get('dist_support'):.1f}% above 3-month support — a tight, defensible stop",
+                "Profitable company (EPS > 0) — dips in quality get bought"]
+        if cp_bonus:
+            why4.insert(0, f"Fresh {m['candle_pattern'].replace('-', ' ')} candle confirms the bounce today")
         out.append(dict(
             strategy="rebound",
-            conf=1 + (rsi14 <= 34) + (1 if m.get("higher_lows") else 0),
+            conf=1 + (rsi14 <= 34) + (1 if m.get("higher_lows") or cp_bonus else 0),
             hold="2–5 weeks",
             target_pct=clamp(snap + 5, 8, 18), stop_pct=clamp(1.8 * vol, 3, 6),
-            why=[f"RSI {rsi14:.0f} oversold inside a long-term uptrend (still above SMA200)",
-                 f"Only {m.get('dist_support'):.1f}% above 3-month support — a tight, defensible stop",
-                 "Profitable company (EPS > 0) — dips in quality get bought"]))
+            why=why4[:3]))
 
     # 5. Volume-backed breakout: past resistance with real demand behind it.
     near_hi = m.get("hi_52w") and price >= 0.98 * m["hi_52w"]
     if (("breakout-3m" in signals or near_hi) and (m.get("vol_ratio") or 0) >= 1.3
             and (rsi14 or 50) <= 78):
+        held_gap = m.get("gap_status") == "follow-through" and (m.get("gap_pct") or 0) > 0
+        why5 = [("Fresh close above the 3-month high" if "breakout-3m" in signals
+                else "Pressing against its 52-week high") + " — overhead sellers are cleared out",
+                f"Volume {m['vol_ratio']:.1f}× the 30-day average confirms real demand",
+                "Volume-backed breakouts from a base tend to run for weeks"]
+        if m.get("dist_key_resistance") is not None and m["dist_key_resistance"] > 5:
+            why5.append(f"{m['dist_key_resistance']:.0f}% clear of the next real resistance level")
         out.append(dict(
             strategy="breakout",
-            conf=1 + ("volume-spike" in signals) + ((m.get("vol_ratio") or 0) >= 1.8),
+            conf=1 + ("volume-spike" in signals or held_gap) + ((m.get("vol_ratio") or 0) >= 1.8),
             hold="2–6 weeks",
             target_pct=clamp(4.5 * vol, 9, 22), stop_pct=clamp(2 * vol, 3.5, 7),
-            why=[("Fresh close above the 3-month high" if "breakout-3m" in signals
-                  else "Pressing against its 52-week high") + " — overhead sellers are cleared out",
-                 f"Volume {m['vol_ratio']:.1f}× the 30-day average confirms real demand",
-                 "Volume-backed breakouts from a base tend to run for weeks"]))
+            why=why5[:3]))
 
     # 6. Dividend runner: ride the pre-record-date run-up AND keep the dividend.
     dtr = m.get("days_to_record_date")
@@ -763,6 +1075,22 @@ def hp_candidates(m):
             why=[f"Fresh {'MACD' if 'macd-cross' in signals else 'golden'} cross on the latest session — day-one entry, not a chase",
                  f"This share's past buy signals won {m['win_rate']}% of the time "
                  f"({m['signal_trades']} trades, avg {m['signal_avg']:+.1f}% in a month)"]))
+
+    # 8. Reversal candle at a proven level: a hammer/bullish-engulfing candle
+    #    right on support the market has actually defended before — day-one
+    #    entry on the clearest visual reversal signal there is.
+    if (m.get("candle_pattern") in ("hammer", "bullish-engulfing")
+            and m.get("dist_key_support") is not None and m["dist_key_support"] <= 3
+            and (m.get("key_support_touches") or 0) >= 2 and (m.get("eps") or 0) > 0):
+        out.append(dict(
+            strategy="reversal-candle",
+            conf=1 + ((m.get("key_support_touches") or 0) >= 3) + ((m.get("vol_ratio") or 0) >= 1.3),
+            hold="2–5 weeks",
+            target_pct=clamp(3.5 * vol, 8, 18), stop_pct=clamp(1.6 * vol, 2.5, 5),
+            why=[f"Fresh {m['candle_pattern'].replace('-', ' ')} candle right on a level touched "
+                 f"{m['key_support_touches']}× before (at {m['key_support']:.1f}) — a clean, early reversal signal",
+                 "Stop sits just below a level the market has already defended multiple times",
+                 "Profitable company (EPS > 0) — the market has a reason to keep defending this level"]))
 
     return out
 
@@ -843,14 +1171,26 @@ def margin_rise_score(m):
         reversal += 0.2
     if (m.get("r_1w") or 0) > 0:
         reversal += 0.2
+    if m.get("divergence") == "bullish":
+        reversal += 0.25
+    if m.get("candle_pattern") in ("hammer", "bullish-engulfing"):
+        reversal += 0.3
+    if m.get("gap_status") == "follow-through" and (m.get("gap_pct") or 0) > 0:
+        reversal += 0.15
 
     accumulation = clamp(((m.get("accum_20d") or 0) + 0.2) / 0.7)
+    ht = m.get("holding_trend_3m")
+    if ht is not None:                                # real filing data, not just an OBV proxy
+        accumulation = clamp(0.6 * accumulation + 0.4 * clamp((ht + 1) / 4))
 
     support = clamp(1 - (m.get("dist_support") or 20) / 15)
     if (m.get("r_1w") or 0) < -2:                    # still knifing down
         support *= 0.5
     if m.get("higher_lows"):
         support = clamp(support + 0.3)
+    if (m.get("dist_key_support") is not None and m["dist_key_support"] <= 3
+            and (m.get("key_support_touches") or 0) >= 2):
+        support = clamp(support + 0.25)              # defended by a real multi-touch level
 
     f = 0.0                                          # is it worth catching?
     if (m.get("eps") or 0) > 0:
@@ -860,6 +1200,13 @@ def margin_rise_score(m):
         f += 0.2
     if (m.get("avg_value_mn_30d") or 0) >= MIN_LIQUIDITY_MN:
         f += 0.15
+    if m.get("eps_trend") in ("up", "turned-profitable"):
+        f += 0.15
+    elif m.get("eps_trend") in ("down", "turned-loss"):
+        f -= 0.15
+    p_nav = m.get("p_nav")
+    if p_nav is not None and 0 < p_nav < 1:
+        f += 0.15                                     # cheap relative to book value too
 
     cat = 0.0                                        # a reason to turn NOW
     dtr = m.get("days_to_record_date")
@@ -901,6 +1248,9 @@ def margin_fall_score(m):
         over += 0.2
     if (m.get("r_1m") or 0) > 25:
         over += 0.25
+    if (m.get("dist_key_resistance") is not None and m["dist_key_resistance"] <= 2
+            and (m.get("key_resistance_touches") or 0) >= 2):
+        over = clamp(over + 0.25)                    # sitting right at a proven rejection level
 
     fade = 0.0                                       # is momentum already rolling over?
     if slope < 0:
@@ -909,8 +1259,17 @@ def margin_fall_score(m):
         fade += 0.3
     if (m.get("vol_ratio") or 1) < 0.8:
         fade += 0.2
+    if m.get("divergence") == "bearish":
+        fade += 0.4
+    if m.get("candle_pattern") in ("shooting-star", "bearish-engulfing"):
+        fade += 0.3
+    if m.get("gap_status") == "faded" and (m.get("gap_pct") or 0) > 0:
+        fade += 0.2
 
     distribution = clamp((0.1 - (m.get("accum_20d") or 0)) / 0.6)
+    ht = m.get("holding_trend_3m")
+    if ht is not None:                                # real filing data, not just an OBV proxy
+        distribution = clamp(0.6 * distribution + 0.4 * clamp((1 - ht) / 4))
 
     v = 0.0                                          # what is the height built on?
     pe = m.get("pe")
@@ -919,6 +1278,8 @@ def margin_fall_score(m):
     if (m.get("eps") or 0) <= 0:
         v += 0.3
     v += {"B": 0.2, "N": 0.2, "Z": 0.5}.get(m.get("category"), 0.0)
+    if m.get("eps_trend") in ("down", "turned-loss"):
+        v = clamp(v + 0.25)                           # rally isn't backed by improving earnings
 
     ev = 0.0                                         # a scheduled reason to drop
     dtr = m.get("days_to_record_date")
@@ -942,7 +1303,10 @@ def margin_rise_when(m, today):
     """Estimated date the rise could start, from how far along the reversal is."""
     hist, slope = m.get("macd_hist"), m.get("macd_slope") or 0
     rsi14, rsi_prev = m.get("rsi14"), m.get("rsi_prev")
-    if hist is not None and hist > 0 and ((m.get("r_1w") or 0) > 0 or slope > 0):
+    if m.get("candle_pattern") in ("hammer", "bullish-engulfing"):
+        d = next_trading_day(today, 1)
+        note = f"{m['candle_pattern'].replace('-', ' ').title()} candle right at support — from the next session"
+    elif hist is not None and hist > 0 and ((m.get("r_1w") or 0) > 0 or slope > 0):
         d = next_trading_day(today, 1)
         note = "Reversal already confirmed (MACD positive, price turning) — from the next session"
     elif hist is not None and hist < 0 and slope > 0:
@@ -977,6 +1341,9 @@ def margin_fall_when(m, today):
         if 0 <= (rd_date - today).days <= 10:
             return (next_trading_day(rd_date, 1).isoformat(),
                     f"Ex-dividend adjustment — price typically drops right after record date {rd}")
+    if m.get("candle_pattern") in ("shooting-star", "bearish-engulfing"):
+        return (next_trading_day(today, 1).isoformat(),
+                f"{m['candle_pattern'].replace('-', ' ').title()} candle right at resistance — from the next session")
     slope = m.get("macd_slope") or 0
     rsi14 = m.get("rsi14") or 50
     streak = m.get("up_streak") or 0
@@ -998,6 +1365,39 @@ def margin_rise_reasons(m):
     r = []
     hist, slope = m.get("macd_hist"), m.get("macd_slope") or 0
     rsi14, rsi_prev = m.get("rsi14"), m.get("rsi_prev")
+    cp = m.get("candle_pattern")
+    if cp == "hammer":
+        r.append(("Hammer candle today — a long lower wick shows buyers rejected further downside",
+                  "আজ হ্যামার ক্যান্ডেল — লম্বা নিচের বাতি দেখাচ্ছে ক্রেতারা আরও পতন প্রতিহত করেছে"))
+    elif cp == "bullish-engulfing":
+        r.append(("Bullish engulfing candle today — today's buying erased all of yesterday's selling",
+                  "আজ বুলিশ এনগাল্ফিং ক্যান্ডেল — আজকের কেনাকাটা গতকালের সব বিক্রি মুছে দিয়েছে"))
+    ht = m.get("holding_trend_3m")
+    if ht is not None and ht >= 1.5:
+        r.append((f"Institutional/foreign holding actually rising (+{ht:.1f}pp) — confirmed in the filings, not just OBV",
+                  f"প্রাতিষ্ঠানিক/বিদেশি মালিকানা সত্যিই বাড়ছে (+{ht:.1f}pp) — ফাইলিংয়ে নিশ্চিত, শুধু OBV নয়"))
+    if m.get("eps_trend") == "turned-profitable":
+        r.append(("Turned profitable in the latest reported quarter",
+                  "সর্বশেষ প্রান্তিকে লাভজনক হয়েছে"))
+    elif m.get("eps_trend") == "up" and (m.get("eps_qoq_growth") or 0) > 5:
+        r.append((f"Quarterly EPS growing (+{m['eps_qoq_growth']:.0f}% vs prior quarter)",
+                  f"প্রান্তিক EPS বাড়ছে (আগের প্রান্তিকের তুলনায় +{m['eps_qoq_growth']:.0f}%)"))
+    p_nav = m.get("p_nav")
+    if p_nav is not None and 0 < p_nav < 1:
+        r.append((f"Trading below book value (P/NAV {p_nav:.2f})",
+                  f"বুক ভ্যালুর নিচে লেনদেন (P/NAV {p_nav:.2f})"))
+    if (m.get("dist_key_support") is not None and m["dist_key_support"] <= 3
+            and (m.get("key_support_touches") or 0) >= 2):
+        r.append((f"Sitting on a real support level touched {m['key_support_touches']}× before "
+                  f"(at {m['key_support']:.1f})",
+                  f"একটি প্রকৃত সাপোর্ট স্তরে আছে যা আগে {m['key_support_touches']}বার স্পর্শ করেছে "
+                  f"({m['key_support']:.1f}-এ)"))
+    if m.get("gap_status") == "follow-through" and (m.get("gap_pct") or 0) > 0:
+        r.append((f"Gapped up {m['gap_pct']:.1f}% and held through the close — buyers defended the gap",
+                  f"{m['gap_pct']:.1f}% গ্যাপ-আপ হয়ে ক্লোজ পর্যন্ত টিকে আছে — ক্রেতারা গ্যাপ রক্ষা করেছে"))
+    if m.get("divergence") == "bullish":
+        r.append(("Bullish RSI divergence — price made a lower low but RSI didn't, selling pressure exhausting",
+                  "বুলিশ RSI ডাইভারজেন্স — দাম নতুন নিচে নামলেও RSI নামেনি, বিক্রির চাপ ফুরিয়ে আসছে"))
     if hist is not None and hist > 0:
         r.append(("MACD already bullish", "MACD ইতিমধ্যে ঊর্ধ্বমুখী"))
     elif slope > 0:
@@ -1044,6 +1444,32 @@ def margin_fall_reasons(m):
     """(english, বাংলা) reason pairs."""
     r = []
     rsi14 = m.get("rsi14")
+    cp = m.get("candle_pattern")
+    if cp == "shooting-star":
+        r.append(("Shooting star candle today — a long upper wick shows sellers rejected further upside",
+                  "আজ শুটিং স্টার ক্যান্ডেল — লম্বা উপরের বাতি দেখাচ্ছে বিক্রেতারা আরও বৃদ্ধি প্রতিহত করেছে"))
+    elif cp == "bearish-engulfing":
+        r.append(("Bearish engulfing candle today — today's selling erased all of yesterday's buying",
+                  "আজ বিয়ারিশ এনগাল্ফিং ক্যান্ডেল — আজকের বিক্রি গতকালের সব কেনাকাটা মুছে দিয়েছে"))
+    ht = m.get("holding_trend_3m")
+    if ht is not None and ht <= -1.5:
+        r.append((f"Institutional/foreign holding actually falling ({ht:.1f}pp) — confirmed in the filings, not just OBV",
+                  f"প্রাতিষ্ঠানিক/বিদেশি মালিকানা সত্যিই কমছে ({ht:.1f}pp) — ফাইলিংয়ে নিশ্চিত, শুধু OBV নয়"))
+    if m.get("eps_trend") == "turned-loss":
+        r.append(("Turned loss-making in the latest reported quarter — the rally isn't backed by earnings",
+                  "সর্বশেষ প্রান্তিকে লোকসানে পড়েছে — ঊর্ধ্বগতি আয় দ্বারা সমর্থিত নয়"))
+    elif m.get("eps_trend") == "down":
+        r.append(("Quarterly EPS declining vs the prior reported quarter",
+                  "প্রান্তিক EPS আগের প্রান্তিকের তুলনায় কমছে"))
+    if (m.get("dist_key_resistance") is not None and m["dist_key_resistance"] <= 2
+            and (m.get("key_resistance_touches") or 0) >= 2):
+        r.append((f"Right at a real resistance level rejected {m['key_resistance_touches']}× before "
+                  f"(at {m['key_resistance']:.1f})",
+                  f"একটি প্রকৃত রেজিস্ট্যান্স স্তরে আছে যা আগে {m['key_resistance_touches']}বার প্রত্যাখ্যাত হয়েছে "
+                  f"({m['key_resistance']:.1f}-এ)"))
+    if m.get("gap_status") == "faded" and (m.get("gap_pct") or 0) > 0:
+        r.append((f"Gapped up {m['gap_pct']:.1f}% but fully faded back below yesterday's close — a trap for chasers",
+                  f"{m['gap_pct']:.1f}% গ্যাপ-আপ হয়েও গতকালের ক্লোজের নিচে ফিরে গেছে — তাড়াহুড়ো করে কেনাদের জন্য ফাঁদ"))
     if rsi14 is not None and rsi14 > 70:
         r.append((f"RSI {rsi14:.0f} overbought", f"RSI {rsi14:.0f} — অতিরিক্ত কেনা"))
     if (m.get("boll_pos") or 0.5) > 0.9:
@@ -1057,6 +1483,9 @@ def margin_fall_reasons(m):
     if (m.get("accum_20d") or 0) <= -0.2:
         r.append((f"OBV distribution ({m['accum_20d']:+.2f}) — volume leaving at the highs",
                   f"OBV বিতরণ ({m['accum_20d']:+.2f}) — চূড়ায় ভলিউম বেরিয়ে যাচ্ছে"))
+    if m.get("divergence") == "bearish":
+        r.append(("Bearish RSI divergence — price made a higher high but RSI didn't, buying power exhausting",
+                  "বিয়ারিশ RSI ডাইভারজেন্স — দাম নতুন চূড়ায় উঠলেও RSI ওঠেনি, কেনার শক্তি ফুরিয়ে আসছে"))
     if (m.get("macd_slope") or 0) < 0:
         r.append(("MACD momentum already fading", "MACD-র গতি ইতিমধ্যে কমছে"))
     dtr = m.get("days_to_record_date")
@@ -1076,36 +1505,55 @@ def margin_fall_reasons(m):
                       "শক্তিশালী ঊর্ধ্বগতি, পতনের সংকেত এখনো নেই — শুধু অনেকটা বেড়ে আছে")]
 
 
+MARGIN_WINDOWS = ["1m", "2m", "3m", "6m", "1y", "2y"]
+MARGIN_DEFAULT_WINDOW = "3m"
+
+
 def build_margin(results, today):
-    lower, higher = [], []
+    """Per-window (1m…2y) lower/higher membership + one shared rise/fall
+    assessment per ticker. A share can be at the bottom of its 1-month range
+    yet the top of its 2-year range — membership is per window, but the turn
+    evidence (MACD/RSI/OBV/news) is the same maths whichever window shows it."""
+    windows = {k: {"lower": [], "higher": []} for k in MARGIN_WINDOWS}
+    tickers = {}
     for code, m in results.items():
-        pos = m.get("pos_2y")
-        if pos is None:
+        ranges = m.get("ranges") or {}
+        in_lower = in_higher = False
+        for k in MARGIN_WINDOWS:
+            r = ranges.get(k)
+            if not r or r["pos"] is None:
+                continue
+            if r["pos"] <= MARGIN_LOWER:
+                windows[k]["lower"].append({
+                    "code": code, "pos": r["pos"],
+                    "from_low": round((m["price"] / r["lo"] - 1) * 100, 1) if r["lo"] else None})
+                in_lower = True
+            elif r["pos"] >= MARGIN_UPPER:
+                windows[k]["higher"].append({
+                    "code": code, "pos": r["pos"],
+                    "from_high": round((1 - m["price"] / r["hi"]) * 100, 1) if r["hi"] else None})
+                in_higher = True
+        if not (in_lower or in_higher):
             continue
-        base = {
-            "code": code, "price": m["price"], "sector": m.get("sector"),
-            "category": m.get("category"), "pos_2y": pos,
-            "rsi14": m.get("rsi14"), "r_1w": m.get("r_1w"), "r_1m": m.get("r_1m"),
-            "flags": m.get("flags") or [], "eligible": m["eligible"],
-            "record_date": m.get("upcoming_record_date"),
-        }
-        if pos <= MARGIN_LOWER:
-            when, note = margin_rise_when(m, today)
+        t = {}
+        if in_lower:
+            t["rise_score"] = margin_rise_score(m)
+            t["rise_date"], t["rise_note"] = margin_rise_when(m, today)
             pairs = margin_rise_reasons(m)
-            lower.append(dict(
-                base, score=margin_rise_score(m), turn_date=when, turn_note=note,
-                from_low=round((m["price"] / m["lo_2y"] - 1) * 100, 1) if m.get("lo_2y") else None,
-                why=[p[0] for p in pairs], why_bn=[p[1] for p in pairs]))
-        elif pos >= MARGIN_UPPER:
-            when, note = margin_fall_when(m, today)
+            t["rise_why"] = [p[0] for p in pairs]
+            t["rise_why_bn"] = [p[1] for p in pairs]
+        if in_higher:
+            t["fall_score"] = margin_fall_score(m)
+            t["fall_date"], t["fall_note"] = margin_fall_when(m, today)
             pairs = margin_fall_reasons(m)
-            higher.append(dict(
-                base, score=margin_fall_score(m), turn_date=when, turn_note=note,
-                from_high=round((1 - m["price"] / m["hi_2y"]) * 100, 1) if m.get("hi_2y") else None,
-                why=[p[0] for p in pairs], why_bn=[p[1] for p in pairs]))
-    lower.sort(key=lambda e: -e["score"])
-    higher.sort(key=lambda e: -e["score"])
-    return {"lower": lower, "higher": higher,
+            t["fall_why"] = [p[0] for p in pairs]
+            t["fall_why_bn"] = [p[1] for p in pairs]
+        tickers[code] = t
+    for k in MARGIN_WINDOWS:
+        windows[k]["lower"].sort(key=lambda e: -tickers[e["code"]]["rise_score"])
+        windows[k]["higher"].sort(key=lambda e: -tickers[e["code"]]["fall_score"])
+    return {"windows": windows, "tickers": tickers,
+            "default": MARGIN_DEFAULT_WINDOW,
             "lower_threshold": MARGIN_LOWER, "higher_threshold": MARGIN_UPPER}
 
 
@@ -1156,6 +1604,30 @@ def spike_score(m, today):
         trend += 0.2
     if m.get("higher_lows"):
         trend += 0.2
+    if m.get("divergence") == "bearish":
+        trend = max(0.0, trend - 0.4)
+        why.append(("⚠ Bearish RSI divergence under this spike — buying power was already exhausting",
+                    "⚠ স্পাইকের নিচে বিয়ারিশ RSI ডাইভারজেন্স — কেনার শক্তি আগেই ফুরিয়ে আসছিল"))
+
+    cs = m.get("close_strength")
+    if cs is not None and cs >= 0.7:
+        trend = clamp(trend + 0.2)
+        why.append((f"Closed strong — {cs * 100:.0f}% up in today's own range, buyers won the session",
+                    f"শক্তিশালী ক্লোজ — আজকের নিজস্ব পরিসরের {cs * 100:.0f}% উপরে, ক্রেতারা দিনটি জিতেছে"))
+    elif cs is not None and cs <= 0.3:
+        trend = max(0.0, trend - 0.25)
+        why.append((f"⚠ Closed weak — only {cs * 100:.0f}% up in today's range, sellers took it back",
+                    f"⚠ দুর্বল ক্লোজ — আজকের পরিসরের মাত্র {cs * 100:.0f}% উপরে, বিক্রেতারা ফিরিয়ে নিয়েছে"))
+
+    if m.get("gap_status") == "faded" and (m.get("gap_pct") or 0) > 0:
+        trend = max(0.0, trend - 0.35)
+        why.append((f"⚠ Gapped up {m['gap_pct']:.1f}% but fully faded back below yesterday's close — a classic trap",
+                    f"⚠ {m['gap_pct']:.1f}% গ্যাপ-আপ হয়েও গতকালের ক্লোজের নিচে ফিরে গেছে — চিরায়ত ফাঁদ"))
+    elif m.get("gap_status") == "follow-through" and (m.get("gap_pct") or 0) > 0:
+        trend = clamp(trend + 0.15)
+        why.append((f"Gapped up {m['gap_pct']:.1f}% and held through the close",
+                    f"{m['gap_pct']:.1f}% গ্যাপ-আপ হয়ে ক্লোজ পর্যন্ত টিকে আছে"))
+
     if trend >= 0.6:
         why.append(("Spike inside an established uptrend — these follow through more often",
                     "প্রতিষ্ঠিত ঊর্ধ্বগতির মধ্যে স্পাইক — এগুলো প্রায়ই চলতে থাকে"))
@@ -1251,8 +1723,10 @@ def build_spike(results, today):
 # chase an unbacked one. Adjusts composite ± and re-derives the verdict.
 def apply_market_wisdom(results, spike, margin):
     sp = {s["code"]: s for s in spike["spikes"]}
-    lo = {e["code"]: e for e in margin["lower"]}
-    hi = {e["code"]: e for e in margin["higher"]}
+    # wisdom is anchored to the long view: the 2-year window's extremes
+    mt = margin["tickers"]
+    lo = {e["code"]: mt[e["code"]] for e in margin["windows"]["2y"]["lower"]}
+    hi = {e["code"]: mt[e["code"]] for e in margin["windows"]["2y"]["higher"]}
     for code, m in results.items():
         adj = 0.0
         notes = []
@@ -1274,21 +1748,21 @@ def apply_market_wisdom(results, spike, margin):
                     f"আজকের +{s['day_change']:.1f}% স্পাইক সমর্থনহীন মনে হচ্ছে "
                     f"(স্কোর মাত্র {s['score']:.0f}/100) — পেছনে ছুটবেন না"))
         e = lo.get(code)
-        if e and e["score"] >= 55:
+        if e and e["rise_score"] >= 55:
             adj += 4
             notes.append((
                 f"Bottom of its 2-year range WITH reversal evidence (rise score "
-                f"{e['score']:.0f}/100) — buying low instead of chasing high",
+                f"{e['rise_score']:.0f}/100) — buying low instead of chasing high",
                 f"২ বছরের সীমার তলানিতে, ঘুরে দাঁড়ানোর প্রমাণসহ (রাইজ স্কোর "
-                f"{e['score']:.0f}/100) — চড়া দামের পেছনে না ছুটে সস্তায় কেনা"))
+                f"{e['rise_score']:.0f}/100) — চড়া দামের পেছনে না ছুটে সস্তায় কেনা"))
         h = hi.get(code)
-        if h and h["score"] >= 50:
+        if h and h["fall_score"] >= 50:
             adj -= 6
             m["flags"].append("top-of-range")
             notes.append((
-                f"Top of its 2-year range with fall risk {h['score']:.0f}/100 — "
+                f"Top of its 2-year range with fall risk {h['fall_score']:.0f}/100 — "
                 f"a profit-taking zone, not an entry zone",
-                f"২ বছরের সীমার চূড়ায়, পতনের ঝুঁকি {h['score']:.0f}/100 — "
+                f"২ বছরের সীমার চূড়ায়, পতনের ঝুঁকি {h['fall_score']:.0f}/100 — "
                 f"এটি মুনাফা তোলার জায়গা, ঢোকার নয়"))
         m["wisdom"] = notes
         if adj:
@@ -1337,6 +1811,14 @@ def build_pick_why(m):
     if rel > 2:
         add(f"Beating the market average by {rel:.1f}% over the last month",
             f"গত এক মাসে বাজারের গড়কে {rel:.1f}% ব্যবধানে হারাচ্ছে")
+    if m.get("candle_pattern") in ("hammer", "bullish-engulfing"):
+        cp = m["candle_pattern"].replace("-", " ")
+        add(f"Fresh {cp} candle today — a classic bullish reversal signal",
+            f"আজ {cp} ক্যান্ডেল — ক্লাসিক বুলিশ রিভার্সাল সংকেত")
+    if (m.get("dist_key_support") is not None and m["dist_key_support"] <= 3
+            and (m.get("key_support_touches") or 0) >= 2):
+        add(f"Sitting on a real support level touched {m['key_support_touches']}× before",
+            f"একটি প্রকৃত সাপোর্ট স্তরে আছে যা আগে {m['key_support_touches']}বার স্পর্শ করেছে")
     rsi14 = m.get("rsi14")
     if rsi14 is not None and 45 <= rsi14 <= 65:
         add(f"RSI {rsi14:.0f} — rising with room to run, not yet overbought",
@@ -1350,9 +1832,10 @@ def build_pick_why(m):
             f"দাম বড় ওঠার আগে নীরব OBV সঞ্চয় ({m['accum_20d']:+.2f})")
     fund = []
     fund_bn = []
-    if (m.get("eps") or 0) > 0:
-        fund.append(f"EPS {m['eps']:.1f}")
-        fund_bn.append(f"EPS {m['eps']:.1f}")
+    eps_disp = m.get("eps_annual") or m.get("eps")
+    if (eps_disp or 0) > 0:
+        fund.append(f"EPS {eps_disp:.1f}")
+        fund_bn.append(f"EPS {eps_disp:.1f}")
     if m.get("pe") and 0 < m["pe"] <= 25:
         fund.append(f"fair P/E {m['pe']:.1f}")
         fund_bn.append(f"যুক্তিসঙ্গত P/E {m['pe']:.1f}")
@@ -1365,6 +1848,20 @@ def build_pick_why(m):
     if len(fund) >= 2:
         add("Solid fundamentals: " + ", ".join(fund),
             "মজবুত মৌলভিত্তি: " + ", ".join(fund_bn))
+    p_nav = m.get("p_nav")
+    if p_nav is not None and 0 < p_nav < 1 and (eps_disp or 0) > 0:
+        add(f"Trading below book value — P/NAV {p_nav:.2f} (NAV {m['nav_per_share']:.1f} vs price {price:.1f})",
+            f"বুক ভ্যালুর নিচে লেনদেন হচ্ছে — P/NAV {p_nav:.2f} (NAV {m['nav_per_share']:.1f}, দাম {price:.1f})")
+    ht = m.get("holding_trend_3m")
+    if ht is not None and ht >= 1.5:
+        add(f"Institutional/foreign holding rising (+{ht:.1f}pp over recent snapshots) — smart money accumulating",
+            f"প্রাতিষ্ঠানিক/বিদেশি মালিকানা বাড়ছে (+{ht:.1f}pp) — বড় বিনিয়োগকারীরা কিনছে")
+    if m.get("eps_trend") == "turned-profitable":
+        add("Turned profitable in the latest reported quarter — an inflection point",
+            "সর্বশেষ প্রান্তিকে লাভজনক হয়েছে — একটি গুরুত্বপূর্ণ মোড়")
+    elif m.get("eps_trend") == "up" and (m.get("eps_qoq_growth") or 0) > 5:
+        add(f"Quarterly EPS growing ({m['eps_qoq_growth']:+.0f}% vs the prior reported quarter)",
+            f"প্রান্তিক EPS বাড়ছে (আগের প্রান্তিকের তুলনায় {m['eps_qoq_growth']:+.0f}%)")
     if (m.get("win_rate") or 0) >= 60 and (m.get("signal_trades") or 0) >= 5:
         add(f"Reliable history — past buy signals won {m['win_rate']}% of the time "
             f"({m['signal_trades']} trades in 2 years)",
@@ -1387,26 +1884,189 @@ def build_pick_why(m):
     return en[:5], bn[:5]
 
 
+# ================= REPORT CARD (self-grading) =================
+# Every analysis run snapshots what it recommended (by market date). Later
+# runs grade those snapshots against what prices actually did over the next
+# 1w/2w/1m — win rates and average returns per category, next to the market
+# baseline. The app grades itself so you know which calls to trust.
+RC_HORIZONS = {"1w": 5, "2w": 10, "1m": 21}
+RC_KEEP_SNAPSHOTS = 150
+RC_WIN_THRESHOLD = 2.0     # a "win" = more than +2% over the horizon
+
+
+def snapshot_and_grade(results, top20, high_profit, market_date, series_cache):
+    hist = load_json(REC_HISTORY_JSON, {}) or {}
+    hist[market_date] = {
+        "strong_buy": [c for c, m in results.items() if m["verdict"] == "Strong Buy"],
+        "buy": [c for c, m in results.items() if m["verdict"] == "Buy"],
+        "top20": list(top20),
+        "high_profit": [p["code"] for p in high_profit["picks"]],
+    }
+    for d in sorted(hist)[:-RC_KEEP_SNAPSHOTS]:
+        del hist[d]
+    save_json(REC_HISTORY_JSON, hist)
+
+    date_idx = {t: {d: i for i, d in enumerate(ds)}
+                for t, (ds, cs) in series_cache.items()}
+
+    def fwd_return(code, d, nd):
+        s = series_cache.get(code)
+        if not s:
+            return None
+        ds, cs = s
+        i = date_idx[code].get(d)
+        if i is None or i + nd >= len(cs) or cs[i] <= 0:
+            return None
+        return (cs[i + nd] / cs[i] - 1) * 100
+
+    cats = {k: {h: [] for h in RC_HORIZONS}
+            for k in ("strong_buy", "buy", "top20", "high_profit")}
+    base = {h: [] for h in RC_HORIZONS}
+    graded = set()
+    for d, snap in hist.items():
+        if d >= market_date:
+            continue
+        for h, nd in RC_HORIZONS.items():
+            rets = [r for r in (fwd_return(c, d, nd) for c in series_cache)
+                    if r is not None]
+            if rets:
+                base[h].append(sum(rets) / len(rets))
+                graded.add(d)
+        for cat in cats:
+            for c in snap.get(cat, []):
+                for h, nd in RC_HORIZONS.items():
+                    r = fwd_return(c, d, nd)
+                    if r is not None:
+                        cats[cat][h].append(r)
+
+    def agg(vals):
+        if not vals:
+            return None
+        wins = sum(1 for v in vals if v > RC_WIN_THRESHOLD)
+        return {"n": len(vals), "avg": round(sum(vals) / len(vals), 2),
+                "win_rate": round(100 * wins / len(vals))}
+
+    return {
+        "snapshots": len(hist),
+        "graded_snapshots": len(graded),
+        "first_date": min(hist) if hist else None,
+        "win_threshold": RC_WIN_THRESHOLD,
+        "categories": {cat: {h: agg(v) for h, v in hs.items()}
+                       for cat, hs in cats.items()},
+        "baseline": {h: (round(sum(v) / len(v), 2) if v else None)
+                     for h, v in base.items()},
+    }
+
+
+# ================= BETA (risk vs the market) =================
+def build_market_returns(series_cache):
+    """Equal-weighted average daily % return across every tracked share, by
+    date — a synthetic market index for beta. The real DSEX history only
+    accumulates on days someone clicks Update Data, far too sparse for a
+    180-session regression; this uses the full 2-year price history instead."""
+    by_date = {}
+    for dates, closes in series_cache.values():
+        for i in range(1, len(closes)):
+            if closes[i - 1] > 0:
+                by_date.setdefault(dates[i], []).append((closes[i] / closes[i - 1] - 1) * 100)
+    return {d: sum(v) / len(v) for d, v in by_date.items() if len(v) >= 20}
+
+
+def compute_beta(dates, closes, market_returns, window=180):
+    """Beta vs the equal-weighted market return series, from the last
+    `window` sessions with a matching market observation. Capped to [-2, 4]
+    — an illiquid share's raw regression can swing wildly from a couple of
+    abnormal days; beyond that range it's noise, not systematic risk."""
+    n = len(closes)
+    if n < 40:
+        return None
+    start = max(1, n - window)
+    xs, ys = [], []
+    for i in range(start, n):
+        if closes[i - 1] <= 0:
+            continue
+        mr = market_returns.get(dates[i])
+        if mr is None:
+            continue
+        xs.append(mr)
+        ys.append((closes[i] / closes[i - 1] - 1) * 100)
+    if len(xs) < 40:
+        return None
+    mx, my = sum(xs) / len(xs), sum(ys) / len(ys)
+    var = sum((x - mx) ** 2 for x in xs) / (len(xs) - 1)
+    if var <= 0:
+        return None
+    cov = sum((x - mx) * (y - my) for x, y in zip(xs, ys)) / (len(xs) - 1)
+    return round(max(-2.0, min(4.0, cov / var)), 2)
+
+
+# ================= SEASONALITY (context, not a signal) =================
+def build_seasonality(series_cache):
+    """Market-wide seasonality: average daily % return grouped by calendar
+    month across every tracked share's full history — informational context
+    only, never fed into a score. Scaled by ~21 trading sessions to read as
+    an approximate 'monthly' figure."""
+    sums, counts = {}, {}
+    for dates, closes in series_cache.values():
+        for i in range(1, len(closes)):
+            if closes[i - 1] <= 0:
+                continue
+            mon = int(dates[i][5:7])
+            sums[mon] = sums.get(mon, 0.0) + (closes[i] / closes[i - 1] - 1) * 100
+            counts[mon] = counts.get(mon, 0) + 1
+    return {mon: {"avg_daily": round(sums[mon] / counts[mon], 3),
+                  "approx_monthly": round(sums[mon] / counts[mon] * 21, 1),
+                  "n": counts[mon]}
+            for mon in sums if counts[mon] >= 50}
+
+
+def ticker_month_seasonality(dates, closes, month):
+    """Same idea, restricted to one share and one calendar month — shown in
+    the detail view as context, explicitly with its sample size."""
+    total, n = 0.0, 0
+    for i in range(1, len(closes)):
+        if closes[i - 1] <= 0:
+            continue
+        if int(dates[i][5:7]) == month:
+            total += (closes[i] / closes[i - 1] - 1) * 100
+            n += 1
+    if n < 10:
+        return None
+    return {"avg_daily": round(total / n, 3), "approx_monthly": round(total / n * 21, 1), "n": n}
+
+
 def run_analysis():
     tick_cache = load_tickers()
     tickers = tick_cache["tickers"]
     profiles = load_json(PROFILES_JSON, {}) or {}
     companies = profiles.get("companies", {})
     pe_map = profiles.get("pe", {})
+    fund_hist = load_json(FUNDAMENTALS_HISTORY_JSON, {}) or {}
     history = load_history()
     today = date.today()
     announcements = (load_json(ANNOUNCEMENTS_JSON, {}) or {}).get("by_ticker", {})
     agm_notices = (load_json(AGM_JSON, {}) or {}).get("by_ticker", {})
 
     results = {}
+    series_cache = {}
     for t in tickers:
         rows = history.get(t)
         if not rows:
             continue
-        m = analyze_ticker(t, rows, companies.get(t), pe_map, today)
+        m = analyze_ticker(t, rows, companies.get(t), pe_map, today, fund_hist.get(t))
         if m:
             m["_code"] = t
+            series_cache[t] = m.pop("_series")
             results[t] = m
+
+    # beta (vs an equal-weighted synthetic market index) + seasonality
+    # context — both need the full series_cache, so run right after it fills
+    market_returns = build_market_returns(series_cache)
+    seasonality = build_seasonality(series_cache)
+    for t, m in results.items():
+        dates, closes = series_cache[t]
+        m["beta"] = compute_beta(dates, closes, market_returns)
+        m["season_this_month"] = ticker_month_seasonality(dates, closes, today.month)
 
     # second pass: relative strength vs market, then the recommendation layer
     r1m_all = [m["r_1m"] for m in results.values() if m.get("r_1m") is not None]
@@ -1531,6 +2191,8 @@ def run_analysis():
         signal_index[s].sort(key=lambda c: -results[c]["composite"])
 
     high_profit = build_high_profit(results, regime)
+    report_card = snapshot_and_grade(results, top20, high_profit,
+                                     spike["date"], series_cache)
 
     for m in results.values():
         del m["_code"]
@@ -1559,6 +2221,8 @@ def run_analysis():
         "high_profit": high_profit,
         "margin": margin,
         "spike": spike,
+        "report_card": report_card,
+        "seasonality": seasonality,
         "sectors": sectors,
         "signals": signal_index,
         "alerts": alerts,
