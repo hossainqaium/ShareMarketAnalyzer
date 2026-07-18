@@ -182,6 +182,16 @@ main { padding: 16px 20px 60px; max-width: 1500px; margin: 0 auto; }
 td .star-btn { font-size: 15px; }
 .panel.shortlist-panel { margin-bottom: 18px; border: 1px solid color-mix(in srgb, var(--series-sma20) 40%, var(--border)); }
 .panel.shortlist-panel h2 { display: flex; align-items: center; gap: 6px; }
+
+/* ---------- compare selection ---------- */
+.compare-btn {
+  border: none; background: none; padding: 0; margin: 0; line-height: 1;
+  font-size: 17px; color: var(--muted); cursor: pointer; flex-shrink: 0;
+}
+.compare-btn:hover { color: var(--accent); }
+.compare-btn.on { color: var(--accent); }
+.mhead .compare-btn { font-size: 24px; margin-right: 2px; }
+td .compare-btn { font-size: 17px; }
 .muted-count { color: var(--muted); font-weight: 400; font-size: 12.5px; }
 
 /* ---------- screener ---------- */
@@ -201,6 +211,19 @@ thead th { position: sticky; top: 0; z-index: 5; background: var(--surface); col
 thead th:hover { color: var(--ink); }
 tbody tr { border-top: 1px solid var(--grid); cursor: pointer; }
 tbody tr:hover { background: var(--chip); }
+
+/* ---------- compare table ---------- */
+.compare-table thead th { cursor: default; }
+.compare-table tbody tr { cursor: default; }
+.compare-table tbody tr:hover { background: none; }
+.compare-table td, .compare-table th { white-space: normal; vertical-align: top; }
+.compare-table td:first-child, .compare-table th:first-child { white-space: nowrap; color: var(--ink-2); font-weight: 500; min-width: 130px; }
+.compare-col { min-width: 170px; }
+.compare-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.compare-remove { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0; line-height: 1; }
+.compare-remove:hover { color: var(--down); }
+.compare-spark { width: 100%; height: 40px; display: block; margin-top: 4px; cursor: pointer; }
+.compare-group-row td { background: var(--chip); color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; padding: 5px 10px; }
 
 /* ---------- modal ---------- */
 .modal-bg {
@@ -416,7 +439,8 @@ details.overview-toggle > .panel:first-of-type { border-top: 1px solid var(--bor
 }
 
 /* ---------- why column (EN line + BN line) ---------- */
-.why-cell { white-space: normal; max-width: 340px; }
+.why-cell { white-space: normal; max-width: 600px; min-width: 460px; }
+.turn-cell { min-width: 190px; }
 .why-bn { color: var(--muted); }
 
 /* ---------- position calculator ---------- */

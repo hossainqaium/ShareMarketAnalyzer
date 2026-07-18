@@ -62,6 +62,20 @@ picks below the fold.
   same way.
 - **Suggestions** — top short-term (1–2 week) and long-term (1–2 month) picks,
   each with a 0–100 score, the reasons behind it, and risk flags.
+- **Compare** — click the **⚖** button next to any share (Suggestions, Spike,
+  ⚡ High Profit, Margin, Charts, Potential Charts, or Screener — everywhere the
+  ☆ shortlist button appears, saved the same way in this browser's
+  `localStorage`) to add it to a side-by-side comparison, up to 6 at once. The
+  Compare tab lays out every share as a column against a full metric set
+  (verdict, composite/short/long/quality scores, target/stop/R/R, RSI, ATR%,
+  beta, P/E, P/NAV, dividend yield, market cap, record dates, risk flags,
+  whether it's currently flagged in Spike/High Profit/Margin, and its detailed
+  Why reasons) with a mini sparkline per share. Below the table, **Head-to-head
+  insights** rank the selected shares only against *each other* — highest
+  composite, best risk/reward, earliest buy date, closest record date, any
+  risk flags — ending in a plain verdict on which one looks like the strongest
+  buy among that specific group (explicitly not a claim against the whole
+  market; check each share's own tabs for that).
 - **Portfolio** — your trade journal and exit engine. Record actual purchases
   (code, qty, price, date; saved in `data/portfolio.json`) and every holding
   is watched with the full analysis: live P&L, an **ATR trailing stop**
@@ -152,17 +166,29 @@ picks below the fold.
   accumulation-only, cap size), a **CSV export** button (downloads exactly
   the currently filtered/sorted view), and **saved filter presets** (name,
   save, load, delete — stored in this browser only).
-- **Spike** — shares that suddenly jumped **3%+ this session**, vs yesterday's
-  close and vs the session open (clicking Update Data during trading hours
-  makes this "right now vs the start of the day", since live prices are
-  fetched). Each spike gets a 0–100 **continuation score** — the chance the
-  rise keeps going: volume backing 25%, room to run (circuit distance, RSI,
-  resistance headroom) 20%, trend backdrop 20%, real catalyst from the
-  announcement/AGM data (dividend, results, board meeting, record date;
-  exchange queries count *against*) 20%, and the share's own signal
-  follow-through history 15% — with an outlook badge (Likely to continue /
-  Mixed / Likely to fade) and honest ⚠ warnings (thin volume, no news,
-  overbought, at the circuit).
+- **Spike** — two kinds of alert, filterable in one tab. **⚡ Spikes**: shares
+  that suddenly jumped **3%+ this session**, vs yesterday's close and vs the
+  session open (clicking Update Data during trading hours makes this "right
+  now vs the start of the day", since live prices are fetched). Each spike
+  gets a 0–100 **continuation score** — the chance the rise keeps going:
+  volume backing 25%, room to run (circuit distance, RSI, resistance
+  headroom) 20%, trend backdrop 20%, real catalyst from the announcement/AGM
+  data (dividend, results, board meeting, record date; exchange queries count
+  *against*) 20%, and the share's own signal follow-through history 15% —
+  with an outlook badge (Likely to continue / Mixed / Likely to fade) and
+  honest ⚠ warnings (thin volume, no news, overbought, at the circuit).
+  **📐 Trend Breaks**: shares that held a clean uptrend, downtrend, or tight
+  sideways range for a long time (the longest of 3/4.5/6/9/12 months that
+  still fits a clean regime — R² ≥ 0.5 for trends, ≤16% band width for a
+  range) and have just broken that established pattern in the last 5
+  sessions — flagged even without a big single-day move, since the signal
+  here is "the character of the price action changed," not "it moved a lot
+  today." Scored 0–100 on how far past the trend/range (40%), volume
+  confirmation (30%), and MACD/candle/divergence agreement (30%); labelled
+  Breakout/Breakdown (range) or Reversal likely/Early reversal (trend).
+  Non-equity and illiquid instruments are excluded — a "breakout" on a bond
+  is noise, not a signal.
+- **⚡ High Profit** — exceptional setups for high profit in 1–2 months, found
   by seven aggressive pattern-hunting strategies scanned across every liquid,
   eligible share on each analysis run: **volatility squeeze** (tightest bands
   in 6 months + accumulation), **momentum leader** (beating the market 8%+ in
@@ -194,6 +220,16 @@ picks below the fold.
   session, MACD-approaching-zero extrapolated at its current pace, record
   dates pull the date (run-ups start ~2 weeks before; ex-dividend drops land
   right after). Searchable, star-shortlistable, rows open the detail view.
+  Both scores also weigh each share's own **margin cycle history**: how many
+  times, and on exactly which dates, it has cycled to the bottom/top 25% of
+  its 2-year range (noise-tolerant episode detection, ≥3 sessions, up to a
+  3-session gap allowed mid-episode), and — of its past *completed* episodes
+  — what % actually reverted (bounced from a bottom / corrected from a top)
+  within a month. A share that has reliably bounced 3-of-4 times gets a real
+  score boost at the bottom; one that never bounces gets discounted even
+  while "technically" oversold. Surfaced as the lead reason when it applies,
+  e.g. *"bounced back 75% of the past 4 times it hit bottom (avg +8.9% within
+  a month)."*
 - **Today's fresh signals** — technical events on the latest trading day:
   golden cross, MACD cross, 3-month breakout, oversold rebound, volume spike.
 - **Sectors** — sector-rotation table plus a **sector performance bar

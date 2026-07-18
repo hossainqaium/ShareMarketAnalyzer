@@ -267,14 +267,12 @@
    "FARCHEM",
    "FEKDIL",
    "GENEXIL",
-   "GP",
    "HAKKANIPUL",
    "HEIDELBCEM",
    "HWAWELLTEX",
    "IBP",
    "ICB",
    "ICICL",
-   "ISLAMIINS",
    "ITC",
    "JAMUNAOIL",
    "JHRML",
@@ -333,31 +331,32 @@
   ],
   "top20": [
    "LHB",
+   "ACIFORMULA",
    "APEXFOOT",
+   "IBNSINA",
    "CONFIDCEM",
    "BSRMLTD",
    "CVOPRL",
-   "ACIFORMULA",
    "DUTCHBANGL",
    "TAMIJTEX",
-   "IBNSINA",
-   "RENATA",
    "BSC",
    "BSCPLC",
+   "MIDLANDBNK",
    "BSRMSTEEL",
    "SANDHANINS",
    "WALTONHIL",
    "EHL",
    "SONALIANSH",
+   "ACMELAB",
    "SUMITPOWER",
-   "PRIMEINSUR",
-   "UPGDCL"
+   "PRIMEINSUR"
   ],
   "high_profit": [
    "ITC",
    "MEGHNAINS",
    "SONALIANSH",
    "FARCHEM",
+   "GP",
    "APEXSPINN",
    "SONALILIFE",
    "ROBI",
@@ -367,8 +366,7 @@
    "PADMAOIL",
    "INDEXAGRO",
    "AMANFEED",
-   "MJLBD",
-   "JHRML"
+   "MJLBD"
   ]
  }
 }

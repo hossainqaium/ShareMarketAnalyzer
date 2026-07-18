@@ -32,6 +32,8 @@
   <button data-tab="highprofit">⚡ High Profit</button>
   <button data-tab="spike">Spike</button>
   <button data-tab="margin">Margin</button>
+  <button data-tab="agm">AGM/EGM/Record</button>
+  <button data-tab="compare">⚖ Compare <span class="muted-count" id="compareBadge"></span></button>
 </nav>
 <nav class="tabs hidden" data-group-tabs="manage">
   <button data-tab="portfolio" class="active">Portfolio</button>
@@ -63,6 +65,8 @@
         <table id="top10Table">
           <thead><tr>
             <th>#</th>
+            <th>★</th>
+            <th data-term="compare">⚖</th>
             <th class="lft">Share</th>
             <th>Price</th>
             <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
@@ -164,6 +168,7 @@
       <div class="tbl-wrap">
         <table id="pfTable">
           <thead><tr>
+            <th>★</th>
             <th class="lft">Code</th><th>Qty</th>
             <th class="lft">Buy date</th><th>Buy ৳</th><th>Now ৳</th>
             <th>Value ৳</th><th>P&amp;L ৳</th><th>P&amp;L %</th>
@@ -197,36 +202,45 @@
 
   <!-- ============ SPIKE ============ -->
   <section id="tab-spike" class="hidden">
-    <p class="disclaimer"><span class="term" data-term="spike_tab">Shares that suddenly jumped 3%+ today</span> —
-      vs yesterday's close and vs the session open. Click <b>Update Data</b> during trading hours to compare the
-      price of <i>this moment</i> against the start of the day; each spike is scored for the chance it <b>continues
-      rising</b> (volume backing, room to run, trend, a real catalyst, and this share's history of follow-through).
-      Chasing an unexplained spike is how money is lost — read the Why column first.
-      · আজ হঠাৎ ৩%+ লাফ দেওয়া শেয়ার — গতকালের ক্লোজ ও আজকের শুরুর তুলনায়। লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের
-      দাম দিনের শুরুর সাথে তুলনা হয়; প্রতিটি স্পাইক আরও বাড়ার সম্ভাবনা অনুযায়ী স্কোর করা। কারণ না জেনে স্পাইকের পেছনে
-      ছুটবেন না — আগে "কেন" কলামটি পড়ুন।</p>
+    <p class="disclaimer"><span class="term" data-term="spike_tab">Two kinds of alert</span>: <b>⚡ Spikes</b> — shares
+      that suddenly jumped 3%+ today vs yesterday's close or the session open — and <b>📐 Trend Breaks</b> — shares
+      that held a clean uptrend, downtrend, or tight sideways range for a long time and have just broken that pattern
+      in the last few sessions, even without a big single-day jump. Click <b>Update Data</b> during trading hours to
+      compare the price of <i>this moment</i> against the start of the day. Chasing an unexplained move is how money
+      is lost — read the Why column first.
+      · দুই ধরনের সতর্কতা: <b>⚡ Spike</b> — আজ হঠাৎ ৩%+ লাফ দেওয়া শেয়ার — এবং <b>📐 Trend Break</b> — যে শেয়ার দীর্ঘদিন
+      পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ পার্শ্ববর্তী সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে, বড় একদিনের লাফ ছাড়াই।
+      লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দাম দিনের শুরুর সাথে তুলনা হয়। কারণ না জেনে পেছনে ছুটবেন না — আগে
+      "কেন" কলামটি পড়ুন।</p>
     <div class="chart-controls">
+      <div class="seg" id="spKindSeg">
+        <button data-kind="" class="active">All</button>
+        <button data-kind="spike">⚡ Spikes</button>
+        <button data-kind="trend-break">📐 Trend Breaks</button>
+      </div>
       <input type="text" id="spSearch" placeholder="Filter by code or sector…">
       <span class="page-info" id="spCount"></span>
     </div>
     <div class="panel">
-      <h2><span class="term" data-term="spike_tab">▲ Today's spikes · আজকের স্পাইক</span>
+      <h2><span class="term" data-term="spike_tab">▲ Today's alerts · আজকের সতর্কতা</span>
         <small class="muted-count" id="spMeta"></small></h2>
-      <div class="sub">Sorted by <span class="term" data-term="spike_score">continuation score</span> — the chance the
-        rise keeps going. 60+ = backed by volume/trend/news; below 40 = likely a one-day event.
-        · আরও বাড়ার সম্ভাবনা অনুযায়ী সাজানো; ৬০+ = ভলিউম/ট্রেন্ড/খবরের সমর্থন আছে, ৪০-এর নিচে = একদিনের ঘটনা হওয়ার সম্ভাবনা বেশি।</div>
+      <div class="sub">Sorted by <span class="term" data-term="spike_score">score</span> — for spikes, the chance the
+        rise keeps going; for trend breaks, conviction the break is real. 60+ = well backed; below 40 = weak/early.
+        · স্কোর অনুযায়ী সাজানো — স্পাইকের জন্য চলতে থাকার সম্ভাবনা, ট্রেন্ড ব্রেকের জন্য তা সত্যি হওয়ার আস্থা। ৬০+ = সমর্থিত;
+        ৪০-এর নিচে = দুর্বল/প্রাথমিক।</div>
       <div class="tbl-wrap tall">
         <table id="spTable">
           <thead><tr>
-            <th>#</th><th>★</th>
+            <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th class="lft" data-term="trend_break">Pattern</th>
             <th>Price</th>
             <th data-term="day_change">Δ vs yesterday</th>
             <th data-term="intraday_change">Δ since open</th>
             <th data-term="vol_today">Vol× today</th>
             <th data-term="rsi">RSI</th>
             <th data-term="support">Headroom%</th>
-            <th data-term="spike_score">Continue score</th>
+            <th data-term="spike_score">Score</th>
             <th class="lft" data-term="spike_score">Outlook</th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
@@ -291,7 +305,7 @@
       <div class="tbl-wrap tall">
         <table id="mgLowerTable">
           <thead><tr>
-            <th>#</th><th>★</th>
+            <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
             <th>Price</th>
             <th data-term="pos2y" id="mgLowerPosTh">3m pos</th>
@@ -314,7 +328,7 @@
       <div class="tbl-wrap tall">
         <table id="mgHigherTable">
           <thead><tr>
-            <th>#</th><th>★</th>
+            <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
             <th>Price</th>
             <th data-term="pos2y" id="mgHigherPosTh">3m pos</th>
@@ -328,6 +342,86 @@
           <tbody></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ AGM/EGM/RECORD ============ -->
+  <section id="tab-agm" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="agm_tab">Parsed straight from DSE's own PDFs</span>, refreshed
+      on every Update Data: the <b>AGM/EGM &amp; Record Date</b> notice (dividend declarations, AGM/EGM dates and the
+      record date to qualify) and the <b>Rights Entitlement</b> notice (rights-share ratio, issue price, record date
+      and subscription window). Search by code, company name or sector.
+      · DSE-এর নিজস্ব পিডিএফ থেকে সরাসরি সংগ্রহ করা, প্রতি Update Data-তে হালনাগাদ হয়: AGM/EGM ও রেকর্ড ডেট নোটিশ
+      (লভ্যাংশ ঘোষণা, AGM/EGM তারিখ ও যোগ্যতার রেকর্ড ডেট) এবং রাইট শেয়ার নোটিশ (অনুপাত, ইস্যু মূল্য, রেকর্ড ডেট ও
+      আবেদনের সময়সীমা)। কোড, কোম্পানির নাম বা সেক্টর দিয়ে খুঁজুন।</p>
+
+    <div class="chart-controls">
+      <input type="text" id="agmSearch" placeholder="Filter by code, company or sector…">
+      <span class="page-info" id="agmMeta"></span>
+    </div>
+
+    <div class="panel" id="agmPanel">
+      <h2>AGM/EGM &amp; Dividend Record Dates · এজিএম/ইজিএম ও লভ্যাংশ রেকর্ড ডেট <span class="muted-count" id="agmCount"></span></h2>
+      <div class="sub">Sorted by nearest record date first — record dates already passed sink to the bottom.</div>
+      <div class="tbl-wrap tall">
+        <table id="agmTable">
+          <thead><tr>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th>
+            <th class="lft">Purpose</th><th>Dividend</th>
+            <th class="lft" data-term="record_date">Record date</th><th class="lft">AGM/EGM date</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="rightsPanel">
+      <h2>Rights Share Record Dates · রাইট শেয়ার রেকর্ড ডেট <span class="muted-count" id="rightsCount"></span></h2>
+      <div class="sub">Sorted by nearest record date first.</div>
+      <div class="tbl-wrap tall">
+        <table id="rightsTable">
+          <thead><tr>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th>
+            <th class="lft">Ratio</th><th>Issue price</th>
+            <th class="lft" data-term="record_date">Record date</th><th class="lft">Subscription window</th>
+            <th class="lft">Remarks</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMPARE ============ -->
+  <section id="tab-compare" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="compare_tab">Side-by-side comparison</span> of shares you've
+      marked with the ⚖ button on any page — up to 6 at once. Ranked head-to-head using the same composite score,
+      technical/fundamental data, announcements, record dates and AGM/EGM the rest of the app uses, with reasons for
+      which one looks like the stronger buy right now.
+      · ⚖ বাটনে ক্লিক করা শেয়ারগুলোর পাশাপাশি তুলনা — একসাথে সর্বোচ্চ ৬টি। কম্পোজিট স্কোর, প্রযুক্তিগত/মৌলিক তথ্য, ঘোষণা,
+      রেকর্ড ডেট ও AGM/EGM মিলিয়ে কোনটি এখন কেনার জন্য ভালো তার কারণসহ তুলনা করা হয়েছে।</p>
+
+    <div class="panel" id="compareEmptyPanel">
+      <div class="axis-note" style="padding:24px 0; text-align:center">No shares selected yet. Click the <b>⚖</b>
+        button next to any share — in Suggestions, Spike, ⚡ High Profit, Margin, Charts, Potential Charts or
+        Screener — to add it here for comparison.
+        · এখনো কোনো শেয়ার নেই। যেকোনো শেয়ারের পাশের <b>⚖</b> বাটনে ক্লিক করে এখানে তুলনার জন্য যোগ করুন।</div>
+    </div>
+
+    <div class="panel hidden" id="comparePanel">
+      <h2 style="display:flex;align-items:center;gap:10px">Compare <span class="muted-count" id="compareCount"></span>
+        <span class="spacer"></span>
+        <button id="btnClearCompare" style="font-size:12px">Clear all · সব মুছুন</button></h2>
+      <div class="tbl-wrap"><table id="compareTable" class="compare-table"></table></div>
+    </div>
+
+    <div class="panel hidden" id="compareInsightsPanel">
+      <h2><span class="term" data-term="compare_insights">Head-to-head insights · তুলনামূলক পর্যবেক্ষণ</span></h2>
+      <div class="sub">How these shares stack up against EACH OTHER (not the whole market) — the composite ranking,
+        best risk/reward, earliest buy date, closest record date, and any risk flags that should tip the decision.
+        · এই শেয়ারগুলো একে অপরের তুলনায় (পুরো বাজারের তুলনায় নয়) কেমন — কম্পোজিট র‍্যাঙ্কিং, সেরা ঝুঁকি-পুরস্কার,
+        সবচেয়ে আগের কেনার তারিখ, নিকটতম রেকর্ড ডেট এবং সিদ্ধান্ত প্রভাবিত করা ঝুঁকি-চিহ্ন।</div>
+      <div id="compareInsightsBody"></div>
     </div>
   </section>
 
@@ -521,6 +615,7 @@
   <div class="modal">
     <div class="mhead">
       <button class="star-btn" id="mStar" title="Add to shortlist">☆</button>
+      <button class="compare-btn" id="mCompare" title="Add to Compare" data-term="compare">⚖</button>
       <h2 id="mCode"></h2>
       <span class="mprice" id="mPrice"></span>
       <span id="mDelta"></span>
@@ -548,9 +643,9 @@
       <span class="seg" id="chartZoomSeg" data-term="chart_zoom">
         <button data-zoom="1m">1M</button>
         <button data-zoom="3m">3M</button>
-        <button data-zoom="6m" class="active">6M</button>
+        <button data-zoom="6m">6M</button>
         <button data-zoom="1y">1Y</button>
-        <button data-zoom="all">All</button>
+        <button data-zoom="all" class="active">All</button>
       </span>
       <small class="axis-note">🖱 scroll to zoom · drag to pan</small>
     </div>

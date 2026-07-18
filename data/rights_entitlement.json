@@ -1,0 +1,22 @@
+{
+ "by_ticker": {
+  "UCB": [
+   {
+    "company_name": "United Commercial Bank PLC",
+    "ratio_text": "01 (One) [R]: 02 (Two) i.e., 01 (One) rights share against 02 (Two) existing shares",
+    "issue_price_text": "Tk. 10.00",
+    "record_date_text": "04-08-26",
+    "record_date": "2026-08-04",
+    "sub_open_text": "23-08-26",
+    "sub_open": "2026-08-23",
+    "sub_close_text": "20-09-26",
+    "sub_close": "2026-09-20",
+    "remarks": "The purpose of the issuance of Rights Shares is to strengthen capital base of the Bank in order to comply with the Basel III capital accord, directed by Bangladesh Bank & to support the business growth"
+   }
+  ]
+ },
+ "unmatched": [],
+ "total_rows": 1,
+ "matched_count": 1,
+ "fetched_at": "2026-07-18 16:53:04"
+}

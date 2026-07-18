@@ -221,6 +221,19 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True):
     except Exception as exc:
         progress(f"AGM/EGM fetch failed (non-fatal): {exc}", None)
 
+    # ---- rights-entitlement record-date PDF ----
+    progress("Fetching rights-entitlement record dates...", 96)
+    rights_matched, rights_total = 0, 0
+    try:
+        import fetch_rights
+        rights_pdf_path = os.path.join(DATA_DIR, "Company_RecordDate_RightsEntitlement.pdf")
+        fetch_rights.download_pdf(rights_pdf_path)
+        rights_result = fetch_rights.build_rights_notices(rights_pdf_path)
+        save_json(fetch_rights.RIGHTS_JSON, rights_result)
+        rights_matched, rights_total = rights_result["matched_count"], rights_result["total_rows"]
+    except Exception as exc:
+        progress(f"Rights-entitlement fetch failed (non-fatal): {exc}", None)
+
     # ---- potential-future projection (regenerated from the fresh history) ----
     progress("Regenerating potential 6-month projections from updated history...", 97)
     try:
@@ -245,6 +258,8 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True):
         "announcement_tickers": announce_tickers,
         "agm_matched": agm_matched,
         "agm_total": agm_total,
+        "rights_matched": rights_matched,
+        "rights_total": rights_total,
         "synced_at": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
     live_note = f", {live_added} live prices ({page_time})" if live_added else ""

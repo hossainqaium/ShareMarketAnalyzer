@@ -14,8 +14,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import analysis as analysis_mod
 import sync as sync_mod
-from dse_common import (ANALYSIS_JSON, PORTFOLIO_JSON, POTENTIAL_CSV,
-                        PROFILES_JSON, ROOT, load_history, load_json,
+from dse_common import (AGM_JSON, ANALYSIS_JSON, PORTFOLIO_JSON, POTENTIAL_CSV,
+                        PROFILES_JSON, RIGHTS_JSON, ROOT, load_history, load_json,
                         save_json)
 
 STATIC_DIR = os.path.join(ROOT, "static")
@@ -223,6 +223,29 @@ def portfolio_diversification(codes):
                 pairs.append({"a": a, "b": b, "corr": corr})
     pairs.sort(key=lambda p: -p["corr"])
     return {"pairs": pairs, "concentration_risk": any(p["corr"] >= 0.7 for p in pairs)}
+
+
+def agm_view():
+    """Flatten the AGM/EGM and rights-entitlement PDF notices into per-ticker
+    rows enriched with sector/category/price, for the AGM/EGM/Record tab."""
+    agm = load_json(AGM_JSON, {}) or {}
+    rights = load_json(RIGHTS_JSON, {}) or {}
+    ana = get_analysis().get("tickers", {})
+
+    def meta(ticker):
+        a = ana.get(ticker) or {}
+        return {"sector": a.get("sector"), "category": a.get("category"), "price": a.get("price")}
+
+    agm_rows = [{"ticker": t, **meta(t), **e}
+                for t, entries in (agm.get("by_ticker") or {}).items() for e in entries]
+    rights_rows = [{"ticker": t, **meta(t), **e}
+                   for t, entries in (rights.get("by_ticker") or {}).items() for e in entries]
+    return {
+        "agm": agm_rows, "agm_fetched_at": agm.get("fetched_at"),
+        "agm_total": agm.get("total_rows"), "agm_matched": agm.get("matched_count"),
+        "rights": rights_rows, "rights_fetched_at": rights.get("fetched_at"),
+        "rights_total": rights.get("total_rows"), "rights_matched": rights.get("matched_count"),
+    }
 
 
 def portfolio_view():
@@ -527,6 +550,9 @@ class Handler(BaseHTTPRequestHandler):
 
         if route == "/api/portfolio":
             return self.send_json(portfolio_view())
+
+        if route == "/api/agm":
+            return self.send_json(agm_view())
 
         self.send_error(404)
 

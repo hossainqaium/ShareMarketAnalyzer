@@ -19,6 +19,7 @@ HOME_URL = f"{BASE}/"
 MARKET_STATS_URL = f"{BASE}/market-statistics.php"
 NEWS_URL = f"{BASE}/old_news.php"
 AGM_PDF_URL = f"{BASE}/Company_AGM_EGM.pdf"
+RIGHTS_PDF_URL = f"{BASE}/Company_RecordDate_RightsEntitlement.pdf"
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
@@ -30,6 +31,7 @@ SYNC_STATE_JSON = os.path.join(DATA_DIR, "sync_state.json")
 MARKET_HISTORY_JSON = os.path.join(DATA_DIR, "market_history.json")
 ANNOUNCEMENTS_JSON = os.path.join(DATA_DIR, "announcements.json")
 AGM_JSON = os.path.join(DATA_DIR, "agm_notices.json")
+RIGHTS_JSON = os.path.join(DATA_DIR, "rights_entitlement.json")
 PROFILES_JSON = os.path.join(DATA_DIR, "profiles.json")
 ANALYSIS_JSON = os.path.join(DATA_DIR, "analysis.json")
 PORTFOLIO_JSON = os.path.join(DATA_DIR, "portfolio.json")

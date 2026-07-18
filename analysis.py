@@ -309,6 +309,142 @@ def support_resistance_levels(highs, lows, lookback=250, tolerance=0.015, window
     return levels or None
 
 
+REGIME_BREAK_LOOKBACKS = [252, 189, 126, 90, 63]   # 1y, 9mo, 6mo, ~4.5mo, 3mo — longest wins
+REGIME_BREAK_HOLDOUT = 5                           # sessions held out to test for "the break"
+
+
+def _linfit(ys):
+    """OLS slope/intercept/R² of ys against 0..n-1 — used to fit log-price
+    trends without needing numpy."""
+    n = len(ys)
+    xs = range(n)
+    mx, my = (n - 1) / 2, sum(ys) / n
+    sxx = sum((x - mx) ** 2 for x in xs)
+    if sxx == 0:
+        return 0.0, my, 0.0
+    sxy = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
+    slope = sxy / sxx
+    intercept = my - slope * mx
+    fitted = [intercept + slope * x for x in xs]
+    ss_res = sum((y - f) ** 2 for y, f in zip(ys, fitted))
+    ss_tot = sum((y - my) ** 2 for y in ys) or 1e-9
+    r2 = 1 - ss_res / ss_tot
+    return slope, intercept, r2
+
+
+def detect_regime_break(dates, closes, holdout=REGIME_BREAK_HOLDOUT):
+    """Has this share been in a long, clean downtrend/uptrend/range and just
+    broken it in the last few sessions? Tries the LONGEST lookback (1y down
+    to 3m) that still fits a clean regime, fits it on log(price) EXCLUDING
+    the most recent `holdout` sessions, then checks whether those held-out
+    sessions deviate sharply from what that established regime implied —
+    the "something changed after a long time" alert for the Spike tab."""
+    n = len(closes)
+    for lb in REGIME_BREAK_LOOKBACKS:
+        total = lb + holdout
+        if n < total + 10 or any(c <= 0 for c in closes[-total:]):
+            continue
+        window = closes[-total:-holdout]
+        recent = closes[-holdout:]
+        logs = [math.log(c) for c in window]
+        slope, intercept, r2 = _linfit(logs)
+        resid_std = math.sqrt(sum((math.log(w) - (intercept + slope * i)) ** 2
+                                  for i, w in enumerate(window)) / max(lb - 2, 1))
+        band = (max(window) - min(window)) / (sum(window) / lb)
+        daily_pct = (math.exp(slope) - 1) * 100
+        regime = None
+        if r2 >= 0.5 and daily_pct <= -0.08:
+            regime = "downtrend"
+        elif r2 >= 0.5 and daily_pct >= 0.08:
+            regime = "uptrend"
+        elif band <= 0.16 and abs(daily_pct) < 0.05:
+            regime = "range"
+        if not regime:
+            continue
+
+        z_scores, breaks = [], []
+        for i, c in enumerate(recent):
+            predicted = math.exp(intercept + slope * (lb - 1 + i + 1))
+            z = (math.log(c) - math.log(predicted)) / resid_std if resid_std > 1e-6 else 0
+            z_scores.append(z)
+        z_last = z_scores[-1]
+        if regime in ("downtrend", "range") and z_last >= 2.2:
+            direction = "up"
+        elif regime in ("uptrend", "range") and z_last <= -2.2:
+            direction = "down"
+        else:
+            continue
+        broke = [i for i, z in enumerate(z_scores)
+                 if (z >= 2.2 if direction == "up" else z <= -2.2)]
+        break_days_ago = holdout - broke[0]
+        lo_band, hi_band = min(window), max(window)
+        return {
+            "regime": regime, "direction": direction,
+            "regime_sessions": lb, "break_days_ago": break_days_ago,
+            "regime_start": dates[-total], "regime_end": dates[-holdout - 1],
+            "z_score": round(z_last, 2), "range_lo": round(lo_band, 2), "range_hi": round(hi_band, 2),
+        }
+    return None
+
+
+def find_range_episodes(dates, closes, lo, hi, lower_thresh=0.25, upper_thresh=0.75,
+                        gap_tolerance=3, min_sessions=3):
+    """Episodes of sustained bottom-quartile / top-quartile membership within
+    a share's own [lo, hi] range — same 25%/75% thresholds the Margin tab
+    uses for 'now', applied across the whole history. Up to `gap_tolerance`
+    sessions of noise are tolerated before an episode is considered over, so
+    a few wobbly days mid-bottom don't fragment one real episode into many.
+    Answers 'how many times, and exactly when, has this cycled to its
+    extremes' — evidence for how reliably this specific share reverts."""
+    if hi <= lo:
+        return []
+    raw, cur = [], None
+    for i, c in enumerate(closes):
+        pos = (c - lo) / (hi - lo)
+        zone = "bottom" if pos <= lower_thresh else "top" if pos >= upper_thresh else None
+        if zone:
+            if cur and cur["type"] == zone:
+                cur["last_in_idx"] = i
+                cur["gap"] = 0
+            else:
+                if cur:
+                    raw.append(cur)
+                cur = {"type": zone, "start_idx": i, "last_in_idx": i, "gap": 0}
+        elif cur:
+            cur["gap"] += 1
+            if cur["gap"] > gap_tolerance:
+                raw.append(cur)
+                cur = None
+    if cur:
+        raw.append(cur)
+    out = []
+    for e in raw:
+        sessions = e["last_in_idx"] - e["start_idx"] + 1
+        if sessions < min_sessions:
+            continue
+        seg = closes[e["start_idx"]:e["last_in_idx"] + 1]
+        extreme = min(seg) if e["type"] == "bottom" else max(seg)
+        out.append({"type": e["type"], "start_date": dates[e["start_idx"]],
+                    "end_date": dates[e["last_in_idx"]], "sessions": sessions,
+                    "extreme_price": round(extreme, 2), "end_idx": e["last_in_idx"]})
+    return out
+
+
+def episode_reversion_stats(episodes, closes, kind, fwd=21, thresh=5.0):
+    """Of THIS share's own past bottom/top episodes, how often did price move
+    the expected way (up after a bottom, down after a top) within `fwd`
+    sessions of the episode ending? Share-specific empirical track record —
+    often more convincing than a generic technical rule alone."""
+    rets = [(closes[e["end_idx"] + fwd] / closes[e["end_idx"]] - 1) * 100
+            for e in episodes if e["type"] == kind and e["end_idx"] + fwd < len(closes)
+            and closes[e["end_idx"]] > 0]
+    if not rets:
+        return None
+    hits = sum(1 for r in rets if r > thresh) if kind == "bottom" else sum(1 for r in rets if r < -thresh)
+    return {"n": len(rets), "hit_rate": round(100 * hits / len(rets)),
+            "avg_return": round(sum(rets) / len(rets), 1)}
+
+
 def holding_trend(hist, months_back=3):
     """Change in institute+foreign holding % over the last few stored
     snapshots — a simple 'smart money' accumulation/distribution signal.
@@ -427,6 +563,24 @@ def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
     m["ranges"] = ranges
     m["hi_2y"], m["lo_2y"] = ranges["2y"]["hi"], ranges["2y"]["lo"]
     m["pos_2y"] = ranges["2y"]["pos"]
+
+    # how many times, and when, has this share cycled to the bottom/top of
+    # its OWN 2-year range, and how reliably has it reverted each time —
+    # feeds margin_rise_score/margin_fall_score below and the Margin tab
+    episodes = find_range_episodes(dates, closes, m["lo_2y"], m["hi_2y"])
+    bottom_eps = [e for e in episodes if e["type"] == "bottom"]
+    top_eps = [e for e in episodes if e["type"] == "top"]
+    year_cutoff = dates[-250] if len(dates) >= 250 else dates[0]
+    strip = lambda e: {k: v for k, v in e.items() if k != "end_idx"}
+    m["margin_history"] = {
+        "bottom_count_2y": len(bottom_eps), "top_count_2y": len(top_eps),
+        "bottom_count_1y": sum(1 for e in bottom_eps if e["end_date"] >= year_cutoff),
+        "top_count_1y": sum(1 for e in top_eps if e["end_date"] >= year_cutoff),
+        "bottom_reversion": episode_reversion_stats(episodes, closes, "bottom"),
+        "top_correction": episode_reversion_stats(episodes, closes, "top"),
+        "recent_bottom_episodes": [strip(e) for e in bottom_eps[-3:]],
+        "recent_top_episodes": [strip(e) for e in top_eps[-3:]],
+    }
 
     # support / resistance over the last quarter (~63 trading days)
     qtr = closes[-63:]
@@ -744,6 +898,10 @@ def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
     last_dt = datetime.strptime(dates[-1], "%Y-%m-%d").date()
     if (today - last_dt).days > 7:
         flags.append("stale-data")
+
+    # long-established trend/range suddenly broken in the last few sessions —
+    # feeds the Spike tab as a distinct "trend-break" alert kind
+    m["regime_break"] = detect_regime_break(dates, closes)
 
     m["score_short"] = round(score_short, 1)
     m["score_long"] = round(score_long, 1)
@@ -1191,6 +1349,11 @@ def margin_rise_score(m):
     if (m.get("dist_key_support") is not None and m["dist_key_support"] <= 3
             and (m.get("key_support_touches") or 0) >= 2):
         support = clamp(support + 0.25)              # defended by a real multi-touch level
+    bh = (m.get("margin_history") or {}).get("bottom_reversion")
+    if bh and bh["n"] >= 2 and bh["hit_rate"] >= 60:
+        support = clamp(support + 0.25)              # this share's own history: it reliably bounces from bottoms
+    elif bh and bh["n"] >= 3 and bh["hit_rate"] <= 25:
+        support *= 0.7                                # ...or historically it doesn't — a falling-knife pattern
 
     f = 0.0                                          # is it worth catching?
     if (m.get("eps") or 0) > 0:
@@ -1251,6 +1414,11 @@ def margin_fall_score(m):
     if (m.get("dist_key_resistance") is not None and m["dist_key_resistance"] <= 2
             and (m.get("key_resistance_touches") or 0) >= 2):
         over = clamp(over + 0.25)                    # sitting right at a proven rejection level
+    th = (m.get("margin_history") or {}).get("top_correction")
+    if th and th["n"] >= 2 and th["hit_rate"] >= 60:
+        over = clamp(over + 0.2)                      # this share's own history: it reliably corrects from tops
+    elif th and th["n"] >= 3 and th["hit_rate"] <= 25:
+        over *= 0.75                                   # ...or historically it just keeps running — a real momentum name
 
     fade = 0.0                                       # is momentum already rolling over?
     if slope < 0:
@@ -1372,6 +1540,17 @@ def margin_rise_reasons(m):
     elif cp == "bullish-engulfing":
         r.append(("Bullish engulfing candle today — today's buying erased all of yesterday's selling",
                   "আজ বুলিশ এনগাল্ফিং ক্যান্ডেল — আজকের কেনাকাটা গতকালের সব বিক্রি মুছে দিয়েছে"))
+    bh = (m.get("margin_history") or {}).get("bottom_reversion")
+    if bh and bh["n"] >= 2 and bh["hit_rate"] >= 60:
+        r.append((f"This share's own track record: bounced back {bh['hit_rate']}% of the past {bh['n']} times "
+                  f"it hit bottom (avg {bh['avg_return']:+.1f}% within a month)",
+                  f"এই শেয়ারের নিজস্ব রেকর্ড: গত {bh['n']} বার তলানিতে যাওয়ার {bh['hit_rate']}% বারই ঘুরে দাঁড়িয়েছে "
+                  f"(এক মাসে গড়ে {bh['avg_return']:+.1f}%)"))
+    elif bh and bh["n"] >= 3 and bh["hit_rate"] <= 25:
+        r.append((f"⚠ This share rarely bounces from bottom — only {bh['hit_rate']}% of its past {bh['n']} bottom "
+                  f"episodes recovered — could be a structural decline, not a dip",
+                  f"⚠ এই শেয়ার তলানি থেকে খুব কমই ঘুরে দাঁড়ায় — গত {bh['n']} বারের মধ্যে মাত্র {bh['hit_rate']}% "
+                  f"বার সফল হয়েছে — এটি সাময়িক পতন নাও হতে পারে"))
     ht = m.get("holding_trend_3m")
     if ht is not None and ht >= 1.5:
         r.append((f"Institutional/foreign holding actually rising (+{ht:.1f}pp) — confirmed in the filings, not just OBV",
@@ -1451,6 +1630,17 @@ def margin_fall_reasons(m):
     elif cp == "bearish-engulfing":
         r.append(("Bearish engulfing candle today — today's selling erased all of yesterday's buying",
                   "আজ বিয়ারিশ এনগাল্ফিং ক্যান্ডেল — আজকের বিক্রি গতকালের সব কেনাকাটা মুছে দিয়েছে"))
+    th = (m.get("margin_history") or {}).get("top_correction")
+    if th and th["n"] >= 2 and th["hit_rate"] >= 60:
+        r.append((f"This share's own track record: corrected {th['hit_rate']}% of the past {th['n']} times "
+                  f"it hit the top (avg {th['avg_return']:+.1f}% within a month)",
+                  f"এই শেয়ারের নিজস্ব রেকর্ড: গত {th['n']} বার চূড়ায় যাওয়ার {th['hit_rate']}% বারই সংশোধন হয়েছে "
+                  f"(এক মাসে গড়ে {th['avg_return']:+.1f}%)"))
+    elif th and th["n"] >= 3 and th["hit_rate"] <= 25:
+        r.append((f"This share rarely corrects from the top — only {th['hit_rate']}% of its past {th['n']} top "
+                  f"episodes pulled back — could be genuine sustained momentum",
+                  f"এই শেয়ার চূড়া থেকে খুব কমই সংশোধিত হয় — গত {th['n']} বারের মধ্যে মাত্র {th['hit_rate']}% "
+                  f"বার হয়েছে — এটি সত্যিকারের টেকসই গতিও হতে পারে"))
     ht = m.get("holding_trend_3m")
     if ht is not None and ht <= -1.5:
         r.append((f"Institutional/foreign holding actually falling ({ht:.1f}pp) — confirmed in the filings, not just OBV",
@@ -1686,6 +1876,73 @@ def spike_score(m, today):
     return score, label, [p[0] for p in pairs], [p[1] for p in pairs]
 
 
+REGIME_LABEL_EN = {"downtrend": "downtrend", "uptrend": "uptrend", "range": "sideways range"}
+REGIME_LABEL_BN = {"downtrend": "নিম্নমুখী প্রবণতা", "uptrend": "ঊর্ধ্বমুখী প্রবণতা", "range": "পার্শ্ববর্তী সীমা"}
+
+
+def regime_break_score(m, rb):
+    """0–100 conviction that a long-held trend/range break is real, plus
+    (english, বাংলা) reasons — confirmed by volume, momentum, candles and
+    divergence the same way every other score in this file is."""
+    why = []
+    up = rb["direction"] == "up"
+    regime_en, regime_bn = REGIME_LABEL_EN[rb["regime"]], REGIME_LABEL_BN[rb["regime"]]
+    span = f"{rb['regime_start']} to {rb['regime_end']}"
+    why.append((
+        f"Was in a {'clean' if rb['regime'] != 'range' else 'tight'} {regime_en} for "
+        f"{rb['regime_sessions']} sessions ({span}) — this is the first break of it in the last "
+        f"{max(rb['break_days_ago'], 1)} session(s)",
+        f"{rb['regime_sessions']} সেশন ধরে {regime_bn}-এ ছিল ({span}) — গত "
+        f"{max(rb['break_days_ago'], 1)} সেশনে প্রথমবার তা ভেঙেছে"))
+
+    conf = 1 + (rb["break_days_ago"] <= 2) + (abs(rb["z_score"]) >= 3.0)
+
+    vt = m.get("vol_ratio") or 1
+    volume = clamp((vt - 0.8) / 2.2)
+    if vt >= 1.5:
+        why.append((f"Volume {vt:.1f}× the 30-day average confirms real participation, not noise",
+                    f"ভলিউম ৩০ দিনের গড়ের {vt:.1f} গুণ — নিছক শব্দ নয়, প্রকৃত অংশগ্রহণ"))
+        conf = min(3, conf + 1)
+    else:
+        why.append((f"⚠ Volume only {vt:.1f}× average — the break lacks a volume signature so far",
+                    f"⚠ ভলিউম গড়ের মাত্র {vt:.1f} গুণ — ব্রেকের সাথে এখনো ভলিউমের সমর্থন নেই"))
+
+    momentum = 0.0
+    if up and (m.get("macd_hist") or 0) > 0:
+        momentum += 0.5
+        why.append(("MACD already confirms — turned bullish", "MACD ইতিমধ্যে নিশ্চিত করছে — বুলিশ হয়েছে"))
+    elif not up and (m.get("macd_hist") or 0) < 0:
+        momentum += 0.5
+        why.append(("MACD already confirms — turned bearish", "MACD ইতিমধ্যে নিশ্চিত করছে — বিয়ারিশ হয়েছে"))
+    if up and m.get("divergence") == "bullish":
+        momentum += 0.3
+    if not up and m.get("divergence") == "bearish":
+        momentum += 0.3
+    if up and m.get("candle_pattern") in ("hammer", "bullish-engulfing"):
+        momentum += 0.2
+        why.append((f"Fresh {m['candle_pattern'].replace('-', ' ')} candle right at the break",
+                    f"ব্রেকের ঠিক মুহূর্তে নতুন {m['candle_pattern'].replace('-', ' ')} ক্যান্ডেল"))
+    if not up and m.get("candle_pattern") in ("shooting-star", "bearish-engulfing"):
+        momentum += 0.2
+        why.append((f"Fresh {m['candle_pattern'].replace('-', ' ')} candle right at the break",
+                    f"ব্রেকের ঠিক মুহূর্তে নতুন {m['candle_pattern'].replace('-', ' ')} ক্যান্ডেল"))
+
+    score = 100 * (0.40 * clamp(abs(rb["z_score"]) / 4) + 0.30 * volume + 0.30 * clamp(momentum))
+    flags = set(m.get("flags") or [])
+    if flags & {"trading-halt", "audit-concern"}:
+        score = min(score, 5)
+        why.append(("⚠ Hard risk flag — do not chase this break", "⚠ গুরুতর ঝুঁকি-চিহ্ন — এই ব্রেকের পেছনে ছুটবেন না"))
+    score = round(score, 1)
+
+    if rb["regime"] == "range":
+        label = ("Breakout" if up else "Breakdown")
+    else:
+        label = ("Reversal likely" if score >= 55 else "Early reversal — watch for confirmation")
+    conf = min(3, conf)
+    pairs = why[:5]
+    return score, label, conf, [p[0] for p in pairs], [p[1] for p in pairs]
+
+
 def build_spike(results, today):
     # market date = latest date a meaningful share of tickers traded on — a
     # single stray row (odd-lot listing, partial fetch) must not define it
@@ -1704,6 +1961,7 @@ def build_spike(results, today):
             continue
         score, label, why, why_bn = spike_score(m, today)
         spikes.append({
+            "kind": "spike",
             "code": code, "price": m["price"], "sector": m.get("sector"),
             "category": m.get("category"), "day_change": dc, "intraday_change": ic,
             "vol_today_ratio": m.get("vol_today_ratio"), "rsi14": m.get("rsi14"),
@@ -1712,6 +1970,36 @@ def build_spike(results, today):
             "flags": m.get("flags") or [], "eligible": m["eligible"],
             "record_date": m.get("upcoming_record_date"),
         })
+
+    # trend/range breaks: a share that held a clean pattern for a long time
+    # and just broke it in the last few sessions — a different kind of "alert
+    # something changed" than a same-day price jump, so it doesn't need
+    # today's single-day % move to qualify. Skipped if already listed above
+    # (that entry already flags "something happened" for this ticker today).
+    already = {s["code"] for s in spikes}
+    for code, m in results.items():
+        if code in already or m["last_date"] != market_date:
+            continue
+        if not m["eligible"]:      # a "breakout" on an illiquid bond/fund is just noise
+            continue
+        rb = m.get("regime_break")
+        if not rb:
+            continue
+        score, label, conf, why, why_bn = regime_break_score(m, rb)
+        spikes.append({
+            "kind": "trend-break", "regime": rb["regime"], "direction": rb["direction"],
+            "regime_sessions": rb["regime_sessions"], "break_days_ago": rb["break_days_ago"],
+            "regime_start": rb["regime_start"], "regime_end": rb["regime_end"],
+            "code": code, "price": m["price"], "sector": m.get("sector"),
+            "category": m.get("category"), "day_change": m.get("day_change"),
+            "intraday_change": m.get("intraday_change"),
+            "vol_today_ratio": m.get("vol_today_ratio"), "rsi14": m.get("rsi14"),
+            "dist_resistance": m.get("dist_resistance"),
+            "score": score, "label": label, "conf": conf, "why": why, "why_bn": why_bn,
+            "flags": m.get("flags") or [], "eligible": m["eligible"],
+            "record_date": m.get("upcoming_record_date"),
+        })
+
     spikes.sort(key=lambda s: -s["score"])
     return {"date": market_date, "min_pct": SPIKE_MIN_PCT, "spikes": spikes}
 
