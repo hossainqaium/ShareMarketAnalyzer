@@ -12,6 +12,9 @@ import urllib.request
 
 BASE = "https://www.dsebd.org"
 ALPHA_URL = f"{BASE}/latest_share_price_alpha.php"
+# Alpha page paginates by first letter (?letter=A) and defaults to A only;
+# the scroll page returns every share's live intraday price in one request.
+LIVE_PRICE_URL = f"{BASE}/latest_share_price_scroll_l.php"
 ARCHIVE_URL = f"{BASE}/day_end_archive.php"
 COMPANY_URL = f"{BASE}/displayCompany.php"
 PE_URL = f"{BASE}/latest_PE.php"
@@ -63,6 +66,25 @@ def fetch(url, retries=3, timeout=30):
     raise last_err
 
 
+def fetch_binary(url, dest_path, retries=3, timeout=30):
+    """Same retry/backoff/UA/TLS policy as fetch(), for binary downloads
+    (the AGM/EGM and rights-entitlement PDFs) that can't go through the
+    text-decoding path."""
+    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout, context=SSL_CTX) as resp:
+                data = resp.read()
+            with open(dest_path, "wb") as f:
+                f.write(data)
+            return
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last_err = e
+            time.sleep(2 * attempt)
+    raise last_err
+
+
 def clean_cell(html):
     text = TAG_RE.sub("", html).replace("&nbsp;", " ")
     return text.strip().replace(",", "")
@@ -73,20 +95,34 @@ def parse_archive_table(html):
 
     Returns list of [date, code, ltp, high, low, openp, closep, ycp, trade, value_mn, volume].
     """
-    header_idx = html.find("shares-table")
-    if header_idx == -1:
-        return []
-    idx = html.find("<tbody>", header_idx)
-    end = html.find("</tbody>", idx)
-    if idx == -1 or end == -1:
+    seg = _table_body(html)
+    if seg is None:
         return []
     rows = []
-    for row_html in ROW_RE.findall(html[idx:end]):
+    for row_html in ROW_RE.findall(seg):
         cells = [clean_cell(c) for c in CELL_RE.findall(row_html)]
         if len(cells) >= 12:
             # #, DATE, TRADING CODE, LTP, HIGH, LOW, OPENP, CLOSEP, YCP, TRADE, VALUE(mn), VOLUME
             rows.append(cells[1:12])
     return rows
+
+
+def _table_body(html):
+    """Slice out the shares-table's data rows. DSE's markup emits a stray
+    </tbody> after EVERY row on some pages (seen on the live-price page
+    2026-07-19), so stopping at the first </tbody> silently drops all but the
+    first share. Bound by </table> instead; header <th> rows produce no <td>
+    matches so slicing from the table start is safe even if <tbody> is absent."""
+    header_idx = html.find("shares-table")
+    if header_idx == -1:
+        return None
+    idx = html.find("<tbody>", header_idx)
+    if idx == -1:
+        idx = header_idx
+    end = html.find("</table>", idx)
+    if end == -1:
+        end = len(html)
+    return html[idx:end]
 
 
 def fetch_archive(start_date, end_date, inst="All Instrument"):
@@ -97,7 +133,8 @@ def fetch_archive(start_date, end_date, inst="All Instrument"):
 
 
 def parse_live_page(html):
-    """Parse latest_share_price_alpha.php: intraday prices as of right now.
+    """Parse a DSE live-price page (latest_share_price_scroll_l.php /
+    latest_share_price_alpha.php): intraday prices as of right now.
 
     Returns (page_date 'YYYY-MM-DD' or None, page_time str,
              rows [[code, ltp, high, low, closep, ycp, trade, value_mn, volume], ...]).
@@ -112,14 +149,10 @@ def parse_live_page(html):
             page_time = (m.group(2) or "").strip()
         except ValueError:
             pass
-    header_idx = html.find("shares-table")
-    if header_idx == -1:
-        return page_date, page_time, []
-    idx = html.find("<tbody>", header_idx)
-    end = html.find("</tbody>", idx)
+    seg = _table_body(html)
     rows = []
-    if idx != -1 and end != -1:
-        for row_html in ROW_RE.findall(html[idx:end]):
+    if seg is not None:
+        for row_html in ROW_RE.findall(seg):
             cells = [clean_cell(c) for c in CELL_RE.findall(row_html)]
             if len(cells) >= 11:
                 # #, CODE, LTP, HIGH, LOW, CLOSEP, YCP, CHANGE, TRADE, VALUE(mn), VOLUME
@@ -302,6 +335,21 @@ def load_tickers(refresh=False):
     cache = {"tickers": tickers, "fetched_at": time.strftime("%Y-%m-%d %H:%M:%S")}
     save_json(TICKERS_JSON, cache)
     return cache
+
+
+def load_potential():
+    """{ticker: [(date, projected_close), ...]} from forecast.py's output CSV,
+    in chronological order (one row per future trading day)."""
+    import csv
+    data = {}
+    if os.path.exists(POTENTIAL_CSV):
+        with open(POTENTIAL_CSV) as f:
+            for r in csv.DictReader(f):
+                try:
+                    data.setdefault(r["Ticker"], []).append((r["Date"], float(r["CloseP"])))
+                except (ValueError, KeyError):
+                    continue
+    return data
 
 
 def load_history():

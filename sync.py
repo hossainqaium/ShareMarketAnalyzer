@@ -15,13 +15,14 @@ Two layers:
 
 import csv
 import os
+import random
 import time
 from datetime import date, datetime, timedelta
 
-from dse_common import (ALPHA_URL, CSV_HEADER, DATA_DIR, HISTORY_CSV, HOME_URL,
-                        MARKET_HISTORY_JSON, MARKET_STATS_URL, SYNC_STATE_JSON,
-                        fetch, fetch_archive, load_json, load_tickers,
-                        parse_home_snapshot, parse_live_page,
+from dse_common import (CSV_HEADER, DATA_DIR, HISTORY_CSV, HOME_URL,
+                        LIVE_PRICE_URL, MARKET_HISTORY_JSON, MARKET_STATS_URL,
+                        SYNC_STATE_JSON, fetch, fetch_archive, load_json,
+                        load_tickers, parse_home_snapshot, parse_live_page,
                         parse_market_statistics, save_json)
 
 
@@ -97,8 +98,17 @@ def daterange_chunks(start, end, days=20):
         cur = chunk_end + timedelta(days=days)
 
 
-def run_sync(progress=lambda msg, pct: None, refresh_tickers=True):
-    """Incremental sync + live intraday overlay. Returns a summary dict."""
+def run_sync(progress=lambda msg, pct: None, refresh_tickers=True, codes=None):
+    """Incremental sync + live intraday overlay. Returns a summary dict.
+
+    codes=None does the full job (every share's price data, plus the
+    market-wide announcements/AGM-EGM/rights PDFs and a full 6-month
+    projection refresh). A codes list (Fetch Shortlisted/Portfolio/Compare)
+    still pulls current prices for EVERY share — DSE's archive/live-price
+    endpoints only come in an all-shares shape, there's no per-ticker
+    equivalent — but skips the announcements/AGM-EGM/rights fetches (they're
+    market-wide anyway, not scopeable) and narrows the 6-month projection
+    recompute to just the requested tickers, so it finishes faster."""
     progress("Loading ticker list...", 2)
     cache = load_tickers(refresh=refresh_tickers)
     tickers = set(cache["tickers"])
@@ -152,7 +162,7 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True):
     live_date = None
     page_time = ""
     try:
-        page_date, page_time, live_rows = parse_live_page(fetch(ALPHA_URL))
+        page_date, page_time, live_rows = parse_live_page(fetch(LIVE_PRICE_URL))
         if page_date and live_rows:
             fresh = []
             for cells in live_rows:
@@ -195,50 +205,56 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True):
         progress(f"Market update fetch failed (non-fatal): {exc}", None)
 
     # ---- company announcements (dividends, audit flags, halts, queries...) ----
-    progress("Fetching company announcements...", 93)
     announce_added, announce_tickers = 0, 0
-    try:
-        import fetch_news
-        state_prev = load_json(SYNC_STATE_JSON, {}) or {}
-        news_since = state_prev.get("news_last_date")
-        news_start = (datetime.strptime(news_since, "%Y-%m-%d").date()
-                     if news_since else today - timedelta(days=14))
-        announce_added, announce_tickers = fetch_news.merge_announcements(
-            news_start.isoformat(), today.isoformat())
-    except Exception as exc:
-        progress(f"Announcements fetch failed (non-fatal): {exc}", None)
-
-    # ---- AGM/EGM & record-date PDF (dividend declarations + record dates) ----
-    progress("Fetching AGM/EGM and record-date notices...", 96)
     agm_matched, agm_total = 0, 0
-    try:
-        import fetch_agm
-        pdf_path = os.path.join(DATA_DIR, "Company_AGM_EGM.pdf")
-        fetch_agm.download_pdf(pdf_path)
-        agm_result = fetch_agm.build_agm_notices(pdf_path)
-        save_json(fetch_agm.AGM_JSON, agm_result)
-        agm_matched, agm_total = agm_result["matched_count"], agm_result["total_rows"]
-    except Exception as exc:
-        progress(f"AGM/EGM fetch failed (non-fatal): {exc}", None)
-
-    # ---- rights-entitlement record-date PDF ----
-    progress("Fetching rights-entitlement record dates...", 96)
     rights_matched, rights_total = 0, 0
-    try:
-        import fetch_rights
-        rights_pdf_path = os.path.join(DATA_DIR, "Company_RecordDate_RightsEntitlement.pdf")
-        fetch_rights.download_pdf(rights_pdf_path)
-        rights_result = fetch_rights.build_rights_notices(rights_pdf_path)
-        save_json(fetch_rights.RIGHTS_JSON, rights_result)
-        rights_matched, rights_total = rights_result["matched_count"], rights_result["total_rows"]
-    except Exception as exc:
-        progress(f"Rights-entitlement fetch failed (non-fatal): {exc}", None)
+    if codes:
+        progress(f"Scoped fetch for {len(codes)} shares — skipping market-wide "
+                 f"announcements/AGM-EGM/rights (not scopeable, unchanged since last full Fetch Data)...", 93)
+    else:
+        progress("Fetching company announcements...", 93)
+        try:
+            import fetch_news
+            state_prev = load_json(SYNC_STATE_JSON, {}) or {}
+            news_since = state_prev.get("news_last_date")
+            news_start = (datetime.strptime(news_since, "%Y-%m-%d").date()
+                         if news_since else today - timedelta(days=14))
+            announce_added, announce_tickers = fetch_news.merge_announcements(
+                news_start.isoformat(), today.isoformat())
+        except Exception as exc:
+            progress(f"Announcements fetch failed (non-fatal): {exc}", None)
+
+        # ---- AGM/EGM & record-date PDF (dividend declarations + record dates) ----
+        progress("Fetching AGM/EGM and record-date notices...", 96)
+        try:
+            import fetch_agm
+            pdf_path = os.path.join(DATA_DIR, "Company_AGM_EGM.pdf")
+            fetch_agm.download_pdf(pdf_path)
+            agm_result = fetch_agm.build_agm_notices(pdf_path)
+            save_json(fetch_agm.AGM_JSON, agm_result)
+            agm_matched, agm_total = agm_result["matched_count"], agm_result["total_rows"]
+        except Exception as exc:
+            progress(f"AGM/EGM fetch failed (non-fatal): {exc}", None)
+
+        # ---- rights-entitlement record-date PDF ----
+        time.sleep(0.8 + random.random() * 0.6)  # same jittered spacing as the other sequential fetches
+        progress("Fetching rights-entitlement record dates...", 96)
+        try:
+            import fetch_rights
+            rights_pdf_path = os.path.join(DATA_DIR, "Company_RecordDate_RightsEntitlement.pdf")
+            fetch_rights.download_pdf(rights_pdf_path)
+            rights_result = fetch_rights.build_rights_notices(rights_pdf_path)
+            save_json(fetch_rights.RIGHTS_JSON, rights_result)
+            rights_matched, rights_total = rights_result["matched_count"], rights_result["total_rows"]
+        except Exception as exc:
+            progress(f"Rights-entitlement fetch failed (non-fatal): {exc}", None)
 
     # ---- potential-future projection (regenerated from the fresh history) ----
-    progress("Regenerating potential 6-month projections from updated history...", 97)
+    scope_note = f"{len(codes)} selected shares" if codes else "all shares"
+    progress(f"Regenerating potential 6-month projections for {scope_note}...", 97)
     try:
         import forecast
-        forecast.run_forecast()
+        forecast.run_forecast(codes=codes)
     except Exception as exc:
         progress(f"Projection failed (non-fatal): {exc}", None)
 

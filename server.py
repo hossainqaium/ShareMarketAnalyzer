@@ -14,9 +14,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import analysis as analysis_mod
 import sync as sync_mod
-from dse_common import (AGM_JSON, ANALYSIS_JSON, PORTFOLIO_JSON, POTENTIAL_CSV,
+from dse_common import (AGM_JSON, ANALYSIS_JSON, PORTFOLIO_JSON,
                         PROFILES_JSON, RIGHTS_JSON, ROOT, load_history, load_json,
-                        save_json)
+                        load_potential, save_json)
 
 STATIC_DIR = os.path.join(ROOT, "static")
 
@@ -55,18 +55,7 @@ def get_profiles(reload=False):
 def get_potential(reload=False):
     with _state["lock"]:
         if _state["potential"] is None or reload:
-            import csv as _csv
-            data = {}
-            if os.path.exists(POTENTIAL_CSV):
-                with open(POTENTIAL_CSV) as f:
-                    reader = _csv.DictReader(f)
-                    for r in reader:
-                        try:
-                            data.setdefault(r["Ticker"], []).append(
-                                (r["Date"], float(r["CloseP"])))
-                        except (ValueError, KeyError):
-                            continue
-            _state["potential"] = data
+            _state["potential"] = load_potential()
         return _state["potential"]
 
 
@@ -115,33 +104,48 @@ def series_for(ticker, max_points=None, ohlc=False):
     return dates, closes, vols
 
 
-def run_update_job():
+def run_update_job(codes=None):
     st = _state["update"]
     try:
         def progress(msg, pct):
             st["message"] = msg
             if pct is not None:
                 st["pct"] = pct
-        summary = sync_mod.run_sync(progress=progress)
-        st["message"] = "Reloading data & re-running analysis..."
-        get_history(reload=True)
-        get_profiles(reload=True)
-        get_potential(reload=True)
+        summary = sync_mod.run_sync(progress=progress, codes=codes)
+        # Fetch Data only writes to local files: scrape → CSV/json, then compute
+        # analysis.json from the fresh history. It deliberately does NOT touch the
+        # in-memory cache the API serves — clicking "Update Data" reloads those
+        # files into memory and renders them (see reload_from_disk / /api/reload).
+        # analysis_mod.run_analysis() always processes every ticker regardless of
+        # `codes` — cross-ticker signals (beta, market breadth, spike/margin
+        # scans, Top 20 diversification) need the full universe to stay correct,
+        # so a scoped fetch can't skip this step, only the network calls above it.
+        st["message"] = "Re-running analysis and saving to disk..."
         analysis_mod.run_analysis()
-        get_analysis(reload=True)
         st["pct"] = 100
         live = (f" + {summary['live_rows']} live prices ({summary['live_time']})"
                 if summary.get("live_rows") else "")
         news = (f", {summary['announcements_added']} new announcements"
                 if summary.get("announcements_added") else "")
-        st["message"] = (f"Done. +{summary['rows_added'] + summary['backfill_rows']} archive rows"
-                         f"{live}{news} (prev last date {summary['previous_last_date']}).")
+        scope = f" (scoped: {', '.join(codes)})" if codes else ""
+        st["message"] = (f"Fetched & saved to disk{scope}. +{summary['rows_added'] + summary['backfill_rows']} archive rows"
+                         f"{live}{news} (prev last date {summary['previous_last_date']}). "
+                         f"Click Update Data to render it.")
         st["done"] = True
     except Exception as e:
         st["error"] = str(e)
-        st["message"] = f"Update failed: {e}"
+        st["message"] = f"Fetch failed: {e}"
     finally:
         st["running"] = False
+
+
+def reload_from_disk():
+    """Load the latest local files (written by Fetch Data) into the in-memory
+    caches the API serves. This is what "Update Data" triggers — no network."""
+    get_history(reload=True)
+    get_profiles(reload=True)
+    get_potential(reload=True)
+    get_analysis(reload=True)
 
 
 # ================= PORTFOLIO (trade journal + exit engine) =================
@@ -343,7 +347,7 @@ def portfolio_view():
         invested += qty * h["buy_price"]
         value += qty * price
         holdings.append({
-            **h, "price": round(price, 2), "value": round(qty * price, 2),
+            **h, "price": round(price, 2), "ycp": m.get("ycp"), "value": round(qty * price, 2),
             "pnl": round(qty * (price - h["buy_price"]), 2),
             "pnl_pct": round(pnl_pct, 2),
             "sessions_held": sessions_held, "horizon_sessions": horizon_s,
@@ -393,6 +397,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(code)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")  # never let the browser serve a stale API response
         self.end_headers()
         self.wfile.write(body)
 
@@ -465,6 +470,7 @@ class Handler(BaseHTTPRequestHandler):
                     "clow": [round(v, 2) for v in full_lows[-n_candles:]],
                     "cclose": [round(v, 2) for v in full_closes[-n_candles:]],
                     "price": ana[c]["price"],
+                    "ycp": ana[c].get("ycp"),
                     "r_1y": ana[c].get("r_1y"),
                     "r_2y": ana[c].get("r_2y"),
                     "score_short": ana[c]["score_short"],
@@ -523,9 +529,13 @@ class Handler(BaseHTTPRequestHandler):
                     "past_dates": yr, "past_closes": [round(v, 2) for v in yc],
                     "fut_dates": fd, "fut_closes": fc,
                     "price": ana[c]["price"],
+                    "ycp": ana[c].get("ycp"),
                     "proj_6m": round(proj_6m, 1) if proj_6m is not None else None,
                     "score_short": ana[c]["score_short"],
                     "score_long": ana[c]["score_long"],
+                    "r_1w": ana[c].get("r_1w"), "r_1m": ana[c].get("r_1m"), "r_2m": ana[c].get("r_2m"),
+                    "pred_1w_price": ana[c].get("pred_1w_price"), "pred_1w_pct": ana[c].get("pred_1w_pct"),
+                    "pred_1m_price": ana[c].get("pred_1m_price"), "pred_1m_pct": ana[c].get("pred_1m_pct"),
                 })
             return self.send_json({"page": page, "per": per, "total": total,
                                    "pages": (total + per - 1) // per, "items": items})
@@ -626,10 +636,19 @@ class Handler(BaseHTTPRequestHandler):
             st = _state["update"]
             if st["running"]:
                 return self.send_json({"started": False, "reason": "already running"})
+            body = self.read_json_body() or {}
+            codes = [c.strip().upper() for c in (body.get("codes") or []) if c and c.strip()]
+            codes = codes or None  # empty list means "no scope" == full update
             _state["update"] = {"running": True, "message": "Starting...", "pct": 0,
                                 "done": False, "error": None}
-            threading.Thread(target=run_update_job, daemon=True).start()
-            return self.send_json({"started": True})
+            threading.Thread(target=run_update_job, kwargs={"codes": codes}, daemon=True).start()
+            return self.send_json({"started": True, "codes": codes})
+
+        if route == "/api/reload":
+            reload_from_disk()
+            ov = get_analysis().get("overview", {})
+            return self.send_json({"ok": True, "market_date": ov.get("market_date"),
+                                   "tickers_analyzed": ov.get("tickers_analyzed")})
         self.send_error(404)
 
 

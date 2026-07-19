@@ -18,8 +18,8 @@
     "purpose": "No Dividend",
     "dividend_pct": 0.0,
     "dividend_kind": "none",
-    "agm_date_text": "29-Jul-26",
-    "agm_date": "2026-07-29",
+    "agm_date_text": "Postponed",
+    "agm_date": null,
     "record_date_text": "9-Jun-26",
     "record_date": "2026-06-09"
    }
@@ -891,5 +891,5 @@
  ],
  "total_rows": 75,
  "matched_count": 71,
- "fetched_at": "2026-07-18 16:53:04"
+ "fetched_at": "2026-07-19 14:57:16"
 }

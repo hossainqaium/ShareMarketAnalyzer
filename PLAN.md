@@ -88,6 +88,35 @@ Python 3 stdlib + vanilla JS/canvas throughout, with one pip dependency
     force `eligible = False` regardless of how strong the technical setup
     looks — a share can't be bought during a halt, and an auditor red flag
     should not be papered over by a good chart.
+11. **Load on dsebd.org is minimized, not disguised.** This tool reads public
+    price/announcement pages for personal analysis; the goal is to be a light,
+    honest visitor rather than to hide that requests are automated. Already in
+    place:
+    - **User-triggered only** — no cron/background poller; every fetch traces
+      back to a manual "Update Data" click (`server.py`'s update thread, no
+      scheduled timer).
+    - **Incremental, not repeated full scrapes** — sync reads the CSV's max
+      date and fetches only the gap (§1), so a full 389-ticker, 2-year pull
+      (`scrape_dse.py`) only ever runs once at bootstrap.
+    - **One request stands in for many** — `inst=All Instrument` on the
+      day-end archive returns every share in a single call instead of 389
+      per-ticker requests.
+    - **Sequential with jittered delays**, not parallel/concurrent — see the
+      `time.sleep(...)` calls in `sync.py`, `scrape_dse.py`, `fetch_profiles.py`;
+      nothing fans out multiple simultaneous connections.
+    - **Bounded retries with backoff** (`dse_common.fetch`, `scrape_dse.fetch`)
+      on transient failures, not hammering on error.
+    - **A real, static browser User-Agent string** so requests parse normally
+      (dsebd.org's default TLS/HTTP stack has quirks with bare Python UAs —
+      see §6) — not rotated, spoofed, or paired with proxy/IP rotation, which
+      would cross from "well-formed request" into deliberately evading rate
+      limiting or blocking.
+    - Explicitly out of scope: proxy/IP rotation, randomized or rotating
+      User-Agents, mimicking human mouse/scroll timing, CAPTCHA solving, or
+      anything else whose purpose is to stop dsebd.org from recognizing this
+      as automated access. If DSE ever rate-limits or blocks this tool, the
+      fix is to fetch less often or less data per run — not to work around
+      the block.
 
 ## Modules
 

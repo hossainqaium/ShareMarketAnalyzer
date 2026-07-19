@@ -22,7 +22,7 @@ import re
 import time
 
 from dse_common import (AGM_JSON, AGM_PDF_URL, PROFILES_JSON, build_name_index,
-                        fetch, load_json, match_company_name, save_json)
+                        fetch_binary, load_json, match_company_name, save_json)
 
 DATE_RE = re.compile(r"(\d{1,2})[-\s]([A-Za-z]{3})[-\s](\d{2,4})")
 PCT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*%\s*(Cash|Stock|Bonus)?", re.I)
@@ -59,15 +59,7 @@ def parse_dividend(purpose):
 
 
 def download_pdf(dest_path):
-    import urllib.request
-    req = urllib.request.Request(AGM_PDF_URL, headers={"User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"})
-    import ssl
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    with urllib.request.urlopen(req, timeout=30, context=ctx) as resp, open(dest_path, "wb") as f:
-        f.write(resp.read())
+    fetch_binary(AGM_PDF_URL, dest_path)
 
 
 def parse_agm_pdf(path):

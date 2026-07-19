@@ -1,1 +1,12 @@
-{"holdings": [], "closed": []}
+{
+ "holdings": [
+  {
+   "id": "1784443663446",
+   "code": "APEXFOOT",
+   "qty": 992,
+   "buy_price": 201.6,
+   "buy_date": "2026-06-21"
+  }
+ ],
+ "closed": []
+}

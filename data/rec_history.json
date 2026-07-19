@@ -345,9 +345,9 @@
    "BSRMSTEEL",
    "SANDHANINS",
    "WALTONHIL",
-   "EHL",
    "SONALIANSH",
    "ACMELAB",
+   "EHL",
    "SUMITPOWER",
    "PRIMEINSUR"
   ],
@@ -368,5 +368,258 @@
    "AMANFEED",
    "MJLBD"
   ]
+ },
+ "2026-07-19": {
+  "strong_buy": [
+   "ACI",
+   "ACMELAB",
+   "AMANFEED",
+   "APEXFOOT",
+   "BSC",
+   "BSCPLC",
+   "BSRMLTD",
+   "CONFIDCEM",
+   "CVOPRL",
+   "EHL",
+   "GPHISPAT",
+   "IBNSINA",
+   "KOHINOOR",
+   "LHB",
+   "MAGURAPLEX",
+   "MEGHNAINS",
+   "MIDLANDBNK",
+   "MJLBD",
+   "NAVANAPHAR",
+   "PHARMAID",
+   "PRIMEINSUR",
+   "RUPALIINS",
+   "SANDHANINS",
+   "SEAPEARL",
+   "SIMTEX",
+   "SONALIANSH",
+   "SONALIPAPR",
+   "TAMIJTEX"
+  ],
+  "buy": [
+   "ACIFORMULA",
+   "ADNTEL",
+   "AGNISYSL",
+   "AL-HAJTEX",
+   "ARGONDENIM",
+   "BATBC",
+   "BDCOM",
+   "BEACONPHAR",
+   "BSRMSTEEL",
+   "BXPHARMA",
+   "CENTRALINS",
+   "CITYGENINS",
+   "DGIC",
+   "DHAKABANK",
+   "DHAKAINS",
+   "DOREENPWR",
+   "DSHGARME",
+   "DUTCHBANGL",
+   "EASTLAND",
+   "EASTRNLUB",
+   "EIL",
+   "ENVOYTEX",
+   "FARCHEM",
+   "FEDERALINS",
+   "FEKDIL",
+   "GLOBALINS",
+   "HEIDELBCEM",
+   "HWAWELLTEX",
+   "IBP",
+   "IDLC",
+   "INDEXAGRO",
+   "ISLAMIINS",
+   "ITC",
+   "KARNAPHULI",
+   "LANKABAFIN",
+   "LINDEBD",
+   "MALEKSPIN",
+   "MARICO",
+   "MATINSPINN",
+   "MLDYEING",
+   "MONNOAGML",
+   "MONOSPOOL",
+   "MTB",
+   "NHFIL",
+   "OLYMPIC",
+   "PADMAOIL",
+   "PENINSULA",
+   "PREMIERCEM",
+   "PRIMEBANK",
+   "RAHIMTEXT",
+   "RAKCERAMIC",
+   "RENATA",
+   "REPUBLIC",
+   "ROBI",
+   "SAIHAMCOT",
+   "SAIHAMTEX",
+   "SALVO",
+   "SAMORITA",
+   "SHAHJABANK",
+   "SHARPIND",
+   "SHASHADNIM",
+   "SILCOPHL",
+   "SILVAPHL",
+   "SINOBANGLA",
+   "SIPLC",
+   "SPCL",
+   "SQUARETEXT",
+   "SQURPHARMA",
+   "SUMITPOWER",
+   "TAKAFULINS",
+   "TECHNODRUG",
+   "TOSRIFA",
+   "UNIONINS",
+   "UNIQUEHRL",
+   "UNITEDINS",
+   "UPGDCL",
+   "WALTONHIL",
+   "WATACHEM"
+  ],
+  "top20": [
+   "LHB",
+   "APEXFOOT",
+   "DUTCHBANGL",
+   "BSRMLTD",
+   "ACIFORMULA",
+   "IBNSINA",
+   "BSRMSTEEL",
+   "PHARMAID",
+   "CVOPRL",
+   "BSC",
+   "LANKABAFIN",
+   "CONFIDCEM",
+   "SONALIPAPR",
+   "AMANFEED",
+   "MEGHNAINS",
+   "EASTRNLUB",
+   "BSCPLC",
+   "MIDLANDBNK",
+   "EHL",
+   "SONALIANSH"
+  ],
+  "high_profit": [
+   "APEXSPINN",
+   "ITC",
+   "BSC",
+   "GP",
+   "SAMORITA",
+   "TECHNODRUG",
+   "BSRMLTD",
+   "FARCHEM",
+   "SINOBANGLA",
+   "UNITEDINS",
+   "CITYGENINS",
+   "AMANFEED",
+   "ROBI",
+   "DHAKAINS",
+   "JAMUNAOIL"
+  ],
+  "pred": {
+   "LHB": {
+    "price": 60.2,
+    "pred_1w": 61.1,
+    "pred_1m": 68.11
+   },
+   "APEXFOOT": {
+    "price": 217.2,
+    "pred_1w": 220.34,
+    "pred_1m": 230.81
+   },
+   "DUTCHBANGL": {
+    "price": 50.0,
+    "pred_1w": 50.83,
+    "pred_1m": 53.64
+   },
+   "BSRMLTD": {
+    "price": 106.5,
+    "pred_1w": 107.34,
+    "pred_1m": 114.07
+   },
+   "ACIFORMULA": {
+    "price": 180.0,
+    "pred_1w": 182.67,
+    "pred_1m": 189.65
+   },
+   "IBNSINA": {
+    "price": 326.9,
+    "pred_1w": 328.79,
+    "pred_1m": 340.88
+   },
+   "BSRMSTEEL": {
+    "price": 100.7,
+    "pred_1w": 101.58,
+    "pred_1m": 109.21
+   },
+   "PHARMAID": {
+    "price": 630.7,
+    "pred_1w": 637.34,
+    "pred_1m": 687.79
+   },
+   "CVOPRL": {
+    "price": 176.3,
+    "pred_1w": 178.72,
+    "pred_1m": 185.11
+   },
+   "BSC": {
+    "price": 124.7,
+    "pred_1w": 125.75,
+    "pred_1m": 142.37
+   },
+   "LANKABAFIN": {
+    "price": 17.9,
+    "pred_1w": 18.12,
+    "pred_1m": 19.48
+   },
+   "CONFIDCEM": {
+    "price": 69.9,
+    "pred_1w": 70.71,
+    "pred_1m": 74.27
+   },
+   "SONALIPAPR": {
+    "price": 249.4,
+    "pred_1w": 254.78,
+    "pred_1m": 271.4
+   },
+   "AMANFEED": {
+    "price": 37.8,
+    "pred_1w": 38.22,
+    "pred_1m": 38.54
+   },
+   "MEGHNAINS": {
+    "price": 39.1,
+    "pred_1w": 39.55,
+    "pred_1m": 41.24
+   },
+   "EASTRNLUB": {
+    "price": 2000.6,
+    "pred_1w": 2075.86,
+    "pred_1m": 2158.39
+   },
+   "BSCPLC": {
+    "price": 163.0,
+    "pred_1w": 165.45,
+    "pred_1m": 179.53
+   },
+   "MIDLANDBNK": {
+    "price": 17.9,
+    "pred_1w": 17.79,
+    "pred_1m": 16.01
+   },
+   "EHL": {
+    "price": 96.2,
+    "pred_1w": 97.3,
+    "pred_1m": 103.88
+   },
+   "SONALIANSH": {
+    "price": 216.0,
+    "pred_1w": 221.25,
+    "pred_1m": 232.89
+   }
+  }
  }
 }

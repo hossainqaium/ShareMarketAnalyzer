@@ -26,7 +26,7 @@ import math
 import time
 from datetime import date, timedelta
 
-from dse_common import POTENTIAL_CSV, load_history
+from dse_common import POTENTIAL_CSV, load_history, load_potential
 
 HORIZON = 125          # future trading sessions to project (~6 months)
 DRIFT_CAP = 0.0015     # max |daily drift| (≈ ±45%/yr before damping)
@@ -97,17 +97,35 @@ def project(closes, horizon=HORIZON):
     return out
 
 
-def run_forecast(progress=lambda msg, pct: None):
-    progress("Projecting potential 6-month future for all shares...", None)
+def run_forecast(progress=lambda msg, pct: None, codes=None):
+    """codes=None regenerates every share's projection (the normal full Fetch
+    Data path). A codes list scopes the (re)computation to just those tickers
+    — used by the Fetch Shortlisted/Portfolio/Compare buttons — and preserves
+    every other ticker's existing projection untouched rather than dropping it."""
+    scope = f"{len(codes)} selected shares" if codes else "all shares"
+    progress(f"Projecting potential 6-month future for {scope}...", None)
     history = load_history()
     today = date.today()
     dates = future_trading_days(today, HORIZON)
+
+    keep = {}
+    if codes:
+        # scoped run: start from what's already on disk for every OTHER ticker
+        for ticker, rows in load_potential().items():
+            if ticker not in codes:
+                keep[ticker] = rows
+        universe = sorted(c for c in codes if c in history)
+    else:
+        universe = sorted(history)
 
     written = 0
     with open(POTENTIAL_CSV, "w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["Ticker", "Date", "CloseP"])
-        for ticker in sorted(history):
+        for ticker, rows in keep.items():
+            for d, p in rows:
+                w.writerow([ticker, d, p])
+        for ticker in universe:
             closes = clean_closes(history[ticker])
             proj = project(closes)
             if not proj:

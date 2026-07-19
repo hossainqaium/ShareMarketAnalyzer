@@ -159,6 +159,7 @@
   "HFL": "https://www.dsebd.org/displayCompany.php?name=HFL",
   "HRTEX": "https://www.dsebd.org/displayCompany.php?name=HRTEX",
   "HWAWELLTEX": "https://www.dsebd.org/displayCompany.php?name=HWAWELLTEX",
+  "IBBL2PBOND": "https://www.dsebd.org/displayCompany.php?name=IBBL2PBOND",
   "IBBLPBOND": "https://www.dsebd.org/displayCompany.php?name=IBBLPBOND",
   "IBNSINA": "https://www.dsebd.org/displayCompany.php?name=IBNSINA",
   "IBP": "https://www.dsebd.org/displayCompany.php?name=IBP",
@@ -286,6 +287,7 @@
   "PRIMEBANK": "https://www.dsebd.org/displayCompany.php?name=PRIMEBANK",
   "PRIMEFIN": "https://www.dsebd.org/displayCompany.php?name=PRIMEFIN",
   "PRIMEINSUR": "https://www.dsebd.org/displayCompany.php?name=PRIMEINSUR",
+  "PRIMELIFE": "https://www.dsebd.org/displayCompany.php?name=PRIMELIFE",
   "PRIMETEX": "https://www.dsebd.org/displayCompany.php?name=PRIMETEX",
   "PROGRESLIF": "https://www.dsebd.org/displayCompany.php?name=PROGRESLIF",
   "PROVATIINS": "https://www.dsebd.org/displayCompany.php?name=PROVATIINS",
@@ -340,7 +342,6 @@
   "SINGERBD": "https://www.dsebd.org/displayCompany.php?name=SINGERBD",
   "SINOBANGLA": "https://www.dsebd.org/displayCompany.php?name=SINOBANGLA",
   "SIPLC": "https://www.dsebd.org/displayCompany.php?name=SIPLC",
-  "SJIBLPBOND": "https://www.dsebd.org/displayCompany.php?name=SJIBLPBOND",
   "SKTRIMS": "https://www.dsebd.org/displayCompany.php?name=SKTRIMS",
   "SONALIANSH": "https://www.dsebd.org/displayCompany.php?name=SONALIANSH",
   "SONALILIFE": "https://www.dsebd.org/displayCompany.php?name=SONALILIFE",
@@ -362,12 +363,8 @@
   "TAKAFULINS": "https://www.dsebd.org/displayCompany.php?name=TAKAFULINS",
   "TALLUSPIN": "https://www.dsebd.org/displayCompany.php?name=TALLUSPIN",
   "TAMIJTEX": "https://www.dsebd.org/displayCompany.php?name=TAMIJTEX",
-  "TB10Y0530": "https://www.dsebd.org/displayCompany.php?name=TB10Y0530",
-  "TB20Y0744": "https://www.dsebd.org/displayCompany.php?name=TB20Y0744",
-  "TB20Y0831": "https://www.dsebd.org/displayCompany.php?name=TB20Y0831",
-  "TB5Y0230": "https://www.dsebd.org/displayCompany.php?name=TB5Y0230",
-  "TB5Y0429": "https://www.dsebd.org/displayCompany.php?name=TB5Y0429",
-  "TB5Y1029": "https://www.dsebd.org/displayCompany.php?name=TB5Y1029",
+  "TB2Y0527": "https://www.dsebd.org/displayCompany.php?name=TB2Y0527",
+  "TB2Y0727": "https://www.dsebd.org/displayCompany.php?name=TB2Y0727",
   "TECHNODRUG": "https://www.dsebd.org/displayCompany.php?name=TECHNODRUG",
   "TILIL": "https://www.dsebd.org/displayCompany.php?name=TILIL",
   "TITASGAS": "https://www.dsebd.org/displayCompany.php?name=TITASGAS",
@@ -396,5 +393,5 @@
   "ZAHINTEX": "https://www.dsebd.org/displayCompany.php?name=ZAHINTEX",
   "ZEALBANGLA": "https://www.dsebd.org/displayCompany.php?name=ZEALBANGLA"
  },
- "fetched_at": "2026-07-18 16:52:53"
+ "fetched_at": "2026-07-19 14:57:15"
 }

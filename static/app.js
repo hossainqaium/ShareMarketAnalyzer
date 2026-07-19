@@ -128,11 +128,13 @@ const GLOSSARY = {
   category: { t: "DSE category", en: "A = pays regular dividends (safest), B = irregular, N = newly listed, Z = pays none / riskiest.", bn: "DSE ক্যাটাগরি: A = নিয়মিত লভ্যাংশ (নিরাপদ), B = অনিয়মিত, N = নতুন তালিকাভুক্ত, Z = লভ্যাংশ দেয় না (ঝুঁকিপূর্ণ)।" },
   rel_1m: { t: "Relative strength", en: "1-month return minus the market average — positive means it's beating the market.", bn: "আপেক্ষিক শক্তি — বাজারের গড়ের তুলনায় ১ মাসের রিটার্ন। পজিটিভ মানে শেয়ারটি বাজারকে হারাচ্ছে।" },
   support: { t: "Support / Resistance", en: "Support = the 3-month low buyers defended; resistance = the 3-month high. Room below resistance = headroom to rise.", bn: "সাপোর্ট = ৩ মাসের সর্বনিম্ন যেখানে ক্রেতারা দাম ধরে রেখেছে; রেজিস্ট্যান্স = সর্বোচ্চ। রেজিস্ট্যান্স পর্যন্ত ফাঁকা জায়গা = বাড়ার সুযোগ।" },
-  returns: { t: "Return %", en: "Percentage price change over the period (1w = 1 week, 1m = 1 month...).", bn: "নির্দিষ্ট সময়ে দামের শতকরা পরিবর্তন (1w = ১ সপ্তাহ, 1m = ১ মাস...)।" },
+  returns: { t: "Return % (past, not a prediction)", en: "How much the price has ALREADY moved over the trailing period (1w = the last week, 1m = the last month) — pure momentum history, one input into the score. For a forward-looking estimate see AI Pred. 1w/1m instead.", bn: "গত সময়ে দাম ইতিমধ্যে কতটা বদলেছে তা (1w = গত সপ্তাহ, 1m = গত মাস) — নিছক অতীতের গতিবেগ, স্কোরের একটি উপাদান মাত্র। ভবিষ্যতের আন্দাজের জন্য AI Pred. 1w/1m দেখুন।" },
   eligible: { t: "Eligible", en: "Passes safety checks for pick lists: liquid, equity (not fund/bond), not category Z, fresh data.", bn: "সুপারিশ তালিকার শর্ত পূরণ করেছে: পর্যাপ্ত লেনদেন, ইকুইটি শেয়ার, Z ক্যাটাগরি নয়, হালনাগাদ তথ্য।" },
   flags: { t: "Risk flags", en: "Warnings that need attention before buying — hover each red chip for its meaning.", bn: "ঝুঁকি-চিহ্ন — কেনার আগে খেয়াল করুন; প্রতিটি লাল চিপে মাউস রাখলে অর্থ দেখা যাবে।" },
   sector: { t: "Sector", en: "Industry group. Diversifying across sectors reduces risk.", bn: "খাত — বিভিন্ন খাতে ভাগ করে বিনিয়োগ করলে ঝুঁকি কমে।" },
-  update: { t: "Update Data", en: "Fetches only the newest missing dates from DSE, then re-runs all analysis. Takes under a minute.", bn: "শুধু নতুন দিনের তথ্য DSE থেকে আনে ও বিশ্লেষণ নতুন করে চালায়। এক মিনিটের কম লাগে।" },
+  fetch_data: { t: "Fetch Data", en: "Fetches only the newest missing dates from DSE, then re-runs all analysis and saves the results to disk. Takes under a minute. This does NOT refresh what's on screen — click Update Data afterward to see it.", bn: "শুধু নতুন দিনের তথ্য DSE থেকে আনে, বিশ্লেষণ নতুন করে চালায় ও ফলাফল ফাইলে সংরক্ষণ করে। এক মিনিটের কম লাগে। এটি পাতায় দেখানো তথ্য বদলায় না — দেখতে পরে Update Data চাপুন।" },
+  fetch_scoped: { t: "Scoped fetch", en: "Same current prices for every share (DSE's price feed has no per-share endpoint), but skips the market-wide announcements/AGM-EGM/rights PDFs and only recomputes the 6-month price projection for this list — so it finishes faster than Fetch Data. Does nothing if the list is empty. Doesn't refresh the screen either — click Update Data after.", bn: "সব শেয়ারের বর্তমান দামই আসে (DSE-এর দামের ফিড একটি একটি শেয়ার করে দেয় না), কিন্তু বাজারজোড়া ঘোষণা/AGM-EGM/রাইটস পিডিএফ বাদ যায় এবং শুধু এই তালিকার ৬ মাসের প্রক্ষেপণ নতুন করে হিসাব হয় — তাই Fetch Data-র চেয়ে দ্রুত শেষ হয়। তালিকা খালি হলে কিছু হয় না। পাতাও বদলায় না — পরে Update Data চাপুন।" },
+  render_data: { t: "Update Data", en: "No network request — just redraws every tab from whatever was last saved to disk by Fetch Data. Instant.", bn: "কোনো নেটওয়ার্ক অনুরোধ নেই — Fetch Data সবশেষ যা ফাইলে সংরক্ষণ করেছিল তা দিয়ে শুধু পাতা নতুন করে আঁকে। তাৎক্ষণিক।" },
   help: { t: "Help", en: "Opens the full glossary of every term used in this app.", bn: "অ্যাপে ব্যবহৃত সব শব্দের পূর্ণ ব্যাখ্যা দেখায়।" },
   "flag:overbought": { t: "overbought", en: "RSI above 70 — price ran up fast and may pause or pull back. Wait for a dip.", bn: "RSI ৭০+ — দাম দ্রুত বেড়েছে, কিছুটা কমতে পারে। একটু কমলে কেনার কথা ভাবুন।" },
   "flag:illiquid": { t: "illiquid", en: "Very little daily trading — hard to buy or sell without moving the price.", bn: "লেনদেন খুব কম — দাম না বাড়িয়ে কেনা বা না কমিয়ে বেচা কঠিন।" },
@@ -163,6 +165,7 @@ const GLOSSARY = {
   market_cap: { t: "Market capitalisation", en: "Total value of all listed equity + mutual funds + debt securities — the size of the whole market.", bn: "সব তালিকাভুক্ত ইকুইটি + মিউচুয়াল ফান্ড + ঋণ সিকিউরিটির মোট মূল্য — সমগ্র বাজারের আকার।" },
   company_alerts: { t: "Company Alerts", en: "Material company announcements scraped from DSE's news feed and the AGM/EGM record-date PDF: trading halts, auditor concerns, and upcoming dividend record dates — things that should change your buy decision.", bn: "DSE-এর ঘোষণা ও AGM/EGM রেকর্ড ডেট পিডিএফ থেকে নেওয়া গুরুত্বপূর্ণ তথ্য: লেনদেন বন্ধ, অডিট সংক্রান্ত উদ্বেগ, এবং আসন্ন লভ্যাংশ রেকর্ড ডেট — যা আপনার কেনার সিদ্ধান্ত বদলে দিতে পারে।" },
   record_date: { t: "Record date", en: "The cutoff date to own a share and qualify for its declared dividend. Buy before this date to capture the dividend; the price typically drops by roughly the dividend amount right after (the 'ex-dividend' adjustment).", bn: "রেকর্ড ডেট — এই তারিখের মধ্যে শেয়ার থাকলে ঘোষিত লভ্যাংশ পাবেন। এই তারিখের আগে কিনলে লভ্যাংশ পাবেন; এর পরপরই দাম লভ্যাংশের প্রায় সমপরিমাণ কমে যায় (এক্স-ডিভিডেন্ড সমন্বয়)।" },
+  action_plan: { t: "Action", en: "When to buy and how long to hold, in one line — combines the suggested buy date and holding horizon. See the separate Target/Stop-loss columns for the exit prices.", bn: "কবে কিনবেন ও কতদিন ধরে রাখবেন, একলাইনে — প্রস্তাবিত কেনার তারিখ ও ধরে রাখার সময়সীমা একসাথে। বের হওয়ার দাম দেখতে Target/Stop-loss কলাম দেখুন।" },
   buy_date: { t: "Suggested buy date", en: "When to enter: next trading session for a fresh setup; 2–3 sessions later if the share is overheated (wait for a dip); and never later than 2 sessions before a record date worth capturing (DSE settles trades in T+2 days). DSE trades Sunday–Thursday.", bn: "কবে কিনবেন: নতুন সেটআপ হলে পরের কার্যদিবসে; অতিরিক্ত বেড়ে থাকলে ২–৩ দিন পরে (দাম একটু কমার অপেক্ষায়); আর লভ্যাংশ পেতে চাইলে রেকর্ড ডেটের অন্তত ২ কার্যদিবস আগে (DSE-তে লেনদেন নিষ্পত্তিতে ২ দিন লাগে)। DSE রবি–বৃহস্পতিবার খোলা থাকে।" },
   "flag:trading-halt": { t: "trading-halt", en: "DSE has halted trading in this share — you cannot buy or sell it right now. Wait for resumption news.", bn: "এই শেয়ারের লেনদেন DSE বন্ধ করে দিয়েছে — এখন কেনা-বেচা করা যাবে না। পুনরায় চালুর খবরের অপেক্ষা করুন।" },
   "flag:audit-concern": { t: "audit-concern", en: "The auditor issued a Qualified Opinion, Emphasis of Matter, or going-concern warning in the latest financials — a serious red flag on the company's accounts. Avoid until resolved.", bn: "সাম্প্রতিক আর্থিক বিবরণীতে অডিটর Qualified Opinion বা Going Concern নিয়ে সতর্ক করেছেন — কোম্পানির হিসাবে গুরুতর ঝুঁকির সংকেত। সমাধান না হওয়া পর্যন্ত এড়িয়ে চলুন।" },
@@ -181,8 +184,8 @@ const GLOSSARY = {
   "news:resumption": { t: "resumption", en: "Trading resumed after a suspension.", bn: "স্থগিতাদেশের পর লেনদেন আবার শুরু হয়েছে।" },
   "news:other": { t: "other announcement", en: "A company announcement that didn't fall into a specific tracked category — read the title for context.", bn: "নির্দিষ্ট কোনো শ্রেণিতে না পড়া কোম্পানি ঘোষণা — বিস্তারিত জানতে শিরোনাম দেখুন।" },
   theme_toggle: { t: "Theme", en: "Click to cycle Auto (follows your browser/OS setting) → Light → Dark. Useful when your browser reports a color scheme you don't want here (e.g. Safari showing light while Chrome shows dark) — pick Light or Dark to force it, independent of the browser. Saved in this browser only.", bn: "ক্লিক করলে Auto (ব্রাউজার/OS-এর সেটিং অনুসরণ করে) → Light → Dark ক্রমে বদলায়। ব্রাউজার ভুল থিম দেখালে (যেমন Safari-তে হালকা কিন্তু Chrome-এ গাঢ়) Light বা Dark বেছে জোর করে নির্ধারণ করুন। শুধু এই ব্রাউজারে সংরক্ষিত হয়।" },
-  shortlist: { t: "Shortlist", en: "Click the ☆ on any share to shortlist it — shortlisted shares are pinned in their own section at the top of the Charts, Potential Charts, and Screener tabs. Saved in this browser only (not shared across devices).", bn: "যেকোনো শেয়ারের ☆ চিহ্নে ক্লিক করলে তা শর্টলিস্টে যোগ হয় — শর্টলিস্ট করা শেয়ারগুলো Charts, Potential Charts ও Screener ট্যাবের উপরে আলাদা অংশে দেখা যাবে। শুধু এই ব্রাউজারে সংরক্ষিত হয় (অন্য ডিভাইসে নয়)।" },
-  compare: { t: "Compare", en: "Click the ⚖ on any share (Suggestions, Spike, High Profit, Margin, Charts, Potential Charts, or Screener) to add it to the Compare tab — up to 6 at once. Compare shows every share side by side and ranks them against EACH OTHER, unlike every other tab which ranks against the whole market. Saved in this browser only.", bn: "যেকোনো শেয়ারের ⚖ চিহ্নে ক্লিক করলে তা Compare ট্যাবে যোগ হয় — একসাথে সর্বোচ্চ ৬টি। Compare শেয়ারগুলোকে পাশাপাশি দেখায় ও একে অপরের তুলনায় র‍্যাঙ্ক করে — বাকি সব ট্যাব যেখানে পুরো বাজারের তুলনায় র‍্যাঙ্ক করে। শুধু এই ব্রাউজারে সংরক্ষিত হয়।" },
+  shortlist: { t: "Shortlist", en: "Click the ☆ on any share to shortlist it — shortlisted shares are pinned in their own section at the top of the Charts, AI Prediction Chart, and Screener tabs. Saved in this browser only (not shared across devices).", bn: "যেকোনো শেয়ারের ☆ চিহ্নে ক্লিক করলে তা শর্টলিস্টে যোগ হয় — শর্টলিস্ট করা শেয়ারগুলো Charts, AI Prediction Chart ও Screener ট্যাবের উপরে আলাদা অংশে দেখা যাবে। শুধু এই ব্রাউজারে সংরক্ষিত হয় (অন্য ডিভাইসে নয়)।" },
+  compare: { t: "Compare", en: "Click the ⚖ on any share (Suggestions, Spike, High Profit, Margin, Charts, AI Prediction Chart, or Screener) to add it to the Compare tab — up to 6 at once. Compare shows every share side by side and ranks them against EACH OTHER, unlike every other tab which ranks against the whole market. Saved in this browser only.", bn: "যেকোনো শেয়ারের ⚖ চিহ্নে ক্লিক করলে তা Compare ট্যাবে যোগ হয় — একসাথে সর্বোচ্চ ৬টি। Compare শেয়ারগুলোকে পাশাপাশি দেখায় ও একে অপরের তুলনায় র‍্যাঙ্ক করে — বাকি সব ট্যাব যেখানে পুরো বাজারের তুলনায় র‍্যাঙ্ক করে। শুধু এই ব্রাউজারে সংরক্ষিত হয়।" },
   compare_tab: { t: "Compare", en: "Side-by-side comparison of shares you've marked with ⚖ across the app (up to 6). Every metric — score, target/stop, technicals, fundamentals, record dates, risk flags, and whether each is currently flagged in Spike/High Profit/Margin — sits in one table so you can weigh them at a glance before deciding which to actually buy.", bn: "অ্যাপ জুড়ে ⚖ দিয়ে চিহ্নিত শেয়ারগুলোর পাশাপাশি তুলনা (সর্বোচ্চ ৬টি)। প্রতিটি তথ্য — স্কোর, টার্গেট/স্টপ, টেকনিক্যাল, মৌলভিত্তি, রেকর্ড ডেট, ঝুঁকি-চিহ্ন এবং Spike/High Profit/Margin-এ চিহ্নিত কিনা — একই টেবিলে থাকে যাতে কোনটি আসলে কিনবেন তা এক নজরে বিবেচনা করতে পারেন।" },
   compare_insights: { t: "Head-to-head insights", en: "Automatically generated callouts comparing ONLY the shares you've selected against each other — best composite, best risk/reward, earliest buy date, closest record date, and any risk flags — ending with which one looks like the strongest overall pick among this specific group.", bn: "শুধুমাত্র আপনার নির্বাচিত শেয়ারগুলোকে একে অপরের সাথে তুলনা করে স্বয়ংক্রিয়ভাবে তৈরি পর্যবেক্ষণ — সেরা কম্পোজিট, সেরা ঝুঁকি-পুরস্কার, সবচেয়ে আগের কেনার তারিখ, নিকটতম রেকর্ড ডেট এবং ঝুঁকি-চিহ্ন — শেষে কোনটি এই নির্দিষ্ট দলের মধ্যে সবচেয়ে শক্তিশালী তার সিদ্ধান্তসহ।" },
   high_profit: { t: "High Profit (exceptional setups)", en: "Aggressive 1–2 month plays found by 7 pattern-hunting strategies, scanned across every liquid eligible share on each Update Data. Each pick shows the strategy that flagged it, a conviction rating (★), an aggressive profit target, and a tight stop-loss. Higher reward = higher risk: position-size with the 2% rule and honour the stop.", bn: "৭টি কৌশলে খুঁজে পাওয়া ১–২ মাসের আক্রমণাত্মক সুযোগ, প্রতি Update Data-তে সব যোগ্য শেয়ার স্ক্যান করে। প্রতিটিতে কৌশল, আস্থা (★), উচ্চ লক্ষ্যমূল্য ও আঁটসাঁট স্টপ-লস দেখানো হয়। বেশি লাভ = বেশি ঝুঁকি: ২% নিয়ম মেনে কিনুন ও স্টপ-লস মানুন।" },
@@ -232,13 +235,15 @@ const GLOSSARY = {
   saved_filters: { t: "Quick screens", en: "A few built-in curated screens (Value picks, Momentum breakouts, Income, Turnarounds, Institutional accumulation) plus any you save yourself under a name — stored in this browser only (localStorage), not shared across devices. Loading a screen replaces your current filters; built-ins can't be deleted.", bn: "কয়েকটি বিল্ট-ইন কিউরেটেড স্ক্রিন (Value picks, Momentum breakouts, Income, Turnarounds, Institutional accumulation) এবং আপনার নিজের সংরক্ষিত ফিল্টার — শুধু এই ব্রাউজারে (localStorage) সংরক্ষিত। স্ক্রিন লোড করলে বর্তমান ফিল্টার প্রতিস্থাপিত হয়; বিল্ট-ইন মোছা যাবে না।" },
   group_decide: { t: "Decide", en: "Everything that helps you choose what to buy or watch right now: Suggestions (Top 20 + scored picks), ⚡High Profit (aggressive setups), Spike (sudden movers), and Margin (range-extreme reversal candidates).", bn: "এখন কী কিনবেন বা নজরে রাখবেন তা ঠিক করতে সাহায্য করে এমন সবকিছু: Suggestions, ⚡High Profit, Spike, এবং Margin।" },
   group_manage: { t: "Manage", en: "Your own holdings — the Portfolio tab: trade journal, exit engine, sell alerts, and diversification check.", bn: "আপনার নিজের শেয়ার — Portfolio ট্যাব: লেনদেন খাতা, এক্সিট ইঞ্জিন, বিক্রির সতর্কতা, বৈচিত্র্য পরীক্ষা।" },
-  group_explore: { t: "Explore", en: "Tools for digging through the data yourself: Charts, Potential Charts, the full Screener table, and Sectors.", bn: "নিজে তথ্য ঘেঁটে দেখার সরঞ্জাম: Charts, Potential Charts, পূর্ণ Screener টেবিল, এবং Sectors।" },
+  group_explore: { t: "Explore", en: "Tools for digging through the data yourself: Charts, AI Prediction Chart, the full Screener table, and Sectors.", bn: "নিজে তথ্য ঘেঁটে দেখার সরঞ্জাম: Charts, AI Prediction Chart, পূর্ণ Screener টেবিল, এবং Sectors।" },
   market_overview_toggle: { t: "Market overview & report card", en: "Click to expand: the official DSEX/DS30/DSES/DSMEX snapshot, turnover, breadth, and the report card grading past recommendations. Collapsed by default to keep the Top 20 and picks front and centre — this is supporting context, not something to check every visit.", bn: "ক্লিক করে বিস্তারিত দেখুন: অফিসিয়াল DSEX/DS30/DSES/DSMEX স্ন্যাপশট, টার্নওভার, ব্রেডথ, এবং অতীত সুপারিশের রিপোর্ট কার্ড। ডিফল্টে সংকুচিত থাকে যাতে Top 20 ও পিকস সামনে থাকে — এটি সহায়ক প্রেক্ষাপট, প্রতিবার দেখার প্রয়োজন নেই।" },
   more_filters: { t: "More filters", en: "Additional Screener filters grouped by theme: Technical (RSI, score, ATR), Fundamental (size, P/NAV, dividend yield, EPS trend), Risk & ownership (liquidity, flags, institutional accumulation), and cross-tab (also appears in Spike/High Profit/Margin).", bn: "থিম অনুযায়ী গোষ্ঠীবদ্ধ অতিরিক্ত Screener ফিল্টার: টেকনিক্যাল, মৌলভিত্তি, ঝুঁকি ও মালিকানা, এবং ক্রস-ট্যাব (অন্য ট্যাবেও আছে কিনা)।" },
   cross_tab_filter: { t: "Also appears in", en: "Filter to shares that also show up in one of the other analysis tabs right now — e.g. a share that's both eligible here AND currently in the Spike list has extra same-day momentum confirmation.", bn: "যেসব শেয়ার এই মুহূর্তে অন্য কোনো বিশ্লেষণ ট্যাবেও দেখা যাচ্ছে সেগুলো ফিল্টার করুন — যেমন এখানে যোগ্য এবং একই সাথে Spike তালিকায় থাকা শেয়ারের অতিরিক্ত একইদিনের নিশ্চয়তা আছে।" },
   columns_picker: { t: "Columns", en: "Choose which Screener columns are visible — Code is always shown so you can always identify a row. Your choice is remembered in this browser.", bn: "Screener-এ কোন কলামগুলো দেখা যাবে বেছে নিন — Code সবসময় দেখানো হয় যাতে সারি শনাক্ত করা যায়। আপনার পছন্দ এই ব্রাউজারে মনে রাখা হয়।" },
   clear_filters: { t: "Clear all filters", en: "Resets every Screener filter (search, dropdowns, checkboxes, and the More Filters section) back to its default — the full unfiltered list.", bn: "সব Screener ফিল্টার (সার্চ, ড্রপডাউন, চেকবক্স, More Filters) ডিফল্টে ফিরিয়ে দেয় — সম্পূর্ণ তালিকা দেখায়।" },
   chart_type: { t: "Chart type", en: "Line = the closing price only (smoothest to read trend). Candlestick = each session's open/high/low/close as a coloured body + wick (green = closed above open, red = below) — shows intraday strength/rejection a line hides. OHLC Bars = the same open/high/low/close as classic tick bars (left tick = open, right tick = close). SMA20/50 overlay stays visible in every mode.", bn: "Line = শুধু ক্লোজিং দাম (প্রবণতা বোঝার জন্য সবচেয়ে মসৃণ)। Candlestick = প্রতিটি সেশনের open/high/low/close রঙিন বডি ও উইক আকারে (সবুজ = ক্লোজ ওপেনের উপরে, লাল = নিচে) — লাইনে যা লুকানো থাকে সেই দিনের ভেতরের শক্তি/প্রত্যাখ্যান দেখায়। OHLC Bars = একই তথ্য ক্লাসিক টিক বার আকারে (বাম টিক = ওপেন, ডান টিক = ক্লোজ)। SMA20/50 ওভারলে সব মোডেই দেখা যায়।" },
+  pred_accuracy: { t: "AI Pred. price accuracy", en: "Every AI Pred. 1w/1m shown for the Top 20 gets snapshotted, then graded once enough trading days pass — same self-grading principle as the Report card above, applied to the price forecast itself. Direction accuracy is compared against a naive \"always guess up\" baseline so you can tell if the model is actually adding anything beyond the market's normal upward drift.", bn: "টপ ২০-এর প্রতিটি AI Pred. 1w/1m সংরক্ষণ হয়, পর্যাপ্ত ট্রেডিং দিন পার হলে নম্বর দেওয়া হয় — উপরের Report card-এর মতোই নীতি, দামের পূর্বাভাসের জন্য প্রয়োগ করা। দিকনির্দেশনার নির্ভুলতা একটি সরল \"সবসময় বাড়বে ধরে নাও\" মানদণ্ডের সাথে তুলনা করা হয়, যাতে বোঝা যায় মডেলটি বাজারের স্বাভাবিক ঊর্ধ্বমুখী প্রবণতার চেয়ে বাড়তি কিছু দিচ্ছে কিনা।" },
+  pred_price: { t: "AI Pred. price", en: "Labeled \"AI Pred.\" but — to be precise — the method is a deterministic statistical projection (drift from recent momentum + a damped seasonal shape from the last year) anchored to today's price, not a trained machine-learning model, and not a promise. Same inputs always produce the same output. See Pred. accuracy under Report card for real graded results, and the AI Prediction Chart tab for the full 6-month curve.", bn: "লেবেলে \"AI Pred.\" লেখা থাকলেও পদ্ধতিটি একটি নির্ধারক পরিসংখ্যানগত প্রক্ষেপণ (সাম্প্রতিক গতির প্রবণতা + গত বছরের ঋতুভিত্তিক আকৃতি) আজকের দামের ভিত্তিতে — প্রশিক্ষিত মেশিন-লার্নিং মডেল নয়, প্রতিশ্রুতিও নয়। একই তথ্যে সবসময় একই ফল আসে। প্রকৃত গ্রেড করা ফলাফলের জন্য Report card-এর নিচে Pred. accuracy দেখুন, আর পূর্ণ ৬ মাসের রেখার জন্য AI Prediction Chart ট্যাব দেখুন।" },
   chart_zoom: { t: "Zoom", en: "1M/3M/6M/1Y/All jump to a preset window (defaults to All — the full price history). Scroll the mouse wheel over the chart to zoom in/out around the cursor; click and drag to pan left/right through history. Manual zoom/pan deselects the preset buttons; click one again to snap back. Volume and RSI below scroll in sync.", bn: "1M/3M/6M/1Y/All প্রি-সেট সময়সীমায় লাফ দেয় (ডিফল্ট All — সম্পূর্ণ দামের ইতিহাস)। চার্টের উপর মাউস হুইল স্ক্রল করলে কার্সারকে কেন্দ্র করে জুম ইন/আউট হয়; ক্লিক করে টেনে ধরলে বাম/ডানে ইতিহাসে চলাচল করা যায়। ম্যানুয়াল জুম/প্যান প্রিসেট বাটন থেকে সরিয়ে দেয়; আবার ক্লিক করলে ফিরে আসে। নিচের Volume ও RSI একসাথে স্ক্রল হয়।" },
   sector_bar_chart: { t: "Sector performance chart", en: "Average 1-month return per sector as horizontal bars growing from zero — green bars (sectors moving up) vs red bars (moving down) make sector rotation visible at a glance, sorted strongest-to-weakest. Hover a bar for its 1w/3m returns and breadth too.", bn: "প্রতিটি খাতের গড় ১ মাসের রিটার্ন অনুভূমিক বার আকারে, শূন্য থেকে বাড়ে — সবুজ বার (বাড়ছে) বনাম লাল বার (কমছে) থেকে সেক্টর রোটেশন এক নজরে বোঝা যায়, শক্তিশালী থেকে দুর্বল ক্রমে সাজানো। বারে মাউস রাখলে ১ সপ্তাহ/৩ মাসের রিটার্ন ও ব্রেডথও দেখা যাবে।" },
   spike_tab: { t: "Spike & Trend Break", en: "Two kinds of alert. ⚡ Spike: shares that suddenly rose 3%+ today — vs yesterday's close (Δ vs yesterday) or vs the session open (Δ since open); Update Data during trading hours fetches live prices, so the comparison is 'right now vs the start of the day'. 📐 Trend Break: shares that held a clean uptrend, downtrend, or tight sideways range for a long time (up to a year) and have just broken that established pattern in the last few sessions — flagged even without a big single-day % move, since the alert here is 'the character of the price action changed', not 'it moved a lot today'. Both get a 0–100 score weighing volume, trend, catalysts and (for spikes) this share's own follow-through history.", bn: "দুই ধরনের সতর্কতা। ⚡ Spike: আজ হঠাৎ ৩%+ বেড়ে যাওয়া শেয়ার — গতকালের ক্লোজ বা আজকের শুরুর দামের তুলনায়; লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। 📐 Trend Break: যে শেয়ার দীর্ঘদিন (এক বছর পর্যন্ত) পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে — বড় একদিনের লাফ ছাড়াই চিহ্নিত হয়, কারণ এখানে সতর্কতা হলো 'দামের চরিত্র বদলেছে', 'আজ অনেক বেড়েছে' নয়। উভয়ই ভলিউম, ট্রেন্ড ও উপলক্ষ মিলিয়ে ০–১০০ স্কোর পায়।" },
@@ -258,7 +263,7 @@ const GLOSSARY = {
   pos2y: { t: "Range position", en: "Where the price sits in the selected period's low→high range (pick 1-Month to 2-Year with the filter; default 3-Month): 0 = at the period low, 1 = at the period high. ≤ 0.25 lands in Lower Margin, ≥ 0.75 in Higher Margin.", bn: "নির্বাচিত সময়ের (ফিল্টারে ১ মাস – ২ বছর, ডিফল্ট ৩ মাস) সর্বনিম্ন→সর্বোচ্চ সীমায় দামের অবস্থান: ০ = সর্বনিম্নে, ১ = সর্বোচ্চে। ≤ ০.২৫ হলে Lower Margin, ≥ ০.৭৫ হলে Higher Margin।" },
   from_low: { t: "Above period low", en: "How far the price has already recovered above the selected period's low. Small = still at the very bottom of that range.", bn: "নির্বাচিত সময়ের সর্বনিম্ন থেকে দাম কতটা উঠেছে। কম মানে ওই সীমার একেবারে তলানিতে।" },
   from_high: { t: "Below period high", en: "How far the price sits below the selected period's high. Small = right at the top of that range.", bn: "নির্বাচিত সময়ের সর্বোচ্চ থেকে দাম কতটা নিচে। কম মানে ওই সীমার একেবারে চূড়ায়।" },
-  potential: { t: "Potential future chart", en: "Left of the divider: the real past year. Right: a deterministic 6-month projection — momentum of the last 60/120/250 sessions, damped over time, plus last year's detrended seasonal shape at half strength. A statistical shape to support your decision, NOT a prediction; regenerated from the freshest history on every Update Data.", bn: "দাগের বাঁয়ে: গত ১ বছরের প্রকৃত দাম। ডানে: পরবর্তী ৬ মাসের গাণিতিক অভিক্ষেপ — সাম্প্রতিক গতি (ক্রমশ ক্ষীয়মাণ) ও গত বছরের ঋতুভিত্তিক আকৃতির অর্ধেক মিলিয়ে। সিদ্ধান্তে সহায়ক পরিসংখ্যানিক আকৃতি, ভবিষ্যদ্বাণী নয়; প্রতি Update Data-তে সর্বশেষ ইতিহাস থেকে নতুন করে তৈরি হয়।" },
+  potential: { t: "AI Prediction Chart", en: "Left of the divider: the real past year, plus past 1w/1m/2m returns (what already happened). Right of the divider, and in the AI Pred. 1w/1m badges: a deterministic 6-month projection — momentum of the last 60/120/250 sessions, damped over time, plus last year's detrended seasonal shape at half strength. Despite the \"AI\" label this is a statistical shape to support your decision, NOT a trained model or a guarantee; regenerated from the freshest history on every Update Data. See Pred. accuracy under Report card for its real graded track record.", bn: "দাগের বাঁয়ে: গত ১ বছরের প্রকৃত দাম, সাথে past 1w/1m/2m রিটার্ন (যা ইতিমধ্যে ঘটেছে)। দাগের ডানে ও AI Pred. 1w/1m ব্যাজে: পরবর্তী ৬ মাসের গাণিতিক অভিক্ষেপ — সাম্প্রতিক গতি (ক্রমশ ক্ষীয়মাণ) ও গত বছরের ঋতুভিত্তিক আকৃতির অর্ধেক মিলিয়ে। \"AI\" লেখা থাকলেও এটি সিদ্ধান্তে সহায়ক পরিসংখ্যানিক আকৃতি, প্রশিক্ষিত মডেল বা গ্যারান্টি নয়; প্রতি Update Data-তে সর্বশেষ ইতিহাস থেকে নতুন করে তৈরি হয়। প্রকৃত গ্রেড করা ফলাফলের জন্য Report card-এর নিচে Pred. accuracy দেখুন।" },
 };
 const VERDICT_BN = { "Strong Buy": "জোরালো ক্রয়", "Buy": "ক্রয়", "Watch": "পর্যবেক্ষণ", "Neutral": "নিরপেক্ষ", "Avoid": "এড়িয়ে চলুন" };
 const HORIZON_BN = { short: "১–২ সপ্তাহ", long: "১–২ মাস", swing: "২ সপ্তাহ – ২ মাস" };
@@ -274,6 +279,10 @@ function pct(v) {
   const cls = v > 0 ? "pos" : v < 0 ? "neg" : "";
   const sign = v > 0 ? "+" : "";
   return `<span class="${cls}">${sign}${Number(v).toFixed(1)}%</span>`;
+}
+/* LTP stacked over YCP (yesterday's close) — used everywhere a share's price is shown */
+function ltpYcp(price, ycp, d = 1) {
+  return `${fmt(price, d)}<br><small style="color:var(--muted)">YCP ${fmt(ycp, d)}</small>`;
 }
 
 /* ---------------- canvas helpers ---------------- */
@@ -597,12 +606,20 @@ document.addEventListener("mouseout", (e) => {
   if (e.target.closest("[data-bn]")) hideTooltip();
 });
 
-/* help modal: full glossary */
+/* help modal: full glossary, filterable — 157+ terms is too many to scan unaided */
 $("#btnHelp").addEventListener("click", () => {
   $("#helpTable tbody").innerHTML = Object.values(GLOSSARY)
     .map((g) => `<tr><td class="lft"><b>${g.t}</b></td><td class="lft" style="white-space:normal">${g.en}</td><td class="lft" style="white-space:normal">${g.bn}</td></tr>`)
     .join("");
   $("#helpBg").classList.remove("hidden");
+  $("#helpSearch").value = "";
+  $("#helpSearch").focus();
+});
+$("#helpSearch").addEventListener("input", () => {
+  const q = $("#helpSearch").value.trim().toLowerCase();
+  $("#helpTable tbody").querySelectorAll("tr").forEach((tr) => {
+    tr.style.display = !q || tr.textContent.toLowerCase().includes(q) ? "" : "none";
+  });
 });
 $("#helpClose").addEventListener("click", () => $("#helpBg").classList.add("hidden"));
 $("#helpBg").addEventListener("click", (e) => {
@@ -850,13 +867,30 @@ function pickRow(code, m, scoreKey, reasonsKey, rank) {
     <div class="rank">${rank}</div>
     ${starBtn(code)}${compareBtn(code)}
     <div class="code">${code}<small>${m.sector || ""}</small></div>
-    <div class="price">${fmt(m.price, 1)}</div>
-    <div class="rets">1w ${pct(m.r_1w)}<br>1m ${pct(m.r_1m)}</div>
+    <div class="price">${fmt(m.price, 1)}<small style="display:block;color:var(--muted);font-weight:400">YCP ${fmt(m.ycp, 1)}</small></div>
+    <div class="rets" data-term="returns">past 1w ${pct(m.r_1w)}<br>past 1m ${pct(m.r_1m)}</div>
     <div class="scorebar"><div class="bar"><div style="width:${score}%"></div></div>
       <div class="num">${fmt(score, 0)}/100</div></div>
     <div class="chips">${reasons.map((r) => `<span class="chip">${r}</span>`).join("")}
       ${flags.map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join("")}</div>
+    <div class="pick-plan" data-term="action_plan">${actionSentence(m)}</div>
   </div>`;
+}
+
+/* one glanceable "when to act" sentence — merges the Buy-on date + Hold-for
+   horizon that used to be two separate cells. Target/Stop-loss stay as their
+   OWN columns (not folded in here) since compact numbers are easier to scan
+   down a column than to extract from prose. */
+function actionSentence(m) {
+  if (!m.eligible || m.verdict === "Avoid") return m.buy_note || "Not recommended for purchase";
+  if (m.verdict === "Watch" || m.verdict === "Neutral") {
+    return `Wait — ${m.buy_note || "no confirmed entry yet"}`;
+  }
+  const note = m.buy_note || "";
+  const semi = note.indexOf(";");
+  const extra = semi >= 0 ? ` (${note.slice(semi + 1).trim()})`
+    : note.startsWith("Overheated") ? ` — ${note}` : "";
+  return `Buy ${m.buy_date}${extra}, hold ${m.horizon}`;
 }
 
 function verdictBadge(v) {
@@ -874,25 +908,22 @@ function renderTop10() {
       ? m.why.slice(0, 4)
       : [...(m.reasons_long || []), ...(m.reasons_short || [])].slice(0, 2);
     const whyBn = (m.why_bn || []).slice(0, 4);
-    const buyNote = m.buy_note || "";
-    const buyShort = buyNote.includes("dividend") ? "before record date"
-      : buyNote.startsWith("Overheated") ? "wait for a dip"
-      : buyNote.startsWith("Wait") ? "after confirmation" : "next session";
     return `<tr data-code="${c}">
       <td>${i + 1}</td>
       <td>${starBtn(c)}</td>
       <td>${compareBtn(c)}</td>
       <td class="lft"><b>${c}</b><br><small style="color:var(--muted)">${m.sector || ""}</small></td>
-      <td>${fmt(m.price, 1)}</td>
+      <td>${ltpYcp(m.price, m.ycp)}</td>
       <td class="lft">${verdictBadge(m.verdict)}</td>
       <td><b>${fmt(m.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>
-      <td class="lft" data-term="buy_date"><b>${m.buy_date || "–"}</b><br><small style="color:var(--muted)">${buyShort}</small></td>
-      <td class="lft" data-term="horizon">${m.horizon}<br><small style="color:var(--muted)">${HORIZON_BN[m.horizon_key] || ""}</small></td>
+      <td class="lft" data-term="action_plan" style="max-width:160px;white-space:normal">${actionSentence(m)}</td>
       <td class="pos" data-term="target">${fmt(m.target_price, 1)}<br><small>+${fmt(m.target_pct, 0)}%</small></td>
       <td class="neg" data-term="stop">${fmt(m.stop_price, 1)}<br><small>−${fmt(m.stop_pct, 0)}%</small></td>
+      <td data-term="pred_price">${fmt(m.pred_1w_price, 1)}<br><small class="${m.pred_1w_pct > 0 ? "pos" : m.pred_1w_pct < 0 ? "neg" : ""}">${m.pred_1w_pct > 0 ? "+" : ""}${fmt(m.pred_1w_pct, 1)}%</small></td>
+      <td data-term="pred_price">${fmt(m.pred_1m_price, 1)}<br><small class="${m.pred_1m_pct > 0 ? "pos" : m.pred_1m_pct < 0 ? "neg" : ""}">${m.pred_1m_pct > 0 ? "+" : ""}${fmt(m.pred_1m_pct, 1)}%</small></td>
       <td class="lft why-cell" style="max-width:380px"><small data-bn="${escAttr(whyBn.map((w) => "• " + w).join("<br>"))}">${why.map((w) => "• " + w).join("<br>")}</small></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="12" class="loading">No qualifying shares today</td></tr>`;
+  }).join("") || `<tr><td colspan="13" class="loading">No qualifying shares today</td></tr>`;
   wireStarButtons($("#top10Table"));
   wireCompareButtons($("#top10Table"));
   $("#top10Table tbody").querySelectorAll("tr[data-code]").forEach((tr) =>
@@ -941,7 +972,8 @@ function hpCardHtml(p, rank) {
       <span class="hp-conf term" data-term="hp_conf">${"★".repeat(p.conf)}${"☆".repeat(3 - p.conf)}</span>
     </div>
     <div class="hp-nums">
-      <div class="mstat"><div class="k">Price</div><div class="v">${fmt(p.price, 1)}</div></div>
+      <div class="mstat"><div class="k">LTP</div><div class="v">${fmt(p.price, 1)}</div></div>
+      <div class="mstat"><div class="k">YCP</div><div class="v">${fmt(p.ycp, 1)}</div></div>
       <div class="mstat" data-term="target"><div class="k">Target</div><div class="v pos">${fmt(p.target_price, 1)}<small> +${fmt(p.target_pct, 0)}%</small></div></div>
       <div class="mstat" data-term="stop"><div class="k">Stop</div><div class="v neg">${fmt(p.stop_price, 1)}<small> −${fmt(p.stop_pct, 0)}%</small></div></div>
       <div class="mstat" data-term="rr"><div class="k">R/R</div><div class="v">${fmt(p.rr, 1)}</div></div>
@@ -981,7 +1013,7 @@ async function loadPortfolio() {
 }
 
 function pfAlertBadge(a) {
-  const cls = { bad: "v-avoid", warn: "v-watch", good: "v-strong", info: "v-buy" }[a.level] || "v-neutral";
+  const cls = { bad: "v-avoid", warn: "v-watch", good: "v-strong", info: "v-info" }[a.level] || "v-neutral";
   return `<span class="verdict ${cls}" data-bn="${escAttr(a.bn)}" style="margin:1px 2px 1px 0">${a.kind}</span>`;
 }
 
@@ -1033,7 +1065,7 @@ function renderPortfolio() {
     <td>${h.qty}</td>
     <td class="lft">${h.buy_date}</td>
     <td>${fmt(h.buy_price)}</td>
-    <td><b>${fmt(h.price)}</b></td>
+    <td><b>${fmt(h.price)}</b><br><small style="color:var(--muted)">YCP ${fmt(h.ycp)}</small></td>
     <td>${nf(h.value)}</td>
     <td class="${pcls(h.pnl)}">${nf(h.pnl)}</td>
     <td class="${pcls(h.pnl_pct)}"><b>${h.pnl_pct > 0 ? "+" : ""}${fmt(h.pnl_pct)}%</b></td>
@@ -1111,10 +1143,29 @@ $("#pfCode").addEventListener("input", () => {
 const RC_LABELS = { strong_buy: "Strong Buy calls", buy: "Buy calls",
                     top20: "Top 20 list", high_profit: "⚡ High Profit picks" };
 
+/* one-line teaser shown ABOVE the collapsed Market overview/Report card
+   details — so the trust signal ("does this app's advice actually work?")
+   isn't hidden from a first-time or skeptical user behind a closed toggle. */
+function renderReportCardTeaser() {
+  const el = $("#rcTeaser");
+  if (!el) return;
+  const rc = state.summary.report_card;
+  const sb = rc && rc.graded_snapshots && rc.categories.strong_buy ? rc.categories.strong_buy["1w"] : null;
+  const base = rc && rc.baseline ? rc.baseline["1w"] : null;
+  if (!sb || sb.n < 3 || base === null || base === undefined) { el.innerHTML = ""; return; }
+  const edge = sb.avg - base;
+  const beat = edge > 0;
+  el.innerHTML = beat
+    ? `<span class="term" data-term="report_card">Strong Buy picks</span> beat the market by <b class="pos">+${fmt(edge)}pp</b> over the next week (${sb.win_rate}% win rate, n=${sb.n}) — see Report card below.`
+    : `<span class="term" data-term="report_card">Strong Buy picks</span> are <b class="neg">${fmt(Math.abs(edge))}pp behind</b> the market over the next week this run (n=${sb.n}) — see Report card below.`;
+}
+
 function renderReportCard() {
   const rc = state.summary.report_card;
-  if (!rc) { $("#reportCardPanel").classList.add("hidden"); return; }
+  if (!rc) { $("#reportCardPanel").classList.add("hidden"); renderReportCardTeaser(); return; }
   $("#reportCardPanel").classList.remove("hidden");
+  renderReportCardTeaser();
+  renderPredAccuracy(rc.pred_accuracy);
   if (!rc.graded_snapshots) {
     $("#rcMeta").textContent = `${rc.snapshots} snapshot${rc.snapshots === 1 ? "" : "s"} recorded (since ${rc.first_date})`;
     $("#rcBody").innerHTML = `<div class="axis-note">Grades appear once recommendations are at least a week old —
@@ -1142,6 +1193,31 @@ function renderReportCard() {
     <thead><tr><th class="lft">Category</th><th>Next 1w</th><th>Next 2w</th><th>Next 1m</th></tr></thead>
     <tbody>${rows}${baseRow}</tbody></table></div>
     <div class="axis-note" style="margin-top:6px">✓ = beat the market baseline · avg return, win = &gt;+${fmt(rc.win_threshold, 0)}%</div>`;
+}
+
+function renderPredAccuracy(pa) {
+  if (!pa || (!pa["1w"] && !pa["1m"])) {
+    $("#rcPredBody").innerHTML = `<div class="axis-note">Not enough graded history yet — AI Pred. 1w needs 1 week and
+      AI Pred. 1m needs about a month of Update Data snapshots to grade. Keep using the app and this fills in.
+      · এখনো পর্যাপ্ত নম্বর জমেনি — AI Pred. 1w-এর জন্য ১ সপ্তাহ, AI Pred. 1m-এর জন্য প্রায় ১ মাসের স্ন্যাপশট লাগবে। ব্যবহার চালিয়ে গেলে এটি নিজে নিজে পূরণ হবে।</div>`;
+    return;
+  }
+  const row = (h, label) => {
+    const a = pa[h];
+    if (!a) return `<tr><td class="lft">${label}</td><td colspan="4">–</td></tr>`;
+    const beatsNaive = a.direction_accuracy > a.always_up_baseline;
+    return `<tr><td class="lft">${label}</td>
+      <td>±${fmt(a.mae_pct)}%<small style="color:var(--muted)"> avg error</small></td>
+      <td><b>${a.direction_accuracy}%</b><small style="color:var(--muted)"> direction right</small>${beatsNaive ? " ✓" : ""}</td>
+      <td><small style="color:var(--muted)">vs ${a.always_up_baseline}% "always up"</small></td>
+      <td><small style="color:var(--muted)">predicted ${a.avg_predicted_pct > 0 ? "+" : ""}${fmt(a.avg_predicted_pct)}% · actual ${a.avg_actual_pct > 0 ? "+" : ""}${fmt(a.avg_actual_pct)}% · n=${a.n}</small></td>
+    </tr>`;
+  };
+  $("#rcPredBody").innerHTML = `<div class="tbl-wrap"><table>
+    <thead><tr><th class="lft">Horizon</th><th>Avg error</th><th>Direction</th><th>Naive baseline</th><th class="lft">Detail</th></tr></thead>
+    <tbody>${row("1w", "AI Pred. 1w")}${row("1m", "AI Pred. 1m")}</tbody></table></div>
+    <div class="axis-note" style="margin-top:6px">✓ = beats a naive "always guess up" baseline · avg error is mean absolute
+      percentage-point gap between predicted and actual move.</div>`;
 }
 
 /* ---------------- spike (sudden risers today) ---------------- */
@@ -1193,7 +1269,7 @@ function renderSpike() {
       <td class="lft">${s.sector || "–"}</td>
       <td class="lft">${s.category || "–"}</td>
       ${spikePatternCell(s)}
-      <td>${fmt(s.price)}</td>
+      <td>${ltpYcp(s.price, s.ycp)}</td>
       <td>${pct(s.day_change)}</td>
       <td>${pct(s.intraday_change)}</td>
       <td><b>${fmt(s.vol_today_ratio, 1)}×</b></td>
@@ -1238,7 +1314,7 @@ function mgRowHtml(e, i, dir) {
     <td class="lft"><b>${e.code}</b></td>
     <td class="lft">${e.sector || "–"}</td>
     <td class="lft">${e.category || "–"}</td>
-    <td>${fmt(e.price)}</td>
+    <td>${ltpYcp(e.price, e.ycp)}</td>
     <td>${fmt(e.pos, 2)}</td>
     <td>${dist}</td>
     <td>${fmt(e.rsi14, 0)}</td>
@@ -1260,7 +1336,7 @@ function mgAssemble(list, dir) {
   return list.map((e) => {
     const t = T[e.code] || {};
     const mt = MT[e.code] || {};
-    const common = { ...e, price: t.price, sector: t.sector, category: t.category,
+    const common = { ...e, price: t.price, ycp: t.ycp, sector: t.sector, category: t.category,
                      rsi14: t.rsi14, r_1w: t.r_1w, r_1m: t.r_1m, flags: t.flags };
     return dir === "lower"
       ? { ...common, score: mt.rise_score, turn_date: mt.rise_date, turn_note: mt.rise_note,
@@ -1446,7 +1522,7 @@ const SCR_COLS = [
   { key: "cap_class", label: "Cap", cls: "lft", term: "cap_class", def: false, td: (r) => `<td class="lft">${r.cap_class || "–"}</td>` },
   { key: "flags", label: "Flags", cls: "lft", term: "flags", def: true,
     td: (r) => `<td class="lft">${(r.flags || []).map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ")}</td>` },
-  { key: "price", label: "Price", cls: "", term: null, def: true, td: (r) => `<td>${fmt(r.price)}</td>` },
+  { key: "price", label: "LTP", cls: "", term: null, def: true, td: (r) => `<td>${ltpYcp(r.price, r.ycp)}</td>` },
   { key: "target_price", label: "Target", cls: "", term: "target", def: true,
     td: (r) => `<td class="pos">${fmt(r.target_price, 1)}<br><small>+${fmt(r.target_pct, 0)}%</small></td>` },
   { key: "stop_price", label: "Stop", cls: "", term: "stop", def: true,
@@ -1539,7 +1615,8 @@ const COMPARE_GROUPS = [
     { label: "Quality score", term: "quality", val: (m) => `${fmt(m.quality, 0)}/100` },
   ] },
   { group: "Trade plan", rows: [
-    { label: "Price", term: null, val: (m) => fmt(m.price, 1) },
+    { label: "LTP", term: null, val: (m) => fmt(m.price, 1) },
+    { label: "YCP", term: null, val: (m) => fmt(m.ycp, 1) },
     { label: "Buy on", term: "buy_date", val: (m) => m.buy_date || "–" },
     { label: "Hold for", term: "horizon", val: (m) => m.horizon || "–" },
     { label: "Target", term: "target", val: (m) => m.target_price ? `<span class="pos">${fmt(m.target_price, 1)} (+${fmt(m.target_pct, 0)}%)</span>` : "–" },
@@ -1993,7 +2070,7 @@ function sliceRange(dates, closes, range) {
 function chartCardHtml(it) {
   const delta = state.chartsRange === "2y" ? it.r_2y : it.r_1y;
   return `<div class="card" data-code="${it.code}">
-      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t">${it.code}</span><span class="p">${fmt(it.price)}</span></div>
+      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t">${it.code}</span><span class="p">${fmt(it.price)} <small style="color:var(--muted)">Y ${fmt(it.ycp)}</small></span></div>
       <div class="delta">${state.chartsRange} ${pct(delta)} · <span class="term" data-term="score_short">S ${fmt(it.score_short, 0)}</span> · <span class="term" data-term="score_long">L ${fmt(it.score_long, 0)}</span></div>
       <canvas></canvas>
     </div>`;
@@ -2149,8 +2226,10 @@ async function loadPotential() {
 
 function potCardHtml(it) {
   return `<div class="card" data-code="${it.code}">
-      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t">${it.code}</span><span class="p">${fmt(it.price)}</span></div>
-      <div class="delta">potential 6m ${pct(it.proj_6m)} · <span class="term" data-term="score_short">S ${fmt(it.score_short, 0)}</span> · <span class="term" data-term="score_long">L ${fmt(it.score_long, 0)}</span></div>
+      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t">${it.code}</span><span class="p">${fmt(it.price)} <small style="color:var(--muted)">Y ${fmt(it.ycp)}</small></span></div>
+      <div class="delta">6m ${pct(it.proj_6m)} · <span class="term" data-term="score_short">S ${fmt(it.score_short, 0)}</span> · <span class="term" data-term="score_long">L ${fmt(it.score_long, 0)}</span></div>
+      <div class="delta" data-term="returns">past 1w ${pct(it.r_1w)} · 1m ${pct(it.r_1m)} · 2m ${pct(it.r_2m)}</div>
+      <div class="delta" data-term="pred_price">AI Pred 1w ${fmt(it.pred_1w_price, 1)} (${pct(it.pred_1w_pct)}) · 1m ${fmt(it.pred_1m_price, 1)} (${pct(it.pred_1m_pct)})</div>
       <canvas></canvas>
     </div>`;
 }
@@ -2246,7 +2325,7 @@ async function openDetail(code) {
   $("#mCompare").classList.toggle("on", onCompare);
   $("#mCompare").title = onCompare ? "Remove from Compare" : "Add to Compare";
   $("#mCompare").onclick = () => toggleCompare(code);
-  $("#mPrice").textContent = fmt(a.price, 2);
+  $("#mPrice").innerHTML = `${fmt(a.price, 2)} <small style="color:var(--muted);font-weight:400">YCP ${fmt(a.ycp, 2)}</small>`;
   $("#mDelta").innerHTML = `1w ${pct(a.r_1w)} · 1m ${pct(a.r_1m)} · 1y ${pct(a.r_1y)}`;
   $("#mSub").textContent = [
     p.sector || a.sector, p.category ? "Category " + p.category : null,
@@ -2488,30 +2567,86 @@ window.addEventListener("resize", () => {
   if (!$("#modalBg").classList.contains("hidden")) drawDetailCharts();
 });
 
-/* ---------------- update data ---------------- */
-$("#btnUpdate").addEventListener("click", async () => {
-  const r = await (await fetch("/api/update", { method: "POST" })).json();
-  if (r.started) pollUpdate();
+/* ---------------- fetch data (network) / update data (render from disk) ---------------- */
+// #updateStatus is CSS-truncated (single line, ellipsis) so a long message can
+// never force the header buttons to wrap onto a new line; the full text still
+// reaches the user via the native title tooltip on hover.
+function setUpdateStatus(msg) {
+  $("#updateStatus").textContent = msg;
+  $("#updateStatus").title = msg;
+}
+
+// only one fetch job can run at a time (server-enforced) — all fetch-family
+// buttons disable together so a second click can't collide with the first
+const FETCH_BUTTON_IDS = ["#btnFetch", "#btnFetchShortlist", "#btnFetchPortfolio", "#btnFetchCompare"];
+function setFetchButtonsDisabled(v) {
+  FETCH_BUTTON_IDS.forEach((id) => { $(id).disabled = v; });
+}
+
+async function startFetch(codes) {
+  const r = await (await fetch("/api/update", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(codes ? { codes } : {}),
+  })).json();
+  if (r.started) pollFetch();
+  else setUpdateStatus("A fetch is already running — wait for it to finish.");
+}
+
+$("#btnFetch").addEventListener("click", () => startFetch(null));
+
+$("#btnFetchShortlist").addEventListener("click", () => {
+  const codes = [...state.shortlist];
+  if (!codes.length) { setUpdateStatus("Shortlist is empty — star a share first."); return; }
+  startFetch(codes);
+});
+$("#btnFetchCompare").addEventListener("click", () => {
+  const codes = [...state.compareSet];
+  if (!codes.length) { setUpdateStatus("Compare list is empty — add a share first."); return; }
+  startFetch(codes);
+});
+$("#btnFetchPortfolio").addEventListener("click", async () => {
+  if (!state.portfolio) await loadPortfolio();
+  const codes = [...new Set((state.portfolio?.holdings || []).map((h) => h.code))];
+  if (!codes.length) { setUpdateStatus("Portfolio is empty — add a holding first."); return; }
+  startFetch(codes);
 });
 
-async function pollUpdate() {
-  $("#btnUpdate").disabled = true;
+async function pollFetch() {
+  setFetchButtonsDisabled(true);
   $("#updBarWrap").classList.remove("hidden");
   const timer = setInterval(async () => {
     const st = await (await fetch("/api/update/status")).json();
-    $("#updateStatus").textContent = st.message;
+    setUpdateStatus(st.message);
     $("#updBar").style.width = (st.pct || 0) + "%";
     if (!st.running) {
       clearInterval(timer);
-      $("#btnUpdate").disabled = false;
+      setFetchButtonsDisabled(false);
       setTimeout(() => $("#updBarWrap").classList.add("hidden"), 1500);
-      if (!st.error) {
-        state.chartsData = null;
-        await loadSummary();
-        if (!$("#tab-charts").classList.contains("hidden")) loadCharts();
-      }
+      // Fetch Data only pulls fresh files from DSE and saves them to disk —
+      // it never touches what's on screen. Click Update Data to render it.
     }
   }, 1200);
+}
+
+$("#btnRender").addEventListener("click", () => renderFromStorage());
+
+async function renderFromStorage() {
+  $("#btnRender").disabled = true;
+  setUpdateStatus("Rendering from saved data…");
+  // tell the server to reload the local files (written by Fetch Data) into the
+  // caches it serves — otherwise /api/summary keeps returning the old in-memory copy
+  await fetch("/api/reload", { method: "POST" });
+  state.chartsData = null;
+  state.potData = null;
+  state.agmData = null;
+  await loadSummary();
+  if (!$("#tab-charts").classList.contains("hidden")) loadCharts();
+  if (!$("#tab-potential").classList.contains("hidden")) loadPotential();
+  if (!$("#tab-agm").classList.contains("hidden")) loadAgm();
+  if (!$("#tab-portfolio").classList.contains("hidden")) loadPortfolio();
+  $("#btnRender").disabled = false;
+  setUpdateStatus(`Rendered from saved data · ${new Date().toLocaleTimeString()}`);
+  setTimeout(() => setUpdateStatus(""), 3000);
 }
 
 /* ---------------- theme toggle (Auto / Light / Dark, persisted) ---------------- */
@@ -2528,6 +2663,15 @@ $("#btnTheme").addEventListener("click", () => {
   applyTheme(THEME_CYCLE[(THEME_CYCLE.indexOf(cur) + 1) % THEME_CYCLE.length]);
 });
 applyTheme(localStorage.getItem("dse_theme") || "auto");
+
+/* ---------------- first-visit orientation hint ---------------- */
+if (!localStorage.getItem("dse_onboarded")) {
+  $("#onboardHint").classList.remove("hidden");
+}
+$("#onboardDismiss").addEventListener("click", () => {
+  localStorage.setItem("dse_onboarded", "1");
+  $("#onboardHint").classList.add("hidden");
+});
 
 /* ---------------- init ---------------- */
 loadSummary().then(() => {

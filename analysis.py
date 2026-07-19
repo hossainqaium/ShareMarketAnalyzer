@@ -21,7 +21,7 @@ from datetime import date, datetime, timedelta
 from dse_common import (AGM_JSON, ANALYSIS_JSON, ANNOUNCEMENTS_JSON,
                         FUNDAMENTALS_HISTORY_JSON, MARKET_HISTORY_JSON,
                         PROFILES_JSON, REC_HISTORY_JSON, load_history,
-                        load_json, load_tickers, save_json)
+                        load_json, load_potential, load_tickers, save_json)
 
 NEWS_LOOKBACK_DAYS = 30
 CRITICAL_NEWS_CATEGORIES = {"trading-halt", "audit-concern"}
@@ -542,6 +542,8 @@ def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
             pass
     if ycp <= 0 and len(closes) > 1:
         ycp = closes[-2]
+    m["ltp"] = m["price"]  # alias: "price" IS the current/latest traded price
+    m["ycp"] = round(ycp, 2) if ycp > 0 else None
     m["day_change"] = round((price / ycp - 1) * 100, 2) if ycp > 0 else None
     m["intraday_change"] = round((price / openp - 1) * 100, 2) if openp > 0 else None
     m["vol_today_ratio"] = round(vols[-1] / vol30, 2) if vols and vol30 else None
@@ -1276,7 +1278,7 @@ def build_high_profit(results, regime):
             best["conf"] = min(3, best["conf"] + 1)
         best["conf"] = min(3, best["conf"])
         pick = {
-            "code": code, "price": m["price"], "sector": m.get("sector"),
+            "code": code, "price": m["price"], "ycp": m.get("ycp"), "sector": m.get("sector"),
             "verdict": m["verdict"], "composite": m["composite"],
             "buy_date": m.get("buy_date"), "win_rate": m.get("win_rate"),
             "matched": sorted(c["strategy"] for c in cands),
@@ -1962,7 +1964,7 @@ def build_spike(results, today):
         score, label, why, why_bn = spike_score(m, today)
         spikes.append({
             "kind": "spike",
-            "code": code, "price": m["price"], "sector": m.get("sector"),
+            "code": code, "price": m["price"], "ycp": m.get("ycp"), "sector": m.get("sector"),
             "category": m.get("category"), "day_change": dc, "intraday_change": ic,
             "vol_today_ratio": m.get("vol_today_ratio"), "rsi14": m.get("rsi14"),
             "dist_resistance": m.get("dist_resistance"),
@@ -1990,7 +1992,7 @@ def build_spike(results, today):
             "kind": "trend-break", "regime": rb["regime"], "direction": rb["direction"],
             "regime_sessions": rb["regime_sessions"], "break_days_ago": rb["break_days_ago"],
             "regime_start": rb["regime_start"], "regime_end": rb["regime_end"],
-            "code": code, "price": m["price"], "sector": m.get("sector"),
+            "code": code, "price": m["price"], "ycp": m.get("ycp"), "sector": m.get("sector"),
             "category": m.get("category"), "day_change": m.get("day_change"),
             "intraday_change": m.get("intraday_change"),
             "vol_today_ratio": m.get("vol_today_ratio"), "rsi14": m.get("rsi14"),
@@ -2189,6 +2191,14 @@ def snapshot_and_grade(results, top20, high_profit, market_date, series_cache):
         "buy": [c for c, m in results.items() if m["verdict"] == "Buy"],
         "top20": list(top20),
         "high_profit": [p["code"] for p in high_profit["picks"]],
+        # point-price predictions snapshotted alongside the categorical picks
+        # so pred_accuracy below can grade them against what actually happened —
+        # same self-grading principle as the rest of the report card, just for
+        # a price forecast instead of a buy/sell call.
+        "pred": {c: {"price": results[c]["price"],
+                     "pred_1w": results[c].get("pred_1w_price"),
+                     "pred_1m": results[c].get("pred_1m_price")}
+                 for c in top20 if results[c].get("pred_1w_price") is not None},
     }
     for d in sorted(hist)[:-RC_KEEP_SNAPSHOTS]:
         del hist[d]
@@ -2234,6 +2244,44 @@ def snapshot_and_grade(results, top20, high_profit, market_date, series_cache):
         return {"n": len(vals), "avg": round(sum(vals) / len(vals), 2),
                 "win_rate": round(100 * wins / len(vals))}
 
+    # Pred. 1w/1m accuracy: honest, backtested grading of the point-price
+    # forecast (forecast.py's deterministic drift+seasonal curve) against what
+    # the share's price actually did — same self-grading principle as the
+    # categories above, but tracking predicted vs actual % change and price
+    # direction instead of a buy/sell call.
+    pred_pairs = {"1w": [], "1m": []}
+    for d, snap in hist.items():
+        if d >= market_date:
+            continue
+        for c, p in snap.get("pred", {}).items():
+            snap_price = p.get("price")
+            if not snap_price:
+                continue
+            for h, nd, pred_key in (("1w", RC_HORIZONS["1w"], "pred_1w"),
+                                    ("1m", RC_HORIZONS["1m"], "pred_1m")):
+                pred_price = p.get(pred_key)
+                actual_pct = fwd_return(c, d, nd)
+                if pred_price is None or actual_pct is None:
+                    continue
+                predicted_pct = (pred_price / snap_price - 1) * 100
+                pred_pairs[h].append((predicted_pct, actual_pct))
+
+    def agg_pred(pairs):
+        if not pairs:
+            return None
+        n = len(pairs)
+        mae = sum(abs(a - p) for p, a in pairs) / n
+        same_dir = sum(1 for p, a in pairs if (p > 0) == (a > 0))
+        pct_actual_up = sum(1 for _, a in pairs if a > 0) / n * 100
+        return {
+            "n": n,
+            "mae_pct": round(mae, 2),
+            "direction_accuracy": round(100 * same_dir / n),
+            "always_up_baseline": round(pct_actual_up),  # accuracy a naive "always predict up" guess would get
+            "avg_predicted_pct": round(sum(p for p, _ in pairs) / n, 2),
+            "avg_actual_pct": round(sum(a for _, a in pairs) / n, 2),
+        }
+
     return {
         "snapshots": len(hist),
         "graded_snapshots": len(graded),
@@ -2243,6 +2291,7 @@ def snapshot_and_grade(results, top20, high_profit, market_date, series_cache):
                        for cat, hs in cats.items()},
         "baseline": {h: (round(sum(v) / len(v), 2) if v else None)
                      for h, v in base.items()},
+        "pred_accuracy": {h: agg_pred(v) for h, v in pred_pairs.items()},
     }
 
 
@@ -2374,6 +2423,27 @@ def run_analysis():
         m["why"], m["why_bn"] = build_pick_why(m)
 
     top20 = pick_top(results, n=20, sector_cap=3)
+
+    # 1w/1m predicted price for every share (not just Top 20 — the AI
+    # Prediction Chart tab lists the full universe), read from forecast.py's
+    # deterministic projection (see forecast.py's docstring — drift + damped
+    # seasonal shape, not machine learning; "AI Pred." is a UI label, not a
+    # claim about the underlying method). Sync always regenerates that
+    # projection before analysis runs, so it reflects the same fresh history
+    # used here.
+    potential = load_potential()
+    for code, m in results.items():
+        fut = potential.get(code)
+        if fut and len(fut) >= TRADING_DAYS["1m"]:
+            pred_1w = fut[TRADING_DAYS["1w"] - 1][1]
+            pred_1m = fut[TRADING_DAYS["1m"] - 1][1]
+            m["pred_1w_price"] = pred_1w
+            m["pred_1m_price"] = pred_1m
+            m["pred_1w_pct"] = round((pred_1w / m["price"] - 1) * 100, 2) if m["price"] else None
+            m["pred_1m_pct"] = round((pred_1m / m["price"] - 1) * 100, 2) if m["price"] else None
+        else:
+            m["pred_1w_price"] = m["pred_1m_price"] = None
+            m["pred_1w_pct"] = m["pred_1m_pct"] = None
 
     # market breadth (structural, our own dataset — secondary confirmation)
     equities = [m for m in results.values() if "not-equity" not in m["flags"]]

@@ -192,6 +192,12 @@
     "title": "PIONEERINS: Confirmation of Company Secretary",
     "text": "The Company has informed that the Board of Directors of the company in its 252nd meeting held on June 08, 2026, has confirmed the appointment of Mr. Md. Imran Hassan, ACS as the Company Secretary of the company with immediate effect.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PIONEERINS: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 2:30 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
    }
   ],
   "PRAGATIINS": [
@@ -200,6 +206,12 @@
     "title": "PRAGATIINS: Board Meeting schedule under LR 16(1)",
     "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 19, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
     "category": "board-meeting"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PRAGATIINS: Dividend Disbursement",
+    "text": "The Company has informed that it has credited the Bonus Shares to the respective shareholders' BO Accounts and it has also disbursed the Cash Dividend to the respective shareholders for the year ended December 31, 2025.",
+    "category": "dividend"
    }
   ],
   "PEOPLESINS": [
@@ -354,6 +366,12 @@
     "title": "AFCAGRO: Inspection of the factory premises of AFC Agro Biotech Ltd.",
     "text": "A team of DSE visited the factory premises of AFC Agro Biotech Limited on July 09, 2026 and found the operation/production closed.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "AFCAGRO: Inspection of the factory premises of AFC Agro Biotech Ltd.",
+    "text": "A team of DSE visited the factory premises of AFC Agro Biotech Limited on July 09, 2026 and found the operation/production closed.",
+    "category": "other"
    }
   ],
   "ACTIVEFINE": [
@@ -425,6 +443,12 @@
    },
    {
     "date": "2026-07-16",
+    "title": "ACTIVEFINE: Inspection of the factory premises of Active Fine Chemicals Limited",
+    "text": "A team of DSE visited the factory premises of Active Fine Chemicals Limited on June 25, 2026 and found the operation/production closed.",
+    "category": "other"
+   },
+   {
+    "date": "2026-07-19",
     "title": "ACTIVEFINE: Inspection of the factory premises of Active Fine Chemicals Limited",
     "text": "A team of DSE visited the factory premises of Active Fine Chemicals Limited on June 25, 2026 and found the operation/production closed.",
     "category": "other"
@@ -604,6 +628,18 @@
     "title": "BSEC NEWS: Awareness Message for Investors",
     "text": "Investors are requested to consider the following facts at the time of making investment decision in the Capital Market: 1. Without acquiring proper knowledge, information and experience regarding different aspects and matters of Capital Market, one should not invest in the Capital Market. 2. The gain or loss, whichever comes from the investment, it belongs to you. So, well - thought of investment decision based on knowledge and fundamentals of the securities may be real assistance to you. (cont.)",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "BSEC NEWS: Awareness Message for Investors",
+    "text": "(Continuation of BSEC News - Awareness Message for Investors) 3. Do not pay any heed to rumors at the time of trading shares; it may cause loss to you. Even spreading rumor is legally prohibited. (Ref.: SEC letter no. SEC/SRMIC/2010/726 dated November 23, 2010). (end)",
+    "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "BSEC NEWS: Awareness Message for Investors",
+    "text": "Investors are requested to consider the following facts at the time of making investment decision in the Capital Market: 1. Without acquiring proper knowledge, information and experience regarding different aspects and matters of Capital Market, one should not invest in the Capital Market. 2. The gain or loss, whichever comes from the investment, it belongs to you. So, well - thought of investment decision based on knowledge and fundamentals of the securities may be real assistance to you. (cont.)",
+    "category": "other"
    }
   ],
   "RUPALIBANK": [
@@ -724,6 +760,12 @@
     "title": "SONARBAINS: Basis for Qualified Opinion and Emphasis of Matter",
     "text": "The auditor of the company has given the Basis for Qualified Opinion and Emphasis of Matter paragraph in the auditor's report for the year ended December 31, 2025. To view the details, please visit: https://www.dsebd.org/Auditors_opinion/2025/SONARBAINS-2025.pdf",
     "category": "audit-concern"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "SONARBAINS: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
    }
   ],
   "PLFSL": [
@@ -830,6 +872,12 @@
     "title": "TB10Y0135: Record date for entitlement of coupon payment",
     "text": "Record Date for entitlement of coupon payment of 10Y BGTB 22/01/2035 Government Securities is 21.07.2026.",
     "category": "record-date"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "TB10Y0135: Suspension for Record Date",
+    "text": "Trading of 10Y BGTB 22/01/2035 Government Securities will remain suspended on record date i.e., 21.07.2026 and day before the record date i.e., 20.07.2026. Trading of the Government Securities will resume on 22.07.2026.",
+    "category": "suspension"
    }
   ],
   "TB10Y0730": [
@@ -838,6 +886,12 @@
     "title": "TB10Y0730: Record date for entitlement of coupon payment",
     "text": "Record Date for entitlement of coupon payment of 10Y BGTB 22/07/2030 Government Securities is 21.07.2026.",
     "category": "record-date"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "TB10Y0730: Suspension for Record Date",
+    "text": "Trading of 10Y BGTB 22/07/2030 Government Securities will remain suspended on record date i.e., 21.07.2026 and day before the record date i.e., 20.07.2026. Trading of the Government Securities will resume on 22.07.2026.",
+    "category": "suspension"
    }
   ],
   "TB10Y0130": [
@@ -846,6 +900,12 @@
     "title": "TB10Y0130: Record date for entitlement of coupon payment",
     "text": "Record Date for entitlement of coupon payment of 10Y BGTB 22/01/2030 Government Securities is 21.07.2026.",
     "category": "record-date"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "TB10Y0130: Suspension for Record Date",
+    "text": "Trading of 10Y BGTB 22/01/2030 Government Securities will remain suspended on record date i.e., 21.07.2026 and day before the record date i.e., 20.07.2026. Trading of the Government Securities will resume on 22.07.2026.",
+    "category": "suspension"
    }
   ],
   "AAMRANET": [
@@ -986,6 +1046,18 @@
     "title": "PREMIERLEA: Clarification on the news published in the online news",
     "text": "In response to a DSE query dated July 08, 2026 regarding news published in the online newspaper titled \"Bangladesh Bank sets three-month deadline for four distressed financial institutions\"(translated from Bengali to English), the company vide its letter dated July 12, 2026 has informed DSE, among others, the following: \"...Kindly be informed that Bangladesh Bank has allowed 3 (Three) months time for complying the conditions as well as for taking necessary corrective measures to improve the position(cont.)",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PREMIERLEA: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 5:00 pm to consider, among others, Un-Audited Financial Statements for the First Quarter (Q1) period ended March 31, 2026 and Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PREMIERLEA: Board Meeting schedule under LR 19(1)",
+    "text": "As per Regulation 19(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 5:00 PM to consider, among others, audited financial statements of the Company for the year ended December 31, 2025.",
+    "category": "board-meeting"
    }
   ],
   "SONALILIFE": [
@@ -1086,6 +1158,18 @@
     "title": "UNITEDINS: Board Meeting schedule under LR 16(1)",
     "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 16, 2026 at 2:35 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
     "category": "board-meeting"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "UNITEDINS: Q2 Financials",
+    "text": "(Cont. News of UNITEDINS): Reasons for deviation: NAVPS has increased due to increase in fair/market value of shares of United Finance Ltd. during the period. EPS has increased due to higher underwriting profit. NOCFPS has increased due to higher collection of premiums. (end)",
+    "category": "financials"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "UNITEDINS: Q2 Financials",
+    "text": "(Q2 Un-audited): EPS was Tk. 1.75 for April-June 2026 as against Tk. 1.21 for April-June 2025; EPS was Tk. 1.99 for January-June 2026 as against Tk. 1.66 for January-June 2025. NOCFPS was Tk. 2.92 for January-June 2026 as against Tk. 0.93 for January-June 2025. NAV per share was Tk. 34.76 as on June 30, 2026 and Tk. 31.04 as on December 31, 2025. (cont.)",
+    "category": "financials"
    }
   ],
   "PARAMOUNT": [
@@ -1094,6 +1178,18 @@
     "title": "PARAMOUNT: Board Meeting schedule under LR 16(1)",
     "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 16, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
     "category": "board-meeting"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PARAMOUNT: Q2 Financials",
+    "text": "(Cont. news of PARAMOUNT): EPS Increased: Due to increase in premium income, reduction in net claim. NAV Increased: Due to increase in reserve for exceptional losses & investment fluctuation reserve. NOCFPS Increased: Due to increase in premium income & increase in premium deposit. (end)",
+    "category": "financials"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PARAMOUNT: Q2 Financials",
+    "text": "(Q2 Un-audited): EPS was Tk. 0.98 for April-June 2026 as against Tk. 0.40 for April-June 2025; EPS was Tk. 2.19 for January-June 2026 as against Tk. 1.58 for January-June 2025. NOCFPS was Tk. 1.95 for January-June 2026 as against Tk. 0.45 for January-June 2025. NAV per share was Tk. 29.86 as on June 30, 2026 and Tk. 27.53 as on June 30, 2025. (cont.)",
+    "category": "financials"
    }
   ],
   "TB5Y0727": [
@@ -1318,6 +1414,12 @@
     "title": "ALARABANK: Regarding venue of AGM",
     "text": "Refer to their earlier news disseminated by DSE on 03.05.2026 regarding dividend declaration, the company has further informed that the 31st Annual General Meeting (AGM) of the Shareholders of the company will be held physically on 29 July 2026, at 11:00 a.m. at KGC Banquet Hall, Kurmitola Golf Club, Dhaka Cantonment, Dhaka.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "ALARABANK: Regarding Postponement of 31st AGM of the Company",
+    "text": "Refer to their earlier news disseminated by DSE on 03.05.2026 regarding dividend declaration, the company has further informed that the 31st Annual General Meeting of the company, which was scheduled to be held on July 29, 2026 has been postponed due to unavoidable circumstances. The rescheduled date, time and venue of the meeting will be notified in due course.",
+    "category": "other"
    }
   ],
   "UCB": [
@@ -1468,6 +1570,12 @@
     "title": "PHOENIXFIN: Qualified Opinion, Material Uncertainty & Emphasis of Matters",
     "text": "The auditor of the company has given the Basis for Qualified Opinion, Material Uncertainty Related to Going Concern & Emphasis of Matters in the auditor's report for the year ended December 31, 2025. To view the details, please visit: https://www.dsebd.org/Auditors_opinion/2025/8.%20Phoenix%20Finance25.pdf",
     "category": "audit-concern"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "PHOENIXFIN: Spot News",
+    "text": "Trading of the shares of the company will be allowed only in the Spot Market and Block transaction will also be settled as per spot settlement cycle from 20.07.2026 to 22.07.2026 and trading of the shares will remain suspended on record date i.e., 23.07.2026.",
+    "category": "other"
    }
   ],
   "UCB2PBOND": [
@@ -1518,6 +1626,12 @@
     "title": "ISLAMIINS: Spot News",
     "text": "Trading of the shares of the company will be allowed only in the Spot Market and Block transaction will also be settled as per spot settlement cycle with cum benefit from 16.07.2026 to 19.07.2026 and trading of the shares will remain suspended on record date i.e., 20.07.2026.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "ISLAMIINS: Suspension for Record Date",
+    "text": "Trading of the shares of the company will remain suspended on record date i.e., 20.07.2026.",
+    "category": "suspension"
    }
   ],
   "CONTININS": [
@@ -1566,6 +1680,12 @@
     "title": "SINGERBD: Category Change",
     "text": "The Company has been placed in 'Z' category from existing 'A' category with effect from today i.e., July 08, 2026 according to provision 1(d) of BSEC Directive No. BSEC/CMRRCD/2009-193/77 dated May 20, 2024 since accumulated loss or negative balance of retained earnings after adjustment of revenue reserve of the company exceeds its paid-up capital.",
     "category": "category-change"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "SINGERBD: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
    }
   ],
   "INTECH": [
@@ -1770,6 +1890,12 @@
     "title": "CLICL: Emphasis of Matter",
     "text": "The auditor of the company has given the Emphasis of Matter paragraph in the auditor's report for the year ended December 31, 2025. To view the details, please visit: https://www.dsebd.org/Auditors_opinion/2025/CLICL.pdf",
     "category": "audit-concern"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "CLICL: Spot News",
+    "text": "Trading of the shares of the company will be allowed only in the Spot Market and Block transaction will also be settled as per spot settlement cycle with cum benefit from 20.07.2026 to 21.07.2026 and trading of the shares will remain suspended on record date i.e., 22.07.2026.",
+    "category": "other"
    }
   ],
   "UNIONCAP": [
@@ -1832,6 +1958,12 @@
     "title": "SOUTHEASTB: Sale Declaration of a Sponsor",
     "text": "Mrs. Rehana Kashem, a Sponsor of the Company has expressed her intention to sell 1,000,000 shares out of her total holding of 3,143,037 shares of the Company at the prevailing market price in the Public Market through Dhaka Stock Exchange PLC. (DSE) within next 30 working days.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "SOUTHEASTB: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 21, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
    }
   ],
   "SHEPHERD": [
@@ -1854,6 +1986,18 @@
     "title": "BANKASIA: Sale Declaration of a Sponsor Director",
     "text": "Mr. Rumee A Hossain, a Sponsor Director of the Company has expressed his intention to sell 1,063,000 shares out of his total holding of 39,318,455 shares of the Company at the prevailing market price in the Public Market through Dhaka Stock Exchange PLC. (DSE) within next 30 working days.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "BANKASIA: Dividend Disbursement",
+    "text": "The Company has informed that it has credited the Bonus Shares to the respective shareholders' BO Accounts and it has also disbursed the Cash Dividend to the respective shareholders for the year ended December 31, 2025.",
+    "category": "dividend"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "BANKASIA: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
    }
   ],
   "PADMALIFE": [
@@ -1958,6 +2102,12 @@
     "title": "POPULARLIF: Spot News",
     "text": "Trading of the shares of the company will be allowed only in the Spot Market and Block transaction will also be settled as per spot settlement cycle with cum benefit from 16.07.2026 to 19.07.2026 and trading of the shares will remain suspended on record date i.e., 20.07.2026.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "POPULARLIF: Suspension for Record Date",
+    "text": "Trading of the shares of the company will remain suspended on record date i.e., 20.07.2026.",
+    "category": "suspension"
    }
   ],
   "FIRSTFIN": [
@@ -2352,6 +2502,12 @@
     "title": "GLOBALINS: Spot News",
     "text": "Trading of the shares of the company will be allowed only in the Spot Market and Block transaction will also be settled as per spot settlement cycle with cum benefit from 16.07.2026 to 19.07.2026 and trading of the shares will remain suspended on record date i.e., 20.07.2026.",
     "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "GLOBALINS: Suspension for Record Date",
+    "text": "Trading of the shares of the company will remain suspended on record date i.e., 20.07.2026.",
+    "category": "suspension"
    }
   ],
   "DBLPBOND": [
@@ -2359,6 +2515,18 @@
     "date": "2026-07-15",
     "title": "DBLPBOND: Spot News",
     "text": "Trading of Dhaka Bank Perpetual Bond will be allowed only in the Spot Market and Block transaction will also be settled as per spot settlement cycle with cum benefit from 16.07.2026 to 19.07.2026 and trading of the Bond will remain suspended on record date i.e., 20.07.2026.",
+    "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "DBLPBOND: Suspension for Record Date",
+    "text": "Trading of Dhaka Bank Perpetual Bond will remain suspended on record date i.e., 20.07.2026.",
+    "category": "suspension"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "DBLPBOND: Trustee Meeting for declaration of Coupon Rate",
+    "text": "Dhaka Bank PLC., the Issuer of Dhaka Bank Perpetual Bond, has informed that a meeting of the Board of Trustee of Dhaka Bank Perpetual Bond will be held on July 26, 2026 at 3.30 p.m. virtually through digital platform for declaration of the Coupon Rate for the 8th coupon period from August 01, 2026 to January 31, 2027.",
     "category": "other"
    }
   ],
@@ -2429,7 +2597,109 @@
     "text": "The Company has informed that it has disbursed the Cash Dividend for the year ended December 31, 2025 to the respective shareholders.",
     "category": "dividend"
    }
+  ],
+  "PHENIXINS": [
+   {
+    "date": "2026-07-19",
+    "title": "PHENIXINS: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 22, 2026 at 4:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   }
+  ],
+  "JAMUNABANK": [
+   {
+    "date": "2026-07-19",
+    "title": "JAMUNABANK: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 22, 2026 at 3:30 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   }
+  ],
+  "NBL": [
+   {
+    "date": "2026-07-19",
+    "title": "NBL: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 27, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   }
+  ],
+  "TAMIJTEX": [
+   {
+    "date": "2026-07-19",
+    "title": "TAMIJTEX: Clarification on a Facebook post regarding factory operations",
+    "text": "(Cont. news of TAMIJTEX): After that, the Following several constructive efforts and discussions with the concerned stakeholders, the factory operations have now been resumed with effect from 18th July, 2026. Accordingly, the financial impact arising from the temporary suspension is currently under assessment. (end)",
+    "category": "other"
+   },
+   {
+    "date": "2026-07-19",
+    "title": "TAMIJTEX: Clarification on a Facebook post regarding factory operations",
+    "text": "In response to a DSE query letter dated July 16, 2026 regarding a news posted in a Facebook profile titled \"Tamij factory closed until further notice (translated from Bengali to English)\" on July 15, 2026, the company has informed that the factory operations of the company were temporarily suspended with effect from 13th July, 2026 due to labor unrest in accordance with Section 13(1) of the Bangladesh Labour Act, 2006. (cont.)",
+    "category": "other"
+   }
+  ],
+  "PURABIGEN": [
+   {
+    "date": "2026-07-19",
+    "title": "PURABIGEN: Credit Rating Result",
+    "text": "Alpha Credit Rating PLC. has assigned Surveillance rating of the Company as \"AA+\" in the long term and \"ST-2\" in the short term along with Stable outlook based on audited financial statement up to December 31, 2025 and relevant qualitative information till July 15, 2026.",
+    "category": "credit-rating"
+   }
+  ],
+  "FORTUNE": [
+   {
+    "date": "2026-07-19",
+    "title": "FORTUNE: Query Response",
+    "text": "In response to the DSE query dated July 15, 2026, the company has informed that there is no undisclosed price sensitive information of the company for recent unusual price hike and increase in volume of shares.",
+    "category": "exchange-query"
+   }
+  ],
+  "TB20Y0744": [
+   {
+    "date": "2026-07-19",
+    "title": "TB20Y0744: Record date for entitlement of coupon payment",
+    "text": "Record Date for entitlement of coupon payment of 20Y BGTB 28/07/2044 Government Securities is 27.07.2026.",
+    "category": "record-date"
+   }
+  ],
+  "TB15Y0736": [
+   {
+    "date": "2026-07-19",
+    "title": "TB15Y0736: Record date for entitlement of coupon payment",
+    "text": "Record Date for entitlement of coupon payment of 15Y BGTB 28/07/2036 Government Securities is 27.07.2026.",
+    "category": "record-date"
+   }
+  ],
+  "TB20Y0129": [
+   {
+    "date": "2026-07-19",
+    "title": "TB20Y0129: Record date for entitlement of coupon payment",
+    "text": "Record Date for entitlement of coupon payment of 20Y BGTB 28/01/2029 Government Securities is 27.07.2026.",
+    "category": "record-date"
+   }
+  ],
+  "HEIDELBCEM": [
+   {
+    "date": "2026-07-19",
+    "title": "HEIDELBCEM: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 23, 2026 at 2:45 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   }
+  ],
+  "ASIAINS": [
+   {
+    "date": "2026-07-19",
+    "title": "ASIAINS: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 27, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   }
+  ],
+  "ROBI": [
+   {
+    "date": "2026-07-19",
+    "title": "ROBI: Board Meeting schedule under LR 16(1)",
+    "text": "As per Regulation 16(1) of the Dhaka Stock Exchange (Listing) Regulations, 2015, the Company has informed that a meeting of the Board of Directors will be held on July 28, 2026 at 3:00 pm to consider, among others, Un-Audited Financial Statements for the Second Quarter (Q2) period ended June 30, 2026.",
+    "category": "board-meeting"
+   }
   ]
  },
- "fetched_at": "2026-07-18 16:53:04"
+ "fetched_at": "2026-07-19 14:57:16"
 }

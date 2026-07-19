@@ -17,8 +17,8 @@ import re
 import time
 
 from dse_common import (PROFILES_JSON, RIGHTS_JSON, RIGHTS_PDF_URL,
-                        build_name_index, load_json, match_company_name,
-                        save_json)
+                        build_name_index, fetch_binary, load_json,
+                        match_company_name, save_json)
 from fetch_agm import parse_date as parse_date_mon
 
 # Unlike the AGM/EGM PDF (dates like "29-Jul-26"), this PDF's table dates are
@@ -41,15 +41,7 @@ def parse_date(text):
 
 
 def download_pdf(dest_path):
-    import ssl
-    import urllib.request
-    req = urllib.request.Request(RIGHTS_PDF_URL, headers={"User-Agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"})
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    with urllib.request.urlopen(req, timeout=30, context=ctx) as resp, open(dest_path, "wb") as f:
-        f.write(resp.read())
+    fetch_binary(RIGHTS_PDF_URL, dest_path)
 
 
 def parse_rights_pdf(path):

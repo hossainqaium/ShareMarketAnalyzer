@@ -103,7 +103,13 @@ button:hover { border-color: var(--muted); }
 button.primary { background: var(--accent); color: #fff; border-color: transparent; }
 button:disabled { opacity: 0.55; cursor: default; }
 
-#updateStatus { font-size: 12.5px; color: var(--ink-2); min-width: 180px; }
+/* fixed, truncated footprint — a long status message must never push the
+   header buttons onto a new line; full text is still available via title */
+#updateStatus {
+  font-size: 12.5px; color: var(--ink-2);
+  width: 260px; flex: 0 0 auto;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .progress { height: 4px; background: var(--grid); border-radius: 2px; overflow: hidden; width: 180px; margin-top: 3px; }
 .progress > div { height: 100%; background: var(--accent); width: 0%; transition: width .4s; }
 
@@ -126,6 +132,13 @@ main { padding: 16px 20px 60px; max-width: 1500px; margin: 0 auto; }
 .hidden { display: none !important; }
 
 .disclaimer { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+.onboard-hint {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; font-size: 12.5px;
+}
+.onboard-hint button { flex-shrink: 0; }
 
 /* ---------- suggestions ---------- */
 .sug-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
@@ -133,7 +146,8 @@ main { padding: 16px 20px 60px; max-width: 1500px; margin: 0 auto; }
 .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
 .panel h2 { font-size: 14.5px; margin-bottom: 4px; }
 .panel .sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-.pick { display: flex; align-items: center; gap: 10px; padding: 9px 6px; border-top: 1px solid var(--grid); cursor: pointer; }
+.pick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 9px 6px; border-top: 1px solid var(--grid); cursor: pointer; }
+.pick-plan { flex-basis: 100%; font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
 .pick:hover { background: var(--chip); border-radius: 6px; }
 .pick .rank { width: 20px; color: var(--muted); font-size: 12px; text-align: right; }
 .pick .code { width: 110px; font-weight: 650; }
@@ -213,13 +227,18 @@ tbody tr { border-top: 1px solid var(--grid); cursor: pointer; }
 tbody tr:hover { background: var(--chip); }
 
 /* ---------- compare table ---------- */
+/* fixed layout + no explicit width on .compare-col: the browser splits
+   whatever space remains after the label column equally across however many
+   shares (2-6) are being compared, so all of them always fit on screen —
+   no horizontal scrolling regardless of COMPARE_MAX. */
+#comparePanel .tbl-wrap { overflow-x: hidden; }
+.compare-table { table-layout: fixed; }
 .compare-table thead th { cursor: default; }
 .compare-table tbody tr { cursor: default; }
 .compare-table tbody tr:hover { background: none; }
-.compare-table td, .compare-table th { white-space: normal; vertical-align: top; }
-.compare-table td:first-child, .compare-table th:first-child { white-space: nowrap; color: var(--ink-2); font-weight: 500; min-width: 130px; }
-.compare-col { min-width: 170px; }
-.compare-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.compare-table td, .compare-table th { white-space: normal; vertical-align: top; overflow-wrap: break-word; }
+.compare-table td:first-child, .compare-table th:first-child { color: var(--ink-2); font-weight: 500; width: 130px; }
+.compare-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13.5px; flex-wrap: wrap; }
 .compare-remove { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 0; line-height: 1; }
 .compare-remove:hover { color: var(--down); }
 .compare-spark { width: 100%; height: 40px; display: block; margin-top: 4px; cursor: pointer; }
@@ -293,10 +312,14 @@ th[data-term], .mstat[data-term] { cursor: help; }
 }
 .verdict small { display: block; font-weight: 500; font-size: 10px; opacity: 0.85; }
 .v-strong { background: color-mix(in srgb, var(--up) 16%, transparent); color: var(--up); }
-.v-buy { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+/* lighter/less-saturated green than v-strong — same "positive" family, distinguished
+   by intensity (Strong Buy vs Buy) instead of switching to an unrelated blue */
+.v-buy { background: color-mix(in srgb, var(--up) 8%, transparent); color: color-mix(in srgb, var(--up) 72%, var(--ink-2)); }
 .v-watch { background: color-mix(in srgb, var(--series-sma20) 18%, transparent); color: var(--series-sma20); }
 .v-neutral { background: var(--chip); color: var(--ink-2); }
 .v-avoid { background: color-mix(in srgb, var(--down) 14%, transparent); color: var(--down); }
+/* genuinely informational (non-buy) badges — the blue freed up from v-buy */
+.v-info { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 
 /* ---------- modal plan banner ---------- */
 .mplan {

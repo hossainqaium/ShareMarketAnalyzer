@@ -16,7 +16,11 @@
   <button id="btnTheme" data-term="theme_toggle">Theme: Auto</button>
   <button id="btnHelp" data-term="help">Help / সাহায্য</button>
   <div>
-    <button class="primary" id="btnUpdate" data-term="update">Update Data</button>
+    <button class="primary" id="btnFetch" data-term="fetch_data">Fetch Data</button>
+    <button id="btnFetchShortlist" data-term="fetch_scoped">Fetch Shortlisted</button>
+    <button id="btnFetchPortfolio" data-term="fetch_scoped">Fetch Portfolio</button>
+    <button id="btnFetchCompare" data-term="fetch_scoped">Fetch Compare</button>
+    <button id="btnRender" data-term="render_data">Update Data</button>
     <div class="progress hidden" id="updBarWrap"><div id="updBar"></div></div>
   </div>
 </header>
@@ -40,7 +44,7 @@
 </nav>
 <nav class="tabs hidden" data-group-tabs="explore">
   <button data-tab="charts" class="active">Charts</button>
-  <button data-tab="potential">Potential Charts</button>
+  <button data-tab="potential">AI Prediction Chart</button>
   <button data-tab="screener">Screener</button>
   <button data-tab="sectors">Sectors</button>
 </nav>
@@ -51,6 +55,15 @@
     <p class="disclaimer">Rule-based technical &amp; fundamental scoring computed locally from 2 years of
       price history — not financial advice. Scores favour liquid, category-A equities; check reasons and
       flags before acting. · নিয়মভিত্তিক বিশ্লেষণ, বিনিয়োগ পরামর্শ নয়; কেনার আগে কারণ ও ঝুঁকি-চিহ্ন দেখে নিন।</p>
+
+    <div class="onboard-hint hidden" id="onboardHint">
+      <span>New here? <b>Top 20</b> = today's best picks, ranked and ready to act on — click any share for
+        full detail. Underlined terms show an explanation on hover, and <b>Help</b> (top right) has the full
+        glossary. · নতুন এখানে? <b>Top 20</b> = আজকের সেরা পছন্দ, র‍্যাঙ্ক করা ও পদক্ষেপ নেওয়ার জন্য প্রস্তুত —
+        বিস্তারিত দেখতে যেকোনো শেয়ারে ক্লিক করুন। আন্ডারলাইন করা শব্দে মাউস রাখলে ব্যাখ্যা দেখা যাবে, আর <b>Help</b>-এ
+        (উপরে ডানে) পূর্ণ শব্দকোষ আছে।</span>
+      <button id="onboardDismiss" title="Dismiss">Got it ✕</button>
+    </div>
 
     <div class="panel top10" id="top10Panel">
       <h2>Top 20 preferred shares · আজকের সেরা ২০ <span class="term" data-term="composite">ⓘ</span></h2>
@@ -68,13 +81,14 @@
             <th>★</th>
             <th data-term="compare">⚖</th>
             <th class="lft">Share</th>
-            <th>Price</th>
+            <th>LTP / YCP</th>
             <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th><span class="term" data-term="composite">Score</span></th>
-            <th class="lft"><span class="term" data-term="buy_date">Buy on</span></th>
-            <th class="lft"><span class="term" data-term="horizon">Hold for</span></th>
+            <th class="lft"><span class="term" data-term="action_plan">Action</span></th>
             <th><span class="term" data-term="target">Target</span></th>
             <th><span class="term" data-term="stop">Stop-loss</span></th>
+            <th><span class="term" data-term="pred_price">AI Pred. 1w</span></th>
+            <th><span class="term" data-term="pred_price">AI Pred. 1m</span></th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
           <tbody></tbody>
@@ -96,6 +110,7 @@
       <div id="signalGroups"></div>
     </div>
 
+    <div class="axis-note" id="rcTeaser" style="margin-bottom:6px"></div>
     <details class="panel overview-toggle" id="overviewDetails">
       <summary data-term="market_overview_toggle">Market overview &amp; report card · বাজার ও পারফরম্যান্স বিস্তারিত <span class="muted-count">(তথ্য দেখতে ক্লিক করুন)</span></summary>
       <div class="panel market" id="marketPanel">
@@ -111,6 +126,10 @@
           prices actually did over the next 1w / 2w / 1m, next to the whole-market baseline. Win = more than +2%.
           · প্রতি Update Data-তে সুপারিশ সংরক্ষণ হয়; পরের রানগুলো সেগুলোকে প্রকৃত দামের সাথে মিলিয়ে নম্বর দেয়। জয় = +২%-এর বেশি।</div>
         <div id="rcBody"></div>
+        <div id="rcPredWrap" style="margin-top:14px">
+          <h3 style="font-size:13.5px;margin-bottom:4px"><span class="term" data-term="pred_accuracy">AI Pred. 1w/1m accuracy — is it worth trusting?</span></h3>
+          <div id="rcPredBody"></div>
+        </div>
       </div>
     </details>
 
@@ -170,7 +189,7 @@
           <thead><tr>
             <th>★</th>
             <th class="lft">Code</th><th>Qty</th>
-            <th class="lft">Buy date</th><th>Buy ৳</th><th>Now ৳</th>
+            <th class="lft">Buy date</th><th>Buy ৳</th><th>LTP / YCP ৳</th>
             <th>Value ৳</th><th>P&amp;L ৳</th><th>P&amp;L %</th>
             <th data-term="time_stop">Held</th>
             <th data-term="target">Target</th>
@@ -234,7 +253,7 @@
             <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
             <th class="lft" data-term="trend_break">Pattern</th>
-            <th>Price</th>
+            <th>LTP / YCP</th>
             <th data-term="day_change">Δ vs yesterday</th>
             <th data-term="intraday_change">Δ since open</th>
             <th data-term="vol_today">Vol× today</th>
@@ -307,7 +326,7 @@
           <thead><tr>
             <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
-            <th>Price</th>
+            <th>LTP / YCP</th>
             <th data-term="pos2y" id="mgLowerPosTh">3m pos</th>
             <th data-term="from_low" id="mgLowerDistTh">Above 3m low</th>
             <th data-term="rsi">RSI</th>
@@ -330,7 +349,7 @@
           <thead><tr>
             <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
-            <th>Price</th>
+            <th>LTP / YCP</th>
             <th data-term="pos2y" id="mgHigherPosTh">3m pos</th>
             <th data-term="from_high" id="mgHigherDistTh">Below 3m high</th>
             <th data-term="rsi">RSI</th>
@@ -403,7 +422,7 @@
 
     <div class="panel" id="compareEmptyPanel">
       <div class="axis-note" style="padding:24px 0; text-align:center">No shares selected yet. Click the <b>⚖</b>
-        button next to any share — in Suggestions, Spike, ⚡ High Profit, Margin, Charts, Potential Charts or
+        button next to any share — in Suggestions, Spike, ⚡ High Profit, Margin, Charts, AI Prediction Chart or
         Screener — to add it here for comparison.
         · এখনো কোনো শেয়ার নেই। যেকোনো শেয়ারের পাশের <b>⚖</b> বাটনে ক্লিক করে এখানে তুলনার জন্য যোগ করুন।</div>
     </div>
@@ -475,6 +494,15 @@
         <option>Neutral</option><option>Avoid</option>
       </select>
       <label class="term" data-term="eligible"><input type="checkbox" id="scrEligible"> eligible only</label>
+      <select id="fltRsi" data-term="rsi">
+        <option value="">Any RSI</option>
+        <option value="oversold">Oversold &lt;30</option>
+        <option value="neutral">Neutral 30–70</option>
+        <option value="sweet">Sweet spot 45–65</option>
+        <option value="overbought">Overbought &gt;70</option>
+      </select>
+      <label class="term" data-term="composite">Min score
+        <input type="number" id="fltComposite" min="0" max="100" step="5" placeholder="0" style="width:56px"></label>
       <div class="spacer"></div>
       <div class="col-picker-wrap">
         <button id="btnColumns" data-term="columns_picker">Columns ▾</button>
@@ -498,15 +526,6 @@
       <div class="filter-groups">
         <div class="filter-group">
           <div class="filter-group-label">Technical · টেকনিক্যাল</div>
-          <select id="fltRsi" data-term="rsi">
-            <option value="">Any RSI</option>
-            <option value="oversold">Oversold &lt;30</option>
-            <option value="neutral">Neutral 30–70</option>
-            <option value="sweet">Sweet spot 45–65</option>
-            <option value="overbought">Overbought &gt;70</option>
-          </select>
-          <label class="term" data-term="composite">Min score
-            <input type="number" id="fltComposite" min="0" max="100" step="5" placeholder="0" style="width:56px"></label>
           <label class="term" data-term="atr">Max ATR%
             <input type="number" id="fltAtr" min="0" step="0.5" placeholder="any" style="width:60px"></label>
         </div>
@@ -554,14 +573,17 @@
       </table>
     </div>
   </section>
-  <!-- ============ POTENTIAL FUTURE CHARTS ============ -->
+  <!-- ============ AI PREDICTION CHART (was: POTENTIAL FUTURE CHARTS) ============ -->
   <section id="tab-potential" class="hidden">
-    <p class="disclaimer"><span class="term" data-term="potential">Past 1 year (blue) vs potential next 6 months (violet)</span>,
-      split by the vertical line at today. The projection is a deterministic statistical shape — damped momentum
-      + last year's seasonal pattern at half strength — <b>a decision aid, not a prediction or guarantee</b>.
-      Regenerated on every Update Data from the freshest history (stored in potential_dse_6m_history.csv).
-      · নীল রেখা = গত ১ বছরের প্রকৃত দাম, বেগুনি রেখা = পরবর্তী ৬ মাসের সম্ভাব্য গতিপথ; মাঝের দাগটি আজকের তারিখ।
-      সিদ্ধান্তে সহায়ক পরিসংখ্যানভিত্তিক অনুমান, ভবিষ্যদ্বাণী নয়।</p>
+    <p class="disclaimer"><span class="term" data-term="potential">Past 1 year (blue) vs AI-predicted next 6 months (violet)</span>,
+      split by the vertical line at today, with past 1w/1m/2m returns and AI Pred. 1w/1m badges on every card.
+      Despite the "AI" label, the projection is a deterministic statistical shape — damped momentum
+      + last year's seasonal pattern at half strength — <b>a decision aid, not a trained model, prediction, or guarantee</b>.
+      Regenerated on every Update Data from the freshest history (stored in potential_dse_6m_history.csv). See
+      <span class="term" data-term="pred_accuracy">Pred. accuracy</span> under Report card for its real graded track record.
+      · নীল রেখা = গত ১ বছরের প্রকৃত দাম, বেগুনি রেখা = AI-অনুমানকৃত পরবর্তী ৬ মাসের গতিপথ; মাঝের দাগটি আজকের তারিখ, প্রতিটি
+      কার্ডে past 1w/1m/2m রিটার্ন ও AI Pred. 1w/1m ব্যাজ। "AI" লেখা থাকলেও এটি সিদ্ধান্তে সহায়ক পরিসংখ্যানভিত্তিক অনুমান,
+      প্রশিক্ষিত মডেল বা ভবিষ্যদ্বাণী নয়।</p>
     <div class="panel shortlist-panel hidden" id="potShortlistPanel">
       <h2 class="term" data-term="shortlist">★ Shortlisted <span class="muted-count" id="potShortlistCount"></span></h2>
       <div class="grid" id="potShortlistGrid"></div>
@@ -618,7 +640,7 @@
       <button class="compare-btn" id="mCompare" title="Add to Compare" data-term="compare">⚖</button>
       <h2 id="mCode"></h2>
       <span class="mprice" id="mPrice"></span>
-      <span id="mDelta"></span>
+      <span id="mDelta" data-term="returns"></span>
       <button class="close" id="mClose">Close</button>
     </div>
     <div class="msub" id="mSub"></div>
@@ -674,6 +696,7 @@
     </div>
     <p class="disclaimer">Hover over any underlined term in the app to see this explanation in place.
       · অ্যাপের যেকোনো আন্ডারলাইন করা শব্দের উপর মাউস রাখলে ব্যাখ্যা দেখা যাবে।</p>
+    <input type="text" id="helpSearch" placeholder="Search terms… · খুঁজুন…" style="width:100%;margin-bottom:8px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--ink);font:inherit">
     <div class="tbl-wrap"><table id="helpTable">
       <thead><tr><th class="lft">Term</th><th class="lft">Meaning</th><th class="lft">অর্থ</th></tr></thead>
       <tbody></tbody>
