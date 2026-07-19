@@ -381,32 +381,34 @@
    "CONFIDCEM",
    "CVOPRL",
    "EHL",
+   "GPHISPAT",
    "IBNSINA",
    "KOHINOOR",
    "LHB",
    "MAGURAPLEX",
    "MEGHNAINS",
+   "MIDLANDBNK",
    "MJLBD",
    "NAVANAPHAR",
    "PHARMAID",
    "PRIMEINSUR",
    "RUPALIINS",
+   "SANDHANINS",
    "SEAPEARL",
    "SIMTEX",
    "SONALIANSH",
-   "SONALIPAPR"
+   "SONALIPAPR",
+   "TAMIJTEX"
   ],
   "buy": [
    "ACIFORMULA",
    "ADNTEL",
    "AGNISYSL",
-   "AGRANINS",
    "AL-HAJTEX",
    "ARGONDENIM",
    "BATBC",
    "BDCOM",
    "BEACONPHAR",
-   "BGIC",
    "BSRMSTEEL",
    "BXPHARMA",
    "CENTRALINS",
@@ -424,9 +426,9 @@
    "FARCHEM",
    "FEDERALINS",
    "FEKDIL",
+   "GENEXIL",
    "GLOBALINS",
    "GP",
-   "GPHISPAT",
    "HEIDELBCEM",
    "HWAWELLTEX",
    "IBP",
@@ -441,7 +443,6 @@
    "MALEKSPIN",
    "MARICO",
    "MATINSPINN",
-   "MIDLANDBNK",
    "MLDYEING",
    "MONNOAGML",
    "MONOSPOOL",
@@ -449,18 +450,18 @@
    "NHFIL",
    "OLYMPIC",
    "PADMAOIL",
+   "PENINSULA",
    "PREMIERCEM",
    "PRIMEBANK",
-   "QUASEMIND",
    "RAHIMTEXT",
    "RAKCERAMIC",
    "RENATA",
    "REPUBLIC",
    "ROBI",
+   "SAIHAMCOT",
    "SAIHAMTEX",
    "SALVO",
    "SAMORITA",
-   "SANDHANINS",
    "SHAHJABANK",
    "SHARPIND",
    "SHASHADNIM",
@@ -473,7 +474,6 @@
    "SQURPHARMA",
    "SUMITPOWER",
    "TAKAFULINS",
-   "TAMIJTEX",
    "TECHNODRUG",
    "TOSRIFA",
    "UNIONINS",
@@ -484,79 +484,79 @@
    "WATACHEM"
   ],
   "top20": [
-   "BSRMLTD",
-   "APEXFOOT",
    "LHB",
+   "APEXFOOT",
+   "DUTCHBANGL",
+   "BSRMLTD",
    "ACIFORMULA",
+   "IBNSINA",
    "BSRMSTEEL",
-   "CONFIDCEM",
-   "SONALIPAPR",
    "PHARMAID",
    "CVOPRL",
-   "RENATA",
-   "EHL",
-   "SONALIANSH",
+   "BSC",
    "LANKABAFIN",
-   "DUTCHBANGL",
+   "CONFIDCEM",
+   "SONALIPAPR",
    "AMANFEED",
-   "KARNAPHULI",
    "MEGHNAINS",
    "EASTRNLUB",
    "BSCPLC",
-   "RUPALIINS"
+   "MIDLANDBNK",
+   "EHL",
+   "SONALIANSH"
   ],
   "high_profit": [
    "GP",
    "APEXSPINN",
    "ITC",
    "BSC",
+   "SAMORITA",
    "TECHNODRUG",
    "BSRMLTD",
-   "SAMORITA",
    "FARCHEM",
    "SINOBANGLA",
    "UNITEDINS",
    "CITYGENINS",
    "AMANFEED",
    "ROBI",
-   "DHAKAINS",
-   "JAMUNAOIL"
+   "JAMUNAOIL",
+   "DHAKAINS"
   ],
   "pred": {
-   "BSRMLTD": {
-    "price": 106.5,
-    "pred_1w": 107.34,
-    "pred_1m": 114.07
+   "LHB": {
+    "price": 60.2,
+    "pred_1w": 61.1,
+    "pred_1m": 68.11
    },
    "APEXFOOT": {
     "price": 217.2,
     "pred_1w": 220.34,
     "pred_1m": 230.81
    },
-   "LHB": {
-    "price": 60.2,
-    "pred_1w": 61.1,
-    "pred_1m": 68.11
+   "DUTCHBANGL": {
+    "price": 50.0,
+    "pred_1w": 50.83,
+    "pred_1m": 53.64
+   },
+   "BSRMLTD": {
+    "price": 106.5,
+    "pred_1w": 107.34,
+    "pred_1m": 114.07
    },
    "ACIFORMULA": {
     "price": 180.0,
     "pred_1w": 182.67,
     "pred_1m": 189.65
    },
+   "IBNSINA": {
+    "price": 326.9,
+    "pred_1w": 328.79,
+    "pred_1m": 340.88
+   },
    "BSRMSTEEL": {
     "price": 100.7,
     "pred_1w": 101.58,
     "pred_1m": 109.21
-   },
-   "CONFIDCEM": {
-    "price": 69.9,
-    "pred_1w": 70.71,
-    "pred_1m": 74.27
-   },
-   "SONALIPAPR": {
-    "price": 249.4,
-    "pred_1w": 254.78,
-    "pred_1m": 271.4
    },
    "PHARMAID": {
     "price": 630.7,
@@ -568,40 +568,30 @@
     "pred_1w": 178.72,
     "pred_1m": 185.11
    },
-   "RENATA": {
-    "price": 474.9,
-    "pred_1w": 479.07,
-    "pred_1m": 501.41
-   },
-   "EHL": {
-    "price": 96.2,
-    "pred_1w": 97.3,
-    "pred_1m": 103.88
-   },
-   "SONALIANSH": {
-    "price": 216.0,
-    "pred_1w": 221.25,
-    "pred_1m": 232.89
+   "BSC": {
+    "price": 124.7,
+    "pred_1w": 125.75,
+    "pred_1m": 142.37
    },
    "LANKABAFIN": {
     "price": 17.9,
     "pred_1w": 18.12,
     "pred_1m": 19.48
    },
-   "DUTCHBANGL": {
-    "price": 50.0,
-    "pred_1w": 50.83,
-    "pred_1m": 53.64
+   "CONFIDCEM": {
+    "price": 69.9,
+    "pred_1w": 70.71,
+    "pred_1m": 74.27
+   },
+   "SONALIPAPR": {
+    "price": 249.4,
+    "pred_1w": 254.78,
+    "pred_1m": 271.4
    },
    "AMANFEED": {
     "price": 37.8,
     "pred_1w": 38.22,
     "pred_1m": 38.54
-   },
-   "KARNAPHULI": {
-    "price": 47.0,
-    "pred_1w": 47.81,
-    "pred_1m": 52.59
    },
    "MEGHNAINS": {
     "price": 39.1,
@@ -618,10 +608,20 @@
     "pred_1w": 165.45,
     "pred_1m": 179.53
    },
-   "RUPALIINS": {
-    "price": 29.6,
-    "pred_1w": 30.07,
-    "pred_1m": 31.57
+   "MIDLANDBNK": {
+    "price": 17.9,
+    "pred_1w": 17.79,
+    "pred_1m": 16.01
+   },
+   "EHL": {
+    "price": 96.2,
+    "pred_1w": 97.3,
+    "pred_1m": 103.88
+   },
+   "SONALIANSH": {
+    "price": 216.0,
+    "pred_1w": 221.25,
+    "pred_1m": 232.89
    }
   }
  }

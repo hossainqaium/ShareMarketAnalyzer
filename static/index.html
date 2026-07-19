@@ -247,12 +247,16 @@
   <!-- ============ SPIKE ============ -->
   <section id="tab-spike" class="hidden">
     <p class="disclaimer"><span class="term" data-term="spike_tab">Two kinds of alert</span>: <b>⚡ Spikes</b> — shares
-      that suddenly jumped or dropped 3%+, today or within the last few sessions — and <b>📐 Trend Breaks</b> — shares
+      that suddenly jumped or dropped 3%+ today or yesterday, <b>confirmed by abnormal volume</b> (≥2× the 30-day
+      average) <b>and a close that backs the direction</b> — a move without both is excluded, not just down-scored,
+      so this list stays short and actionable — and <b>📐 Trend Breaks</b> — shares
       that held a clean uptrend, downtrend, or tight sideways range for a long time and have just broken that pattern
       in the last few sessions, even without a big single-day jump. Both are sorted by <b>how recently it happened</b>
       (today first), with same-day ties broken by price. Chasing an unexplained move is how money is lost — read the
       Why column first.
-      · দুই ধরনের সতর্কতা: <b>⚡ Spike</b> — আজ বা গত কয়েক সেশনে হঠাৎ ৩%+ ওঠা বা নামা শেয়ার — এবং <b>📐 Trend Break</b> —
+      · দুই ধরনের সতর্কতা: <b>⚡ Spike</b> — আজ বা গতকাল হঠাৎ ৩%+ ওঠা বা নামা শেয়ার, <b>অস্বাভাবিক ভলিউম</b> (৩০ দিনের গড়ের
+      ≥২ গুণ) ও <b>দিক-নিশ্চিতকারী ক্লোজ</b> দুটোই মিললে তবেই — শুধু দাম পরিবর্তনে তালিকায় আসে না, তাই তালিকা সংক্ষিপ্ত ও
+      কার্যকর থাকে — এবং <b>📐 Trend Break</b> —
       যে শেয়ার দীর্ঘদিন পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ পার্শ্ববর্তী সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে। দুটোই
       কতদিন আগে ঘটেছে তা অনুযায়ী সাজানো (আজকেরটি আগে), একই দিনের মধ্যে দাম অনুযায়ী। কারণ না জেনে পেছনে ছুটবেন না — আগে
       "কেন" কলামটি পড়ুন।</p>
@@ -749,6 +753,106 @@
     </div>
     <p class="disclaimer">Hover over any underlined term in the app to see this explanation in place.
       · অ্যাপের যেকোনো আন্ডারলাইন করা শব্দের উপর মাউস রাখলে ব্যাখ্যা দেখা যাবে।</p>
+
+    <details class="filter-more">
+      <summary>📈 How to analyze &amp; buy a share — step by step · কীভাবে বিশ্লেষণ করে শেয়ার কিনবেন</summary>
+      <ol style="padding:10px 16px 14px 32px;font-size:12.5px;line-height:1.7">
+        <li><b>Start at Suggestions → Top 20.</b> These are today's best overall picks —
+          diversified (max 3 per sector), each with a verdict, score, buy date, hold period,
+          target and stop-loss already worked out.
+          · <span style="color:var(--muted)">Suggestions ট্যাবের Top 20 দিয়ে শুরু করুন — এগুলো আজকের
+          সেরা পছন্দ, সেক্টর অনুযায়ী বৈচিত্র্যময়, এবং প্রতিটির verdict, score, কেনার তারিখ, ধরে রাখার
+          সময়, target ও stop-loss আগে থেকেই ঠিক করা।</span></li>
+        <li><b>Check the Verdict and Score</b> — but don't stop there. A high score with no real
+          reasons behind it isn't trustworthy.
+          · <span style="color:var(--muted)">Verdict ও Score দেখুন — কিন্তু শুধু এতে থামবেন না; পেছনে
+          বাস্তব কারণ ছাড়া উঁচু score ভরসাযোগ্য নয়।</span></li>
+        <li><b>Read the Why column.</b> Look for concrete, data-backed reasons (uptrend, volume
+          surge, real fundamentals) — not just a number.
+          · <span style="color:var(--muted)">Why কলাম পড়ুন — সংখ্যা নয়, বাস্তব কারণ (ঊর্ধ্বগতি, ভলিউম
+          বৃদ্ধি, প্রকৃত মৌলভিত্তি) খুঁজুন।</span></li>
+        <li><b>Know your exit before you enter.</b> Check the Action cell (buy date + hold
+          period) and the Target / Stop-loss columns — decide your exit points before you buy,
+          not after.
+          · <span style="color:var(--muted)">ঢোকার আগেই বের হওয়ার পরিকল্পনা জানুন — Action ঘর (কেনার
+          তারিখ ও ধরে রাখার সময়) এবং Target/Stop-loss দেখে আগেভাগেই ঠিক করুন।</span></li>
+        <li><b>Treat AI Pred. 1w/1m as an estimate, not a promise.</b> Check "AI Pred. price
+          accuracy" under Report card to see its actual graded track record before trusting it.
+          · <span style="color:var(--muted)">AI Pred. 1w/1m কে অনুমান হিসেবে দেখুন, প্রতিশ্রুতি নয়। এর
+          প্রকৃত নির্ভুলতা দেখতে Report card-এর নিচে "AI Pred. price accuracy" দেখুন।</span></li>
+        <li><b>Open the share's detail view</b> (click any row) for the full picture: chart with
+          SMA20/50, RSI, volume, and fundamentals (EPS, P/E, P/NAV, dividend yield). <b>Do not
+          buy if you see a trading-halt or audit-concern flag</b> — the app already blocks these
+          from a Buy verdict, but always double-check the flags yourself.
+          · <span style="color:var(--muted)">শেয়ারের বিস্তারিত দেখতে ক্লিক করুন — চার্ট, SMA20/50, RSI,
+          ভলিউম, মৌলভিত্তি (EPS, P/E, P/NAV, লভ্যাংশ ফলন)। trading-halt বা audit-concern ফ্ল্যাগ থাকলে
+          কিনবেন না।</span></li>
+        <li><b>Check for an upcoming AGM/EGM/Record date</b> if dividend timing matters to you.
+          · <span style="color:var(--muted)">লভ্যাংশের সময় গুরুত্বপূর্ণ হলে AGM/EGM/Record ট্যাবে
+          আসন্ন রেকর্ড ডেট দেখুন।</span></li>
+        <li><b>Cross-check the other Decide tabs</b> for more context: Spike (is it moving today
+          for a real, volume-backed reason), Margin (is it near a 2-year low with reversal
+          evidence), High Profit (is there a tighter, more aggressive setup).
+          · <span style="color:var(--muted)">আরও প্রেক্ষাপটের জন্য অন্য Decide ট্যাব দেখুন: Spike,
+          Margin, High Profit।</span></li>
+        <li><b>Size your position</b> using the 2% rule calculator in the detail view before
+          deciding how many shares to buy.
+          · <span style="color:var(--muted)">কতগুলো শেয়ার কিনবেন তা ঠিক করতে বিস্তারিত পাতার ২% নিয়মের
+          ক্যালকুলেটর ব্যবহার করুন।</span></li>
+        <li><b>Check the Report card</b> — has this category (Strong Buy, Buy, Top 20) actually
+          beaten the market historically? Trust categories with a real track record more than
+          ones without one yet.
+          · <span style="color:var(--muted)">Report card দেখুন — এই ক্যাটাগরি অতীতে সত্যিই বাজারকে
+          হারিয়েছে কিনা যাচাই করুন।</span></li>
+        <li><b>Diversify.</b> Don't put everything into one share or one sector — use Compare and
+          the Portfolio tab's diversification/correlation panel to check.
+          · <span style="color:var(--muted)">বৈচিত্র্য আনুন — একটি শেয়ার বা খাতে সব বিনিয়োগ করবেন না;
+          Compare ও Portfolio ট্যাবের বৈচিত্র্য/সহসম্পর্ক প্যানেল দেখুন।</span></li>
+      </ol>
+    </details>
+
+    <details class="filter-more">
+      <summary>📉 What to check before selling — step by step · বিক্রির আগে যা যাচাই করবেন</summary>
+      <ol style="padding:10px 16px 14px 32px;font-size:12.5px;line-height:1.7">
+        <li><b>Open the Portfolio tab.</b> Every holding shows live P&amp;L, a rising trailing
+          stop (never moves down), a break-even rule (once +5%, the stop never sits below your
+          entry), and a time-stop (the thesis is treated as failed if it's still flat past the
+          planned holding period).
+          · <span style="color:var(--muted)">Portfolio ট্যাব খুলুন — প্রতিটি হোল্ডিং-এ লাইভ P&amp;L,
+          ক্রমবর্ধমান ট্রেইলিং স্টপ, ব্রেক-ইভেন নিয়ম, এবং টাইম-স্টপ দেখা যাবে।</span></li>
+        <li><b>Watch the Alerts column</b> per holding — target-hit, stop-hit, fall-risk,
+          bearish divergence, momentum turn, unbacked spike, halt/audit, and record-date
+          reminders are real, data-backed sell signals, not just a hunch.
+          · <span style="color:var(--muted)">প্রতিটি হোল্ডিং-এর Alerts কলাম দেখুন — এগুলো বাস্তব,
+          তথ্যভিত্তিক বিক্রির সংকেত, নিছক অনুমান নয়।</span></li>
+        <li><b>If Margin flags the share as top-of-range</b> (Higher Margin, with a real fall
+          score), treat that as a profit-taking signal — not a reason to buy more.
+          · <span style="color:var(--muted)">Margin যদি শেয়ারটিকে Higher Margin (উপরের সীমায়) হিসেবে
+          দেখায় প্রকৃত fall score সহ, এটি মুনাফা তোলার সংকেত — আরও কেনার নয়।</span></li>
+        <li><b>Re-check risk flags since you bought</b> — trading-halt, audit-concern,
+          exchange-query, or category-change should trigger a hard reconsideration regardless of
+          price.
+          · <span style="color:var(--muted)">কেনার পর নতুন ঝুঁকি-চিহ্ন এসেছে কিনা দেখুন — এলে দাম যাই
+          হোক পুনর্বিবেচনা করুন।</span></li>
+        <li><b>If price hit your Target</b>, book at least partial profit rather than assuming it
+          keeps running — check whether the move still has real backing (volume, trend) or looks
+          exhausted (RSI divergence, spike-fade-risk).
+          · <span style="color:var(--muted)">দাম Target ছুঁলে অন্তত আংশিক মুনাফা তুলুন — গতি সত্যিকারের
+          সমর্থনে চলছে নাকি ফুরিয়ে আসছে তা যাচাই করুন।</span></li>
+        <li><b>If it hit your Stop-loss</b> (or the ATR trailing stop), respect it. The exit
+          engine exists specifically so a small loss doesn't become a large one.
+          · <span style="color:var(--muted)">Stop-loss বা ট্রেইলিং স্টপ ছুঁলে তা মেনে চলুন — ছোট
+          ক্ষতিকে বড় হতে দেবেন না।</span></li>
+        <li><b>Re-check portfolio diversification</b> after any sale — selling one holding
+          changes how concentrated your remaining portfolio is.
+          · <span style="color:var(--muted)">বিক্রির পর পোর্টফোলিও বৈচিত্র্য আবার যাচাই করুন।</span></li>
+        <li><b>Record the sale</b> (Sell button) so the Report card and closed-trades ledger can
+          track your real win rate over time.
+          · <span style="color:var(--muted)">বিক্রয় রেকর্ড করুন যাতে Report card আপনার প্রকৃত জয়ের হার
+          দেখাতে পারে।</span></li>
+      </ol>
+    </details>
+
     <input type="text" id="helpSearch" placeholder="Search terms… · খুঁজুন…" style="width:100%;margin-bottom:8px;padding:6px 10px;border:1px solid var(--border);border-radius:7px;background:var(--surface);color:var(--ink);font:inherit">
     <div class="tbl-wrap"><table id="helpTable">
       <thead><tr><th class="lft">Term</th><th class="lft">Meaning</th><th class="lft">অর্থ</th></tr></thead>

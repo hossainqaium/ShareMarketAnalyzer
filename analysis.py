@@ -30,7 +30,9 @@ MIN_LIQUIDITY_MN = 5.0     # avg daily traded value (mn BDT) to qualify for pick
 TRADING_DAYS = {"1w": 5, "2w": 10, "1m": 21, "2m": 42, "3m": 63, "6m": 126, "1y": 250}
 
 SPIKE_MIN_PCT = 3.0        # DSE circuit is ±10%, so 3%+ in a day is a jolt (either direction)
-SPIKE_LOOKBACK = 5         # sessions scanned for "how many days ago did it spike" (matches Trend Break's holdout)
+SPIKE_LOOKBACK = 2         # sessions scanned: today and yesterday only — a short, actionable list
+SPIKE_MIN_VOL_RATIO = 2.0  # that day's volume vs the 30-day average — the "abnormal volume" gate
+SPIKE_CLOSE_CONFIRM = 0.5  # close position within that day's own H-L range must back the move's direction
 
 
 def clamp(x, lo=0.0, hi=1.0):
@@ -282,23 +284,42 @@ def detect_gap(openp, ycp, price):
     return round(gap_pct, 2), status
 
 
-def detect_recent_spike(day_change, intraday_change, dates, closes,
-                        lookback=SPIKE_LOOKBACK, thresh=SPIKE_MIN_PCT):
-    """Most recent session within the last `lookback` sessions whose price
-    move was >= thresh% in EITHER direction — a spike that may have
-    happened today or a few sessions back, not only today. Today's check
-    prefers day_change/intraday_change (the live overlay may make "now" a
-    truer read than a plain close-to-close diff); older sessions use pure
-    close-to-close returns since their day is already final."""
+def detect_recent_spike(day_change, intraday_change, dates, closes, vols, highs, lows, vol30,
+                        lookback=SPIKE_LOOKBACK, thresh=SPIKE_MIN_PCT,
+                        vol_thresh=SPIKE_MIN_VOL_RATIO, close_confirm=SPIKE_CLOSE_CONFIRM):
+    """Most recent session within the last `lookback` sessions (today and
+    yesterday, by default) whose price move was >= thresh% in EITHER
+    direction, CONFIRMED by two things — without them a raw % move is just
+    noise, not a real signal, and is excluded outright rather than merely
+    down-scored:
+      - abnormal volume: that day's volume >= vol_thresh x the 30-day
+        average — a proxy for genuine buying/selling demand overwhelming
+        the other side, since DSE's public data has no order-book depth;
+      - a close that backs the direction: for an up-move, closed in the
+        upper half of that day's own high-low range (buyers were still in
+        control at the bell, not just an intraday wick); for a down-move,
+        the lower half.
+    Today's check prefers day_change/intraday_change (the live overlay may
+    make "now" a truer read than a plain close-to-close diff); older
+    sessions use pure close-to-close returns since their day is final."""
     n = len(closes)
-    if n < 2:
+    if n < 2 or not vol30:
         return None
+
+    def confirmed(i, chg):
+        vr = (vols[i] / vol30) if vol30 else 0
+        if vr < vol_thresh:
+            return False
+        h, l, c = highs[i], lows[i], closes[i]
+        cs = (c - l) / (h - l) if h > l else 0.5
+        return cs >= close_confirm if chg > 0 else cs <= (1 - close_confirm)
+
     today_chg = None
     if day_change is not None and abs(day_change) >= thresh:
         today_chg = day_change
     elif intraday_change is not None and abs(intraday_change) >= thresh:
         today_chg = intraday_change
-    if today_chg is not None:
+    if today_chg is not None and confirmed(n - 1, today_chg):
         return {"days_ago": 0, "direction": "up" if today_chg > 0 else "down",
                 "change_pct": round(today_chg, 2), "date": dates[-1],
                 "price_that_day": round(closes[-1], 2)}
@@ -307,7 +328,7 @@ def detect_recent_spike(day_change, intraday_change, dates, closes,
         if i < 1 or closes[i - 1] <= 0:
             continue
         chg = (closes[i] / closes[i - 1] - 1) * 100
-        if abs(chg) >= thresh:
+        if abs(chg) >= thresh and confirmed(i, chg):
             return {"days_ago": days_ago, "direction": "up" if chg > 0 else "down",
                     "change_pct": round(chg, 2), "date": dates[i],
                     "price_that_day": round(closes[i], 2)}
@@ -411,7 +432,11 @@ def detect_regime_break(dates, closes, holdout=REGIME_BREAK_HOLDOUT):
             continue
         broke = [i for i, z in enumerate(z_scores)
                  if (z >= 2.2 if direction == "up" else z <= -2.2)]
-        break_days_ago = holdout - broke[0]
+        # recent[-1] (index holdout-1) IS today, so days-ago from today is
+        # (holdout-1) - i, not holdout - i — that off-by-one previously made
+        # "today" impossible to reach (min value was 1, not 0) and shifted
+        # the whole 0..holdout-1 range up by one session.
+        break_days_ago = (holdout - 1) - broke[0]
         lo_band, hi_band = min(window), max(window)
         return {
             "regime": regime, "direction": direction,
@@ -613,7 +638,8 @@ def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
     m["day_change"] = round((price / ycp - 1) * 100, 2) if ycp > 0 else None
     m["intraday_change"] = round((price / openp - 1) * 100, 2) if openp > 0 else None
     m["vol_today_ratio"] = round(vols[-1] / vol30, 2) if vols and vol30 else None
-    m["recent_spike"] = detect_recent_spike(m["day_change"], m["intraday_change"], dates, closes)
+    m["recent_spike"] = detect_recent_spike(m["day_change"], m["intraday_change"], dates, closes,
+                                            vols, highs, lows, vol30)
 
     yr = closes[-250:]
     hi52, lo52 = max(yr), min(yr)

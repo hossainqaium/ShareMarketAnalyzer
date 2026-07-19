@@ -167,17 +167,26 @@ picks below the fold.
   the currently filtered/sorted view), and **saved filter presets** (name,
   save, load, delete — stored in this browser only).
 - **Spike** — two kinds of alert, each its own sub-tab. Both are sorted by
-  **how recently it happened** — today first, then 1 day ago, 2 days ago and
-  so on out to a 5-session lookback — with same-day ties broken by price
-  (highest first), and every row marked **▲ up** or **▼ down**.
+  **how recently it happened** — today first, then yesterday — with same-day
+  ties broken by price (highest first), and every row marked **▲ up** or
+  **▼ down**.
   **⚡ Spikes**: shares that suddenly moved **3%+ in either direction**,
-  today or within the last 5 sessions, vs yesterday's close and vs the
-  session open (clicking Update Data during trading hours makes "today"
-  compare "right now" against the start of the day, since live prices are
-  fetched). Each spike gets a 0–100 **continuation score** — the chance the
-  move keeps going in its own direction: volume backing 25%, room to run
-  (circuit distance, RSI, resistance/support headroom) 20%, trend backdrop
-  20%, a real catalyst from the announcement/AGM data (direction-appropriate:
+  today or yesterday, vs the prior close and vs the session open (clicking
+  Update Data during trading hours makes "today" compare "right now" against
+  the start of the day). A price move alone isn't enough to qualify — it must
+  also be **confirmed by abnormal volume** (that day's volume ≥2× the 30-day
+  average — real buying/selling demand, not a thin-volume wobble, since DSE's
+  public data has no order-book depth to check directly) **and a close that
+  backs the direction** (upper half of that day's own high–low range for an
+  up-move, lower half for a down-move — buyers/sellers were still in control
+  at the bell, not just an intraday wick that reversed). A move missing
+  either confirmation is excluded outright, not just down-scored, which is
+  what keeps this list short (typically a couple dozen shares) and directly
+  actionable instead of listing every small daily wiggle. Each qualifying
+  spike gets a 0–100 **continuation score** — the chance the move keeps
+  going in its own direction: volume backing 25%, room to run (circuit
+  distance, RSI, resistance/support headroom) 20%, trend backdrop 20%, a real
+  catalyst from the announcement/AGM data (direction-appropriate:
   dividend/results/record date support an up-move continuing, auditor
   concerns/exchange queries support a down-move continuing) 20%, and the
   share's own signal follow-through history 15% — with an outlook badge
