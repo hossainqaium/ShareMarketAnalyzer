@@ -166,17 +166,24 @@ picks below the fold.
   accumulation-only, cap size), a **CSV export** button (downloads exactly
   the currently filtered/sorted view), and **saved filter presets** (name,
   save, load, delete — stored in this browser only).
-- **Spike** — two kinds of alert, filterable in one tab. **⚡ Spikes**: shares
-  that suddenly jumped **3%+ this session**, vs yesterday's close and vs the
-  session open (clicking Update Data during trading hours makes this "right
-  now vs the start of the day", since live prices are fetched). Each spike
-  gets a 0–100 **continuation score** — the chance the rise keeps going:
-  volume backing 25%, room to run (circuit distance, RSI, resistance
-  headroom) 20%, trend backdrop 20%, real catalyst from the announcement/AGM
-  data (dividend, results, board meeting, record date; exchange queries count
-  *against*) 20%, and the share's own signal follow-through history 15% —
-  with an outlook badge (Likely to continue / Mixed / Likely to fade) and
-  honest ⚠ warnings (thin volume, no news, overbought, at the circuit).
+- **Spike** — two kinds of alert, each its own sub-tab. Both are sorted by
+  **how recently it happened** — today first, then 1 day ago, 2 days ago and
+  so on out to a 5-session lookback — with same-day ties broken by price
+  (highest first), and every row marked **▲ up** or **▼ down**.
+  **⚡ Spikes**: shares that suddenly moved **3%+ in either direction**,
+  today or within the last 5 sessions, vs yesterday's close and vs the
+  session open (clicking Update Data during trading hours makes "today"
+  compare "right now" against the start of the day, since live prices are
+  fetched). Each spike gets a 0–100 **continuation score** — the chance the
+  move keeps going in its own direction: volume backing 25%, room to run
+  (circuit distance, RSI, resistance/support headroom) 20%, trend backdrop
+  20%, a real catalyst from the announcement/AGM data (direction-appropriate:
+  dividend/results/record date support an up-move continuing, auditor
+  concerns/exchange queries support a down-move continuing) 20%, and the
+  share's own signal follow-through history 15% — with an outlook badge
+  (up: Likely to continue / Mixed / Likely to fade; down: Likely to continue
+  falling / Mixed / Likely to bounce) and honest ⚠ warnings (thin volume, no
+  news, overbought/oversold, at the circuit).
   **📐 Trend Breaks**: shares that held a clean uptrend, downtrend, or tight
   sideways range for a long time (the longest of 3/4.5/6/9/12 months that
   still fits a clean regime — R² ≥ 0.5 for trends, ≤16% band width for a
@@ -187,7 +194,9 @@ picks below the fold.
   confirmation (30%), and MACD/candle/divergence agreement (30%); labelled
   Breakout/Breakdown (range) or Reversal likely/Early reversal (trend).
   Non-equity and illiquid instruments are excluded — a "breakout" on a bond
-  is noise, not a signal.
+  is noise, not a signal. The **Suggestions** tab shows a compact "today
+  only" summary of both lists (top 6 by score, with a link to the full
+  sortable tab) right after the Top 20 table.
 - **⚡ High Profit** — exceptional setups for high profit in 1–2 months, found
   by seven aggressive pattern-hunting strategies scanned across every liquid,
   eligible share on each analysis run: **volatility squeeze** (tightest bands
@@ -310,7 +319,16 @@ picks below the fold.
      clicking Update at any moment analyzes today's latest prices — each click
      replaces the previous intraday snapshot, and the official day-end numbers
      automatically replace the snapshot on the first update after the data is
-     posted (tracked in `data/sync_state.json`).
+     posted (tracked in `data/sync_state.json`). The intraday row's own
+     "close" field is a stale snapshot on DSE's live page (it can lag the
+     true last-traded price by a meaningful margin mid-session) and is
+     deliberately dropped rather than trusted, so every module downstream —
+     Suggestions, ⚡ High Profit, Spike, Margin, Compare, the detail view,
+     Portfolio — reads the real **LTP (Last Traded Price)** as "today's
+     price" until the official close is posted. Completed trading days are
+     unaffected: the exchange's official CloseP (not just the final tick)
+     stays authoritative there, since it's computed via DSE's own
+     methodology and is the correct historical reference.
   3. The official Market Update snapshot (DSEX/DS30/etc, turnover, breadth).
   4. **Company announcements** (`old_news.php`) since the last sync — see below.
   5. **AGM/EGM & record-date PDF** (`Company_AGM_EGM.pdf`) — re-downloaded and

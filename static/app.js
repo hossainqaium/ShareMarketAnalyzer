@@ -10,7 +10,7 @@ const state = {
   priceChartType: "line", chartsChartType: "line",
   chartZoom: null, chartZoomPreset: "all", chartDragging: false,
   mgView: "lower", mgSearch: "", mgRange: "3m",
-  spSearch: "", spKind: "",
+  spSearch: "", spView: "spikes",
   agmData: null, agmSearch: "",
   portfolio: null,
   detail: null, // cached /api/history payload for the open modal
@@ -173,6 +173,7 @@ const GLOSSARY = {
   "flag:category-change-news": { t: "category-change-news", en: "This company's DSE category (A/B/N/Z) recently changed — check which direction, as it affects dividend eligibility and risk perception.", bn: "কোম্পানির DSE ক্যাটাগরি (A/B/N/Z) সম্প্রতি পরিবর্তিত হয়েছে — কোন দিকে পরিবর্তন হয়েছে দেখে নিন, এটি লভ্যাংশ যোগ্যতা ও ঝুঁকিকে প্রভাবিত করে।" },
   "flag:top-of-range": { t: "top-of-range", en: "Trading in the top quarter of its 2-year range with a meaningful fall score — the Margin analysis sees this as a profit-taking zone, not an entry zone. Blocks a Strong Buy verdict.", bn: "২ বছরের সীমার উপরের ২৫%-এ আছে এবং পতনের স্কোর উল্লেখযোগ্য — Margin বিশ্লেষণ একে মুনাফা তোলার জায়গা মনে করে, ঢোকার নয়। Strong Buy রায় আটকে দেয়।" },
   "flag:spike-fade-risk": { t: "spike-fade-risk", en: "This share spiked today but the continuation score is low (thin volume / no news / weak trend) — the Spike analysis expects the jump to fade. Don't chase it.", bn: "শেয়ারটি আজ স্পাইক করেছে কিন্তু ধারাবাহিকতা-স্কোর কম (কম ভলিউম / খবর নেই / দুর্বল ট্রেন্ড) — Spike বিশ্লেষণ ধারণা করছে লাফটি মিলিয়ে যাবে। পেছনে ছুটবেন না।" },
+  "flag:spike-down-risk": { t: "spike-down-risk", en: "This share dropped sharply recently and the Spike analysis sees signs the decline continues (volume backing, downtrend context, bad news) — a reason to reassess a holding or avoid buying the dip.", bn: "শেয়ারটি সম্প্রতি ব্যাপক পড়েছে এবং Spike বিশ্লেষণ পতন চলতে থাকার লক্ষণ দেখছে (ভলিউম সমর্থন, নিম্নগতির প্রেক্ষাপট, খারাপ খবর) — হোল্ডিং পুনর্মূল্যায়ন করার বা কমা দামে না কেনার কারণ।" },
   why_col: { t: "Why · কেন", en: "The detailed, data-backed reasons behind this row — trend, relative strength, volume, fundamentals, signal history, record dates, plus cross-checks against today's Spike list and the 2-year Margin extremes. Hover the text itself to read it in Bengali.", bn: "এই সারির পেছনের বিস্তারিত, তথ্যভিত্তিক কারণ — ট্রেন্ড, আপেক্ষিক শক্তি, ভলিউম, মৌলভিত্তি, সংকেতের ইতিহাস, রেকর্ড ডেট, এবং আজকের Spike ও Margin-এর সাথে মিলিয়ে দেখা। লেখাটির উপর মাউস রাখলে বাংলায় পড়া যাবে।" },
   "flag:record-date-soon": { t: "record-date-soon", en: "The dividend record date is within ~20 days — a near-term reason to hold through that date if you want the dividend.", bn: "লভ্যাংশের রেকর্ড ডেট প্রায় ২০ দিনের মধ্যে — লভ্যাংশ পেতে চাইলে ওই তারিখ পর্যন্ত ধরে রাখার একটি কারণ।" },
   "news:dividend": { t: "dividend news", en: "Company announced or disbursed a dividend.", bn: "কোম্পানি লভ্যাংশ ঘোষণা বা বিতরণ করেছে।" },
@@ -246,12 +247,14 @@ const GLOSSARY = {
   pred_price: { t: "AI Pred. price", en: "Labeled \"AI Pred.\" but — to be precise — the method is a deterministic statistical projection (drift from recent momentum + a damped seasonal shape from the last year) anchored to today's price, not a trained machine-learning model, and not a promise. Same inputs always produce the same output. See Pred. accuracy under Report card for real graded results, and the AI Prediction Chart tab for the full 6-month curve.", bn: "লেবেলে \"AI Pred.\" লেখা থাকলেও পদ্ধতিটি একটি নির্ধারক পরিসংখ্যানগত প্রক্ষেপণ (সাম্প্রতিক গতির প্রবণতা + গত বছরের ঋতুভিত্তিক আকৃতি) আজকের দামের ভিত্তিতে — প্রশিক্ষিত মেশিন-লার্নিং মডেল নয়, প্রতিশ্রুতিও নয়। একই তথ্যে সবসময় একই ফল আসে। প্রকৃত গ্রেড করা ফলাফলের জন্য Report card-এর নিচে Pred. accuracy দেখুন, আর পূর্ণ ৬ মাসের রেখার জন্য AI Prediction Chart ট্যাব দেখুন।" },
   chart_zoom: { t: "Zoom", en: "1M/3M/6M/1Y/All jump to a preset window (defaults to All — the full price history). Scroll the mouse wheel over the chart to zoom in/out around the cursor; click and drag to pan left/right through history. Manual zoom/pan deselects the preset buttons; click one again to snap back. Volume and RSI below scroll in sync.", bn: "1M/3M/6M/1Y/All প্রি-সেট সময়সীমায় লাফ দেয় (ডিফল্ট All — সম্পূর্ণ দামের ইতিহাস)। চার্টের উপর মাউস হুইল স্ক্রল করলে কার্সারকে কেন্দ্র করে জুম ইন/আউট হয়; ক্লিক করে টেনে ধরলে বাম/ডানে ইতিহাসে চলাচল করা যায়। ম্যানুয়াল জুম/প্যান প্রিসেট বাটন থেকে সরিয়ে দেয়; আবার ক্লিক করলে ফিরে আসে। নিচের Volume ও RSI একসাথে স্ক্রল হয়।" },
   sector_bar_chart: { t: "Sector performance chart", en: "Average 1-month return per sector as horizontal bars growing from zero — green bars (sectors moving up) vs red bars (moving down) make sector rotation visible at a glance, sorted strongest-to-weakest. Hover a bar for its 1w/3m returns and breadth too.", bn: "প্রতিটি খাতের গড় ১ মাসের রিটার্ন অনুভূমিক বার আকারে, শূন্য থেকে বাড়ে — সবুজ বার (বাড়ছে) বনাম লাল বার (কমছে) থেকে সেক্টর রোটেশন এক নজরে বোঝা যায়, শক্তিশালী থেকে দুর্বল ক্রমে সাজানো। বারে মাউস রাখলে ১ সপ্তাহ/৩ মাসের রিটার্ন ও ব্রেডথও দেখা যাবে।" },
-  spike_tab: { t: "Spike & Trend Break", en: "Two kinds of alert. ⚡ Spike: shares that suddenly rose 3%+ today — vs yesterday's close (Δ vs yesterday) or vs the session open (Δ since open); Update Data during trading hours fetches live prices, so the comparison is 'right now vs the start of the day'. 📐 Trend Break: shares that held a clean uptrend, downtrend, or tight sideways range for a long time (up to a year) and have just broken that established pattern in the last few sessions — flagged even without a big single-day % move, since the alert here is 'the character of the price action changed', not 'it moved a lot today'. Both get a 0–100 score weighing volume, trend, catalysts and (for spikes) this share's own follow-through history.", bn: "দুই ধরনের সতর্কতা। ⚡ Spike: আজ হঠাৎ ৩%+ বেড়ে যাওয়া শেয়ার — গতকালের ক্লোজ বা আজকের শুরুর দামের তুলনায়; লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। 📐 Trend Break: যে শেয়ার দীর্ঘদিন (এক বছর পর্যন্ত) পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে — বড় একদিনের লাফ ছাড়াই চিহ্নিত হয়, কারণ এখানে সতর্কতা হলো 'দামের চরিত্র বদলেছে', 'আজ অনেক বেড়েছে' নয়। উভয়ই ভলিউম, ট্রেন্ড ও উপলক্ষ মিলিয়ে ০–১০০ স্কোর পায়।" },
+  spike_tab: { t: "Spike & Trend Break", en: "Two kinds of alert, each its own sub-tab, both sorted by how recently it happened (today first; same day, sorted by price). ⚡ Spike: shares that suddenly moved 3%+ — up ▲ or down ▼ — today or within the last few sessions; Update Data during trading hours fetches live prices, so 'today' compares right now against the start of the day. 📐 Trend Break: shares that held a clean uptrend, downtrend, or tight sideways range for a long time (up to a year) and have just broken that established pattern in the last few sessions — flagged even without a big single-day % move, since the alert here is 'the character of the price action changed'. Both get a 0–100 score weighing volume, trend, catalysts and (for spikes) this share's own follow-through history.", bn: "দুই ধরনের সতর্কতা, প্রতিটির নিজস্ব সাব-ট্যাব, উভয়ই কতদিন আগে ঘটেছে তা অনুযায়ী সাজানো (আজকেরটি আগে; একই দিনে দাম অনুযায়ী)। ⚡ Spike: আজ বা গত কয়েক সেশনে হঠাৎ ৩%+ ওঠা ▲ বা নামা ▼ শেয়ার; লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। 📐 Trend Break: যে শেয়ার দীর্ঘদিন (এক বছর পর্যন্ত) পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে। উভয়ই ভলিউম, ট্রেন্ড ও উপলক্ষ মিলিয়ে ০–১০০ স্কোর পায়।" },
   day_change: { t: "Δ vs yesterday", en: "Today's price change vs yesterday's closing price (YCP). The DSE daily circuit limit is ±10%, so 3%+ is a genuine jolt.", bn: "গতকালের ক্লোজিং দামের তুলনায় আজকের পরিবর্তন। DSE-র দৈনিক সীমা ±১০%, তাই ৩%+ মানে সত্যিকারের ঝাঁকুনি।" },
   intraday_change: { t: "Δ since open", en: "Price change from today's opening price to the latest price — during trading hours this is the move from the session start to right now (refresh with Update Data).", bn: "আজকের শুরুর দাম থেকে সর্বশেষ দামের পরিবর্তন — লেনদেন চলাকালে এটি দিনের শুরু থেকে এই মুহূর্ত পর্যন্ত ওঠানামা (Update Data চাপলে হালনাগাদ)।" },
   vol_today: { t: "Today's volume ratio", en: "Today's traded volume ÷ the 30-day average. A spike on 2×+ volume has real money behind it; a spike on thin volume is usually a trap.", bn: "আজকের লেনদেন ÷ ৩০ দিনের গড়। ২ গুণের বেশি ভলিউমে স্পাইক মানে সত্যিকারের টাকা ঢুকছে; কম ভলিউমের স্পাইক সাধারণত ফাঁদ।" },
-  spike_score: { t: "Continuation score", en: "0–100 chance today's spike keeps rising: volume backing 25%, room to run (circuit distance, RSI, resistance headroom) 20%, trend backdrop 20%, real catalyst (dividend/results/board meeting/record date; exchange query counts against) 20%, this share's signal follow-through history 15%. 60+ = likely to continue; below 40 = likely to fade. For Trend Breaks the same 0–100 scale instead measures conviction the break is real: how far past the established trend/range (40%), volume confirmation (30%), and agreement from MACD/candles/divergence (30%).", bn: "০–১০০: আজকের স্পাইক চলতে থাকার সম্ভাবনা — ভলিউম ২৫%, বাড়ার জায়গা ২০%, ট্রেন্ড ২০%, প্রকৃত উপলক্ষ ২০%, অতীতের ধারাবাহিকতা ১৫%। ৬০+ = চলার সম্ভাবনা; ৪০-এর নিচে = মিলিয়ে যাওয়ার সম্ভাবনা। Trend Break-এর জন্য একই স্কেল পরিবর্তে ব্রেকটি সত্যি হওয়ার আস্থা মাপে: প্রতিষ্ঠিত ট্রেন্ড/সীমা থেকে কতদূর (৪০%), ভলিউম নিশ্চিতকরণ (৩০%), এবং MACD/ক্যান্ডেল/ডাইভারজেন্সের সমর্থন (৩০%)।" },
-  trend_break: { t: "Pattern (Trend Break)", en: "For ⚡ Spike rows this just confirms the kind. For 📐 Trend Break rows: how many sessions the established regime held, what it was (downtrend/uptrend/range), the exact date span, and which way (▲/▼) it just broke — hover for the full sentence in Bengali.", bn: "⚡ Spike সারিতে এটি শুধু ধরন নিশ্চিত করে। 📐 Trend Break সারিতে: প্রতিষ্ঠিত প্রবণতা কত সেশন ধরে ছিল, কী ছিল (নিম্নমুখী/ঊর্ধ্বমুখী/সীমা), সঠিক তারিখ পরিসীমা, এবং কোন দিকে (▲/▼) তা ভেঙেছে — সম্পূর্ণ বাক্যের জন্য হোভার করুন।" },
+  spike_score: { t: "Continuation score", en: "For Spikes: 0–100 chance the move keeps going in its own direction — volume backing 25%, room to run (circuit distance, RSI, resistance/support headroom) 20%, trend backdrop 20%, real catalyst (dividend/results/board meeting/record date/exchange query — direction-appropriate) 20%, this share's signal follow-through history 15%. Up-spikes: 60+ = likely to continue, below 40 = likely to fade. Down-spikes: 60+ = likely to keep falling, below 40 = likely to bounce. For Trend Breaks the same 0–100 scale instead measures conviction the break is real: how far past the established trend/range (40%), volume confirmation (30%), and agreement from MACD/candles/divergence (30%).", bn: "স্পাইকের জন্য: মুভটি নিজের দিকে চলতে থাকার সম্ভাবনা ০–১০০ — ভলিউম ২৫%, জায়গা ২০%, ট্রেন্ড ২০%, প্রকৃত উপলক্ষ ২০%, অতীতের ধারাবাহিকতা ১৫%। ঊর্ধ্বমুখী স্পাইক: ৬০+ = চলার সম্ভাবনা, ৪০-এর নিচে = মিলিয়ে যাওয়ার সম্ভাবনা। নিম্নমুখী স্পাইক: ৬০+ = পড়তে থাকার সম্ভাবনা, ৪০-এর নিচে = ফিরে আসার সম্ভাবনা। Trend Break-এর জন্য একই স্কেল ব্রেকটি সত্যি হওয়ার আস্থা মাপে।" },
+  trend_break: { t: "Pattern (Trend Break)", en: "How many sessions the established regime held, what it was (downtrend/uptrend/range), the exact date span, and which way (▲/▼) it just broke — hover the chip for the full sentence in Bengali.", bn: "প্রতিষ্ঠিত প্রবণতা কত সেশন ধরে ছিল, কী ছিল (নিম্নমুখী/ঊর্ধ্বমুখী/সীমা), সঠিক তারিখ পরিসীমা, এবং কোন দিকে (▲/▼) তা ভেঙেছে — সম্পূর্ণ বাক্যের জন্য চিপে হোভার করুন।" },
+  days_ago: { t: "Days ago", en: "How many sessions ago this happened — 'Today' at the top, then 1 day ago, 2 days ago, and so on, out to the lookback window. Same day, ties are broken by price (highest first) so the list stays deterministic.", bn: "এটি কতদিন আগে ঘটেছে — 'আজ' সবার উপরে, তারপর ১ দিন আগে, ২ দিন আগে, ইত্যাদি, লুকব্যাক উইন্ডো পর্যন্ত। একই দিনে সমতা হলে দাম অনুযায়ী (বেশি আগে) সাজানো হয় যাতে তালিকা নির্দিষ্ট থাকে।" },
+  spike_direction: { t: "Direction", en: "▲ = an upward jump (buyers pushed the price up), ▼ = a downward drop (sellers pushed it down). Both are alert-worthy — a sudden fall after a long calm period matters just as much as a sudden rise.", bn: "▲ = ঊর্ধ্বমুখী লাফ (ক্রেতারা দাম বাড়িয়েছে), ▼ = নিম্নমুখী পতন (বিক্রেতারা দাম কমিয়েছে)। উভয়ই সতর্কতার যোগ্য — দীর্ঘ শান্ত সময়ের পর হঠাৎ পতনও হঠাৎ উত্থানের মতোই গুরুত্বপূর্ণ।" },
   margin_history: { t: "Margin cycle history", en: "Over this share's own 2-year price range, how many times has it cycled to the bottom 25% ('bottom episode') and top 25% ('top episode'), with exact dates — and of the past COMPLETED episodes, what % actually reverted (bounced from bottoms / corrected from tops) within a month. A share with a high reversion rate is more trustworthy to buy at the bottom or sell at the top than one with no such history; used as extra evidence in the Rise/Fall scores and reasons.", bn: "শেয়ারটির নিজের ২ বছরের দামের সীমায়, এটি কতবার নিচের ২৫% ('bottom episode') ও উপরের ২৫% ('top episode')-এ গেছে, সঠিক তারিখসহ — এবং অতীতের সম্পন্ন এপিসোডগুলোর মধ্যে কত শতাংশ সত্যিই এক মাসের মধ্যে ঘুরে দাঁড়িয়েছে (তলানি থেকে) বা সংশোধিত হয়েছে (চূড়া থেকে)। বেশি reversion rate থাকা শেয়ার তলানিতে কেনা বা চূড়ায় বেচার জন্য বেশি বিশ্বাসযোগ্য; Rise/Fall স্কোর ও কারণে অতিরিক্ত প্রমাণ হিসেবে ব্যবহৃত হয়।" },
   margin_tab: { t: "Margin", en: "Shares trading at the extremes of their own price range over a period you pick (1 month – 2 years, default 3 months). Lower Margin = bottom 25% of that range (candidates to buy before a rise); Higher Margin = top 25% (candidates to sell / avoid before a fall). All six ranges are recomputed on every Update Data; switching the filter is instant.", bn: "আপনার বেছে নেওয়া সময়ের (১ মাস – ২ বছর, ডিফল্ট ৩ মাস) দামের সীমার প্রান্তে থাকা শেয়ার। Lower Margin = সীমার নিচের ২৫% (বাড়ার আগে কেনার প্রার্থী); Higher Margin = উপরের ২৫% (কমার আগে বেচা/এড়ানোর প্রার্থী)। প্রতি Update Data-তে ছয়টি সীমাই নতুন করে হিসাব হয়; ফিল্টার বদলানো তাৎক্ষণিক।" },
   agm_tab: { t: "AGM/EGM/Record", en: "Two tables parsed directly from DSE's own PDFs on every Update Data: the AGM/EGM & Record Date notice (dividend declarations, AGM/EGM meeting dates, and the record date to qualify for the dividend) and the Rights Entitlement notice (rights-share ratio, issue price, record date, and the subscription window to apply). Both are searchable by code, company name or sector, sorted with the nearest upcoming record date first.", bn: "প্রতি Update Data-তে DSE-এর নিজস্ব পিডিএফ থেকে সরাসরি সংগ্রহ করা দুটি টেবিল: AGM/EGM ও রেকর্ড ডেট নোটিশ (লভ্যাংশ ঘোষণা, সভার তারিখ, যোগ্যতার রেকর্ড ডেট) এবং রাইট শেয়ার নোটিশ (অনুপাত, ইস্যু মূল্য, রেকর্ড ডেট, আবেদনের সময়সীমা)। দুটোই কোড, কোম্পানির নাম বা সেক্টর দিয়ে খোঁজা যায়, নিকটতম রেকর্ড ডেট আগে দেখানো হয়।" },
@@ -644,7 +647,7 @@ function activateTab(tabName) {
   lastTabInGroup[group] = tabName;
   document.querySelectorAll(".tab-groups button").forEach((x) =>
     x.classList.toggle("active", x.dataset.group === group));
-  document.querySelectorAll("nav.tabs[data-group-tabs]").forEach((nav) =>
+  document.querySelectorAll("[data-group-tabs]").forEach((nav) =>
     nav.classList.toggle("hidden", nav.dataset.groupTabs !== group));
   document.querySelectorAll(`nav.tabs[data-group-tabs="${group}"] button`).forEach((x) =>
     x.classList.toggle("active", x.dataset.tab === tabName));
@@ -683,6 +686,7 @@ async function loadSummary() {
   renderHighProfit();
   renderMargin();
   renderSpike();
+  renderSpikeSummary();
   renderReportCard();
   renderMarket();
   // portfolio add-form helpers: ticker autocomplete + default date
@@ -1220,47 +1224,60 @@ function renderPredAccuracy(pa) {
       percentage-point gap between predicted and actual move.</div>`;
 }
 
-/* ---------------- spike (sudden risers today) ---------------- */
+/* ---------------- spike (sudden movers) + trend break (regime changes) ---------------- */
 const TREND_BREAK_LABEL_BN = {
   "Breakout": "ব্রেকআউট", "Breakdown": "ব্রেকডাউন",
   "Reversal likely": "ঘুরে দাঁড়ানোর সম্ভাবনা", "Early reversal — watch for confirmation": "প্রাথমিক ঘুরে দাঁড়ানো — নিশ্চিতকরণের অপেক্ষা",
 };
-function spikeLabelBadge(s) {
-  if (s.kind === "trend-break") {
-    const cls = s.score >= 55 ? "v-strong" : "v-watch";
-    return `<span class="verdict ${cls}">${s.label}<small>${TREND_BREAK_LABEL_BN[s.label] || ""}</small></span>`;
-  }
-  const cls = s.score >= 60 ? "v-strong" : s.score >= 40 ? "v-watch" : "v-avoid";
-  const bn = s.score >= 60 ? "চলতে পারে" : s.score >= 40 ? "নিশ্চিত হয়ে কিনুন" : "মিলিয়ে যেতে পারে";
-  return `<span class="verdict ${cls}">${s.label}<small>${bn}</small></span>`;
+const SPIKE_LABEL_BN = {
+  "Likely to continue": "চলতে পারে", "Likely to continue falling": "পড়তে থাকতে পারে",
+  "Mixed — wait for confirmation": "নিশ্চিত হয়ে সিদ্ধান্ত নিন", "Likely to fade": "মিলিয়ে যেতে পারে",
+  "Likely to bounce": "ফিরে আসতে পারে",
+};
+function daysAgoLabel(n) { return n === 0 ? "Today" : n === 1 ? "1d ago" : `${n}d ago`; }
+function daysAgoLabelBn(n) { return n === 0 ? "আজ" : `${n} দিন আগে`; }
+function dirArrow(direction) {
+  return `<span class="${direction === "up" ? "pos" : "neg"}">${direction === "up" ? "▲" : "▼"}</span>`;
 }
-function spikePatternCell(s) {
-  if (s.kind !== "trend-break") return `<td class="lft"><span class="chip sig">⚡ Spike</span></td>`;
-  const arrow = s.direction === "up" ? "▲" : "▼";
+function spikeOutlookBadge(s) {
+  const cls = s.score >= 60 ? "v-strong" : s.score >= 40 ? "v-watch" : "v-avoid";
+  return `<span class="verdict ${cls}">${s.label}<small>${SPIKE_LABEL_BN[s.label] || ""}</small></span>`;
+}
+function trendBreakOutlookBadge(s) {
+  const cls = s.score >= 55 ? "v-strong" : "v-watch";
+  return `<span class="verdict ${cls}">${s.label}<small>${TREND_BREAK_LABEL_BN[s.label] || ""}</small></span>`;
+}
+function trendBreakPatternCell(s) {
   const regimeLabel = { downtrend: "downtrend", uptrend: "uptrend", range: "range" }[s.regime] || s.regime;
   const bnLabel = { downtrend: "নিম্নমুখী প্রবণতা", uptrend: "ঊর্ধ্বমুখী প্রবণতা", range: "সীমা" }[s.regime] || "";
-  const detail = `${s.regime_sessions}-session ${regimeLabel} (${s.regime_start} to ${s.regime_end}) broken ` +
-    `${arrow} in the last ${Math.max(s.break_days_ago, 1)} session(s)`;
-  const detailBn = `${s.regime_sessions}-সেশনের ${bnLabel} (${s.regime_start} থেকে ${s.regime_end}) ভেঙেছে ` +
-    `গত ${Math.max(s.break_days_ago, 1)} সেশনে`;
-  return `<td class="lft"><span class="chip sig" data-bn="${escAttr(detailBn)}" title="${detail}">📐 ${s.regime_sessions}d ${regimeLabel} ${arrow}</span></td>`;
+  const detail = `${s.regime_sessions}-session ${regimeLabel} (${s.regime_start} to ${s.regime_end})`;
+  const detailBn = `${s.regime_sessions}-সেশনের ${bnLabel} (${s.regime_start} থেকে ${s.regime_end})`;
+  return `<td class="lft"><span class="chip sig" data-bn="${escAttr(detailBn)}" title="${detail}">${s.regime_sessions}d ${regimeLabel}</span></td>`;
+}
+function spikeFlagsHtml(s) {
+  return (s.flags || [])
+    .filter((f) => ["trading-halt", "audit-concern", "illiquid", "exchange-query", "category-Z"].includes(f))
+    .map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ");
 }
 
 function renderSpike() {
   const sp = state.summary.spike;
   if (!sp) return;
+  const isSpikes = state.spView !== "trend-breaks";
+  $("#spSpikesPanel").classList.toggle("hidden", !isSpikes);
+  $("#spTrendBreaksPanel").classList.toggle("hidden", isSpikes);
+
   const q = (state.spSearch || "").toUpperCase();
-  let rows = sp.spikes || [];
-  if (state.spKind) rows = rows.filter((s) => s.kind === state.spKind);
-  if (q) rows = rows.filter((s) => s.code.includes(q) || (s.sector || "").toUpperCase().includes(q));
-  const nSpike = (sp.spikes || []).filter((s) => s.kind === "spike").length;
-  const nBreak = (sp.spikes || []).filter((s) => s.kind === "trend-break").length;
-  $("#spMeta").textContent = sp.date ? `session ${sp.date} · ${nSpike} spikes (≥${sp.min_pct}%) · ${nBreak} trend breaks` : "";
-  $("#spCount").textContent = `${rows.length} alerts shown`;
-  $("#spTable tbody").innerHTML = rows.map((s, i) => {
-    const flags = (s.flags || [])
-      .filter((f) => ["trading-halt", "audit-concern", "illiquid", "exchange-query", "category-Z"].includes(f))
-      .map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ");
+  const filt = (rows) => q ? rows.filter((s) => s.code.includes(q) || (s.sector || "").toUpperCase().includes(q)) : rows;
+  const spikes = filt(sp.spikes || []);
+  const breaks = filt(sp.trend_breaks || []);
+
+  $("#spMeta").textContent = sp.date ? `session ${sp.date} · last ${sp.lookback} sessions · ≥${sp.min_pct}% either direction` : "";
+  $("#tbMeta").textContent = sp.date ? `session ${sp.date} · last ${sp.lookback} sessions` : "";
+  $("#spCount").textContent = isSpikes ? `${spikes.length} spikes shown` : `${breaks.length} trend breaks shown`;
+
+  $("#spTable tbody").innerHTML = spikes.map((s, i) => {
+    const room = s.direction === "up" ? s.dist_resistance : s.dist_support;
     return `<tr data-code="${s.code}">
       <td>${i + 1}</td>
       <td>${starBtn(s.code)}</td>
@@ -1268,28 +1285,107 @@ function renderSpike() {
       <td class="lft"><b>${s.code}</b></td>
       <td class="lft">${s.sector || "–"}</td>
       <td class="lft">${s.category || "–"}</td>
-      ${spikePatternCell(s)}
-      <td>${ltpYcp(s.price, s.ycp)}</td>
-      <td>${pct(s.day_change)}</td>
-      <td>${pct(s.intraday_change)}</td>
+      <td data-bn="${escAttr(daysAgoLabelBn(s.days_ago))}">${daysAgoLabel(s.days_ago)}</td>
+      <td>${dirArrow(s.direction)}</td>
+      <td class="${s.direction === "up" ? "pos" : "neg"}"><b>${s.change_pct > 0 ? "+" : ""}${fmt(s.change_pct, 1)}%</b></td>
+      <td>${fmt(s.price)}</td>
       <td><b>${fmt(s.vol_today_ratio, 1)}×</b></td>
       <td>${fmt(s.rsi14, 0)}</td>
-      <td>${fmt(s.dist_resistance)}</td>
+      <td>${fmt(room)}</td>
       <td><b class="${s.score >= 60 ? "pos" : ""}">${fmt(s.score, 0)}</b><small style="color:var(--muted)">/100</small></td>
-      <td class="lft">${spikeLabelBadge(s)}</td>
-      <td class="lft why-cell"><small data-bn="${escAttr((s.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(s.why || []).join(" · ")}</small> ${flags}</td>
+      <td class="lft">${spikeOutlookBadge(s)}</td>
+      <td class="lft why-cell"><small data-bn="${escAttr((s.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(s.why || []).join(" · ")}</small> ${spikeFlagsHtml(s)}</td>
     </tr>`;
-  }).join("") || `<tr><td colspan="16" class="loading">No alerts match — check again after the next Update Data.</td></tr>`;
+  }).join("") || `<tr><td colspan="16" class="loading">No spikes in the last ${sp.lookback || 5} sessions — check again after the next Update Data.</td></tr>`;
   wireScreenerTable($("#spTable"));
+
+  $("#tbTable tbody").innerHTML = breaks.map((s, i) => `<tr data-code="${s.code}">
+      <td>${i + 1}</td>
+      <td>${starBtn(s.code)}</td>
+      <td>${compareBtn(s.code)}</td>
+      <td class="lft"><b>${s.code}</b></td>
+      <td class="lft">${s.sector || "–"}</td>
+      <td class="lft">${s.category || "–"}</td>
+      <td data-bn="${escAttr(daysAgoLabelBn(s.days_ago))}">${daysAgoLabel(s.days_ago)}</td>
+      <td>${dirArrow(s.direction)}</td>
+      ${trendBreakPatternCell(s)}
+      <td>${fmt(s.price)}</td>
+      <td><b>${fmt(s.vol_today_ratio, 1)}×</b></td>
+      <td>${fmt(s.rsi14, 0)}</td>
+      <td><b class="${s.score >= 55 ? "pos" : ""}">${fmt(s.score, 0)}</b><small style="color:var(--muted)">/100</small></td>
+      <td class="lft">${trendBreakOutlookBadge(s)}</td>
+      <td class="lft why-cell"><small data-bn="${escAttr((s.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(s.why || []).join(" · ")}</small> ${spikeFlagsHtml(s)}</td>
+    </tr>`).join("") || `<tr><td colspan="15" class="loading">No trend breaks in the last ${sp.lookback || 5} sessions — check again after the next Update Data.</td></tr>`;
+  wireScreenerTable($("#tbTable"));
+}
+
+/* Suggestions-tab summary: today's freshest spikes/trend-breaks only (days_ago
+   === 0), ranked by score — a quick pulse, not the full multi-day list. */
+const SUG_SPIKE_SHOW = 6;
+function sugSpikeItem(s) {
+  const cls = s.direction === "up" ? "pos" : "neg";
+  return `<div class="sug-spike-item" data-code="${s.code}">
+    ${starBtn(s.code)}${compareBtn(s.code)}
+    <span class="code">${s.code}</span>
+    <span class="sector">${s.sector || ""}</span>
+    <span class="chg ${cls}">${dirArrow(s.direction)} ${s.change_pct > 0 ? "+" : ""}${fmt(s.change_pct, 1)}%</span>
+    <b class="${s.score >= 60 ? "pos" : ""}">${fmt(s.score, 0)}</b>
+  </div>`;
+}
+function sugBreakItem(s) {
+  const regimeLabel = { downtrend: "downtrend", uptrend: "uptrend", range: "range" }[s.regime] || s.regime;
+  return `<div class="sug-spike-item" data-code="${s.code}">
+    ${starBtn(s.code)}${compareBtn(s.code)}
+    <span class="code">${s.code}</span>
+    <span class="sector">${s.sector || ""}</span>
+    <span class="chip sig pattern-chip">${dirArrow(s.direction)} ${s.regime_sessions}d ${regimeLabel}</span>
+    <b class="${s.score >= 55 ? "pos" : ""}">${fmt(s.score, 0)}</b>
+  </div>`;
+}
+function wireSugSpikeItems(container, view) {
+  container.querySelectorAll(".sug-spike-item").forEach((el) =>
+    el.addEventListener("click", () => openDetail(el.dataset.code)));
+  wireStarButtons(container);
+  wireCompareButtons(container);
+  const more = container.querySelector(".sug-spike-more");
+  if (more) more.addEventListener("click", () => {
+    activateTab("spike");
+    state.spView = view;
+    $("#spViewSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x.dataset.view === view));
+    renderSpike();
+  });
+}
+function renderSpikeSummary() {
+  const sp = state.summary.spike;
+  if (!sp) return;
+  const todaySpikes = (sp.spikes || []).filter((s) => s.days_ago === 0).sort((a, b) => b.score - a.score);
+  const todayBreaks = (sp.trend_breaks || []).filter((s) => s.days_ago === 0).sort((a, b) => b.score - a.score);
+  $("#sugSpikeMeta").textContent = sp.date ? `session ${sp.date}` : "";
+
+  const spikesBody = $("#sugSpikesBody");
+  spikesBody.innerHTML = todaySpikes.slice(0, SUG_SPIKE_SHOW).map(sugSpikeItem).join("") ||
+    `<div class="axis-note" style="padding:7px 0">No spikes today yet — check the Spike tab for recent days.</div>`;
+  if (todaySpikes.length > SUG_SPIKE_SHOW || todaySpikes.length)
+    spikesBody.insertAdjacentHTML("beforeend",
+      `<span class="sug-spike-more">${todaySpikes.length} today · View all in Spike tab →</span>`);
+  wireSugSpikeItems(spikesBody, "spikes");
+
+  const breaksBody = $("#sugBreaksBody");
+  breaksBody.innerHTML = todayBreaks.slice(0, SUG_SPIKE_SHOW).map(sugBreakItem).join("") ||
+    `<div class="axis-note" style="padding:7px 0">No fresh trend breaks today — check the Spike tab for recent days.</div>`;
+  if (todayBreaks.length > SUG_SPIKE_SHOW || todayBreaks.length)
+    breaksBody.insertAdjacentHTML("beforeend",
+      `<span class="sug-spike-more">${todayBreaks.length} today · View all in Spike tab →</span>`);
+  wireSugSpikeItems(breaksBody, "trend-breaks");
 }
 
 $("#spSearch").addEventListener("input", debounce(() => {
   state.spSearch = $("#spSearch").value;
   renderSpike();
 }, 250));
-$("#spKindSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
-  $("#spKindSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
-  state.spKind = b.dataset.kind;
+$("#spViewSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  $("#spViewSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  state.spView = b.dataset.view;
   renderSpike();
 }));
 
@@ -1704,11 +1800,11 @@ function buildCompareInsights(rows, sets) {
         `সবচেয়ে কাছের লভ্যাংশ রেকর্ড ডেট (${withRecord[0].days_to_record_date} দিন বাকি)`);
 
   rows.forEach((r) => {
-    const hard = (r.flags || []).filter((f) => ["trading-halt", "audit-concern", "bearish-divergence", "top-of-range", "spike-fade-risk"].includes(f));
+    const hard = (r.flags || []).filter((f) => ["trading-halt", "audit-concern", "bearish-divergence", "top-of-range", "spike-fade-risk", "spike-down-risk"].includes(f));
     if (hard.length) add(r.code, `⚠ Carries a risk flag here: ${hard.join(", ")} — weigh this against the others`,
         `⚠ এখানে ঝুঁকি-চিহ্ন আছে: ${hard.join(", ")} — বাকিদের সাথে তুলনা করে বিবেচনা করুন`);
-    if (sets.spike.has(r.code)) add(r.code, "Spiking today — check the Spike tab's continuation score before chasing it",
-        "আজ স্পাইক করছে — পেছনে ছোটার আগে Spike ট্যাবের ধারাবাহিকতা-স্কোর দেখুন");
+    if (sets.spike.has(r.code)) add(r.code, "Recently spiked or dropped 3%+ — check the Spike tab's continuation score before acting",
+        "সম্প্রতি ৩%+ স্পাইক বা পতন হয়েছে — সিদ্ধান্তের আগে Spike ট্যাবের ধারাবাহিকতা-স্কোর দেখুন");
     const mg = compareMarginSignal(r.code);
     if (mg?.dir === "higher") add(r.code, `At the top of its 2-year range with a real fall risk (${fmt(mg.score, 0)}/100) — a profit-taking zone, not an entry one`,
         `২ বছরের সীমার চূড়ায়, প্রকৃত পতনের ঝুঁকি (${fmt(mg.score, 0)}/100) — এটি মুনাফা তোলার জায়গা, ঢোকার নয়`);

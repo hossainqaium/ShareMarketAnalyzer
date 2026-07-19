@@ -334,6 +334,10 @@ def portfolio_view():
             alert("spike-fade", "warn",
                   "Spiked today without backing — consider selling into the strength",
                   "আজ সমর্থন ছাড়া স্পাইক করেছে — বাড়তি দামেই বিক্রির কথা ভাবুন")
+        if "spike-down-risk" in flags:
+            alert("spike-down", "bad",
+                  "Dropped hard recently with signs the decline continues — reassess this holding now",
+                  "সম্প্রতি ব্যাপক পড়েছে এবং পতন চলতে থাকার লক্ষণ আছে — এই হোল্ডিং এখনই পুনর্মূল্যায়ন করুন")
         if sessions_held > horizon_s and pnl_pct < TIME_STOP_GAIN:
             alert("time-stop", "warn",
                   f"Time stop: {sessions_held} sessions held (plan was ~{horizon_s}) and still flat — the thesis isn't working",

@@ -174,8 +174,18 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True, codes=None):
                         continue  # not traded in this session
                 except ValueError:
                     continue
-                # OpenP isn't shown intraday; day-end data replaces this row later
-                fresh.append([code, page_date, ltp, high, low, "0", closep, ycp,
+                # OpenP isn't shown intraday; day-end data replaces this row
+                # later. The live page's own "CLOSEP" field is just a stale
+                # intraday snapshot too — it can lag the true LTP by a
+                # meaningful margin mid-session (confirmed: e.g. LTP 202 vs
+                # that field showing 198.4 for the same share/moment) — so it
+                # is deliberately dropped here rather than trusted. Writing it
+                # as "0" makes every downstream reader's existing
+                # CloseP-else-LTP fallback correctly resolve to the real LTP
+                # for this provisional row, while official day-end rows
+                # (where CloseP is the exchange's true computed close, not
+                # just the last tick) are completely unaffected.
+                fresh.append([code, page_date, ltp, high, low, "0", "0", ycp,
                               trade, value_mn, volume])
                 keys.add((code, page_date))
             if fresh:

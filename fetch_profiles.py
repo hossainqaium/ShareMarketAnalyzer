@@ -179,6 +179,10 @@ def parse_profile(html):
         p["holding"] = snaps[-1][1]
     p["_holding_snapshots"] = snaps
     p["_interim_eps"] = iv
+    # full multi-year table (up to ~8 years, all in this one page load) —
+    # only the latest year survives into p[] above; main() persists the rest
+    # into fundamentals_history.json so analysis.py can compute CAGR/growth
+    p["_annual"] = annual
 
     # Latest cash dividend % (first entry like "30% 2025")
     if p.get("cash_dividend"):
@@ -242,6 +246,23 @@ def merge_eps_history(fh, ticker, values):
     entry["eps_interim"] = hist[-EPS_INTERIM_KEEP:]
 
 
+def merge_annual_history(fh, ticker, annual):
+    """Merge the audited annual EPS/NAV/profit table (up to ~8 years, all
+    scraped fresh in one page load) into fundamentals_history.json, keyed by
+    year. Unlike holding/interim-EPS history this doesn't need to accumulate
+    over repeated scrapes — DSE's page already shows the full table — but we
+    merge rather than overwrite so a future partial parse can't drop older
+    years that a past run already captured. Figures are from audited
+    financials, safe to refresh in place if a year's values ever change."""
+    if not annual:
+        return
+    entry = fh.setdefault(ticker, {})
+    by_year = {row["year"]: row for row in entry.get("annual", [])}
+    for y, v in annual.items():
+        by_year[y] = {"year": y, **v}
+    entry["annual"] = [by_year[y] for y in sorted(by_year)]
+
+
 def main():
     cache = load_tickers()
     tickers = cache["tickers"]
@@ -272,9 +293,10 @@ def main():
         try:
             html = fetch(url)
             p = parse_profile(html)
-            snaps, iv = p.pop("_holding_snapshots"), p.pop("_interim_eps")
+            snaps, iv, annual = p.pop("_holding_snapshots"), p.pop("_interim_eps"), p.pop("_annual")
             merge_holding_history(fund_hist, ticker, snaps)
             merge_eps_history(fund_hist, ticker, iv)
+            merge_annual_history(fund_hist, ticker, annual)
             companies[ticker] = p
             print(f"[{i}/{len(todo)}] {ticker}: {p.get('sector')} cat={p.get('category')} "
                   f"nav={p.get('nav_per_share')}")

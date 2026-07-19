@@ -39,6 +39,12 @@
   <button data-tab="agm">AGM/EGM/Record</button>
   <button data-tab="compare">⚖ Compare <span class="muted-count" id="compareBadge"></span></button>
 </nav>
+<div class="decide-legend" data-group-tabs="decide">Start with <b>Suggestions</b> for the best overall picks —
+  <b>High Profit</b>, <b>Spike</b> and <b>Margin</b> surface more specific setups (aggressive, sudden movers,
+  price extremes); <b>AGM/EGM/Record</b> is dividend &amp; rights dates; <b>Compare</b> puts shares you've picked
+  side by side. · সেরা সামগ্রিক পছন্দের জন্য <b>Suggestions</b> দিয়ে শুরু করুন — <b>High Profit</b>, <b>Spike</b> ও
+  <b>Margin</b> আরও নির্দিষ্ট সুযোগ দেখায় (আক্রমণাত্মক, হঠাৎ ওঠা, দামের চরম); <b>AGM/EGM/Record</b> লভ্যাংশ ও রাইট শেয়ারের
+  তারিখ; <b>Compare</b>-এ আপনার বেছে নেওয়া শেয়ারগুলো পাশাপাশি দেখুন।</div>
 <nav class="tabs hidden" data-group-tabs="manage">
   <button data-tab="portfolio" class="active">Portfolio</button>
 </nav>
@@ -93,6 +99,25 @@
           </tr></thead>
           <tbody></tbody>
         </table>
+      </div>
+    </div>
+
+    <div class="panel" id="spikeSummaryPanel">
+      <h2><span class="term" data-term="spike_tab">⚡ Today's Spikes &amp; 📐 Trend Breaks · আজকের স্পাইক ও ট্রেন্ড ব্রেক</span>
+        <small class="muted-count" id="sugSpikeMeta"></small></h2>
+      <div class="sub">A quick pulse of today's sudden movers (▲ up / ▼ down) and freshly broken long-term trends —
+        open the <b>Spike</b> tab (under Decide) for the full multi-day list, sortable and filterable.
+        · আজকের হঠাৎ ওঠা/নামা (▲/▼) ও নতুন ভাঙা দীর্ঘমেয়াদি প্রবণতার সংক্ষিপ্ত চিত্র — সম্পূর্ণ তালিকার জন্য Decide-এর
+        Spike ট্যাব দেখুন।</div>
+      <div class="sug-spike-grid">
+        <div>
+          <h3 class="sug-spike-h">⚡ Spikes today</h3>
+          <div id="sugSpikesBody"></div>
+        </div>
+        <div>
+          <h3 class="sug-spike-h">📐 Trend breaks today</h3>
+          <div id="sugBreaksBody"></div>
+        </div>
       </div>
     </div>
 
@@ -222,43 +247,71 @@
   <!-- ============ SPIKE ============ -->
   <section id="tab-spike" class="hidden">
     <p class="disclaimer"><span class="term" data-term="spike_tab">Two kinds of alert</span>: <b>⚡ Spikes</b> — shares
-      that suddenly jumped 3%+ today vs yesterday's close or the session open — and <b>📐 Trend Breaks</b> — shares
+      that suddenly jumped or dropped 3%+, today or within the last few sessions — and <b>📐 Trend Breaks</b> — shares
       that held a clean uptrend, downtrend, or tight sideways range for a long time and have just broken that pattern
-      in the last few sessions, even without a big single-day jump. Click <b>Update Data</b> during trading hours to
-      compare the price of <i>this moment</i> against the start of the day. Chasing an unexplained move is how money
-      is lost — read the Why column first.
-      · দুই ধরনের সতর্কতা: <b>⚡ Spike</b> — আজ হঠাৎ ৩%+ লাফ দেওয়া শেয়ার — এবং <b>📐 Trend Break</b> — যে শেয়ার দীর্ঘদিন
-      পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ পার্শ্ববর্তী সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে, বড় একদিনের লাফ ছাড়াই।
-      লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দাম দিনের শুরুর সাথে তুলনা হয়। কারণ না জেনে পেছনে ছুটবেন না — আগে
+      in the last few sessions, even without a big single-day jump. Both are sorted by <b>how recently it happened</b>
+      (today first), with same-day ties broken by price. Chasing an unexplained move is how money is lost — read the
+      Why column first.
+      · দুই ধরনের সতর্কতা: <b>⚡ Spike</b> — আজ বা গত কয়েক সেশনে হঠাৎ ৩%+ ওঠা বা নামা শেয়ার — এবং <b>📐 Trend Break</b> —
+      যে শেয়ার দীর্ঘদিন পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ পার্শ্ববর্তী সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে। দুটোই
+      কতদিন আগে ঘটেছে তা অনুযায়ী সাজানো (আজকেরটি আগে), একই দিনের মধ্যে দাম অনুযায়ী। কারণ না জেনে পেছনে ছুটবেন না — আগে
       "কেন" কলামটি পড়ুন।</p>
     <div class="chart-controls">
-      <div class="seg" id="spKindSeg">
-        <button data-kind="" class="active">All</button>
-        <button data-kind="spike">⚡ Spikes</button>
-        <button data-kind="trend-break">📐 Trend Breaks</button>
+      <div class="seg" id="spViewSeg">
+        <button data-view="spikes" class="active">⚡ Spikes</button>
+        <button data-view="trend-breaks">📐 Trend Breaks</button>
       </div>
       <input type="text" id="spSearch" placeholder="Filter by code or sector…">
       <span class="page-info" id="spCount"></span>
     </div>
-    <div class="panel">
-      <h2><span class="term" data-term="spike_tab">▲ Today's alerts · আজকের সতর্কতা</span>
+
+    <div class="panel" id="spSpikesPanel">
+      <h2><span class="term" data-term="spike_tab">⚡ Spikes · স্পাইক</span>
         <small class="muted-count" id="spMeta"></small></h2>
-      <div class="sub">Sorted by <span class="term" data-term="spike_score">score</span> — for spikes, the chance the
-        rise keeps going; for trend breaks, conviction the break is real. 60+ = well backed; below 40 = weak/early.
-        · স্কোর অনুযায়ী সাজানো — স্পাইকের জন্য চলতে থাকার সম্ভাবনা, ট্রেন্ড ব্রেকের জন্য তা সত্যি হওয়ার আস্থা। ৬০+ = সমর্থিত;
-        ৪০-এর নিচে = দুর্বল/প্রাথমিক।</div>
+      <div class="sub">Sorted by <span class="term" data-term="days_ago">how many days ago it spiked</span> (today
+        first); same day, sorted by price. <span class="term" data-term="spike_score">Score</span> = the chance the
+        move continues in its own direction. 60+ = well backed; below 40 = weak/early.
+        · কতদিন আগে স্পাইক হয়েছে তা অনুযায়ী সাজানো (আজকেরটি আগে); একই দিনে দাম অনুযায়ী। স্কোর = মুভটি নিজের দিকে চলতে
+        থাকার সম্ভাবনা। ৬০+ = সমর্থিত; ৪০-এর নিচে = দুর্বল/প্রাথমিক।</div>
       <div class="tbl-wrap tall">
         <table id="spTable">
           <thead><tr>
             <th>#</th><th>★</th><th data-term="compare">⚖</th>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th data-term="days_ago">Days</th>
+            <th data-term="spike_direction">Dir</th>
+            <th data-term="spike_direction">Move</th>
+            <th>Price</th>
+            <th data-term="vol_today">Vol× now</th>
+            <th data-term="rsi">RSI now</th>
+            <th data-term="support">Room%</th>
+            <th data-term="spike_score">Score</th>
+            <th class="lft" data-term="spike_score">Outlook</th>
+            <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="spTrendBreaksPanel">
+      <h2><span class="term" data-term="trend_break">📐 Trend Breaks · ট্রেন্ড ব্রেক</span>
+        <small class="muted-count" id="tbMeta"></small></h2>
+      <div class="sub">Sorted by <span class="term" data-term="days_ago">how many days ago it broke</span> (today
+        first); same day, sorted by price. <span class="term" data-term="spike_score">Score</span> = conviction the
+        break is real, not noise.
+        · কতদিন আগে ব্রেক হয়েছে তা অনুযায়ী সাজানো (আজকেরটি আগে); একই দিনে দাম অনুযায়ী। স্কোর = ব্রেকটি সত্যি হওয়ার আস্থা।</div>
+      <div class="tbl-wrap tall">
+        <table id="tbTable">
+          <thead><tr>
+            <th>#</th><th>★</th><th data-term="compare">⚖</th>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th data-term="days_ago">Days</th>
+            <th data-term="spike_direction">Dir</th>
             <th class="lft" data-term="trend_break">Pattern</th>
-            <th>LTP / YCP</th>
-            <th data-term="day_change">Δ vs yesterday</th>
-            <th data-term="intraday_change">Δ since open</th>
-            <th data-term="vol_today">Vol× today</th>
-            <th data-term="rsi">RSI</th>
-            <th data-term="support">Headroom%</th>
+            <th>Price</th>
+            <th data-term="vol_today">Vol× now</th>
+            <th data-term="rsi">RSI now</th>
             <th data-term="spike_score">Score</th>
             <th class="lft" data-term="spike_score">Outlook</th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>

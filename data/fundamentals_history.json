@@ -291,6 +291,38 @@
      0.34
     ]
    }
+  ],
+  "annual": [
+   {
+    "year": 2021,
+    "eps_co_basic": 5.5,
+    "nav": 162.65,
+    "profit_mn": 347.17
+   },
+   {
+    "year": 2022,
+    "eps_co_basic": 12.3,
+    "nav": 141.98,
+    "profit_mn": 893.0
+   },
+   {
+    "year": 2023,
+    "eps_co_basic": -6.48,
+    "nav": 113.67,
+    "profit_mn": -493.96
+   },
+   {
+    "year": 2024,
+    "eps_co_basic": -18.25,
+    "nav": 91.17,
+    "profit_mn": -1394.67
+   },
+   {
+    "year": 2025,
+    "eps_co_basic": -7.4,
+    "nav": 91.64,
+    "profit_mn": -650.3
+   }
   ]
  },
  "ACIFORMULA": {
@@ -5872,6 +5904,38 @@
      8.2
     ]
    }
+  ],
+  "annual": [
+   {
+    "year": 2021,
+    "eps_co_basic": 15.66,
+    "nav": 68.69,
+    "profit_mn": 489.12
+   },
+   {
+    "year": 2022,
+    "eps_co_basic": 19.39,
+    "nav": 83.36,
+    "profit_mn": 605.67
+   },
+   {
+    "year": 2023,
+    "eps_co_basic": 19.38,
+    "nav": 96.68,
+    "profit_mn": 605.42
+   },
+   {
+    "year": 2024,
+    "eps_co_basic": 21.46,
+    "nav": 111.94,
+    "profit_mn": 670.52
+   },
+   {
+    "year": 2025,
+    "eps_co_basic": 20.27,
+    "nav": 125.69,
+    "profit_mn": 633.19
+   }
   ]
  },
  "IBP": {
@@ -7413,6 +7477,38 @@
     "values": [
      0.97
     ]
+   }
+  ],
+  "annual": [
+   {
+    "year": 2021,
+    "eps_co_basic": 3.34,
+    "nav": 17.04,
+    "profit_mn": 3881.87
+   },
+   {
+    "year": 2022,
+    "eps_co_basic": 3.83,
+    "nav": 15.25,
+    "profit_mn": 4444.54
+   },
+   {
+    "year": 2023,
+    "eps_co_basic": 5.12,
+    "nav": 19.14,
+    "profit_mn": 5942.09
+   },
+   {
+    "year": 2024,
+    "eps_co_basic": 3.29,
+    "nav": 16.01,
+    "profit_mn": 3819.31
+   },
+   {
+    "year": 2025,
+    "eps_co_basic": 4.4,
+    "nav": 16.41,
+    "profit_mn": 5108.44
    }
   ]
  },
@@ -11063,6 +11159,38 @@
      6.47,
      7.11
     ]
+   }
+  ],
+  "annual": [
+   {
+    "year": 2021,
+    "eps_co_basic": 51.94,
+    "nav": 263.85,
+    "profit_mn": 5061.56
+   },
+   {
+    "year": 2022,
+    "eps_co_basic": 47.68,
+    "nav": 274.39,
+    "profit_mn": 5110.92
+   },
+   {
+    "year": 2023,
+    "eps_co_basic": 20.4,
+    "nav": 266.87,
+    "profit_mn": 2339.24
+   },
+   {
+    "year": 2024,
+    "eps_co_basic": 31.53,
+    "nav": 295.56,
+    "profit_mn": 3615.81
+   },
+   {
+    "year": 2025,
+    "eps_co_basic": 19.36,
+    "nav": 305.49,
+    "profit_mn": 2221.01
    }
   ]
  },
