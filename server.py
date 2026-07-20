@@ -152,7 +152,7 @@ def reload_from_disk():
 TRAIL_ATR_MULT = 2.5       # trailing stop = highest close since buy − 2.5×ATR
 BREAKEVEN_TRIGGER = 5.0    # after +5%, the stop never sits below your entry
 TIME_STOP_GAIN = 2.0       # "thesis failed" if below +2% past the horizon
-HORIZON_SESSIONS = {"short": 10, "swing": 25, "long": 42}
+DEFAULT_HORIZON_SESSIONS = 25  # fallback when a holding's ticker has no analysis (delisted/missing)
 
 
 def load_portfolio():
@@ -273,7 +273,7 @@ def portfolio_view():
         qty = h["qty"]
         pnl_pct = (price / h["buy_price"] - 1) * 100 if h["buy_price"] else 0.0
         sessions_held = max(0, len(cs) - 1)
-        horizon_s = HORIZON_SESSIONS.get(m.get("horizon_key") or "swing", 25)
+        horizon_s = m.get("horizon_days") or DEFAULT_HORIZON_SESSIONS
         flags = set(m.get("flags") or [])
 
         # exit engine: static stop / ATR trailing stop / break-even, take the highest

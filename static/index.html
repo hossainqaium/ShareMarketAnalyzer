@@ -36,14 +36,17 @@
   <button data-tab="highprofit">⚡ High Profit</button>
   <button data-tab="spike">Spike</button>
   <button data-tab="margin">Margin</button>
+  <button data-tab="toptx">Today's Top 10 Transaction</button>
   <button data-tab="agm">AGM/EGM/Record</button>
   <button data-tab="compare">⚖ Compare <span class="muted-count" id="compareBadge"></span></button>
 </nav>
 <div class="decide-legend" data-group-tabs="decide">Start with <b>Suggestions</b> for the best overall picks —
   <b>High Profit</b>, <b>Spike</b> and <b>Margin</b> surface more specific setups (aggressive, sudden movers,
-  price extremes); <b>AGM/EGM/Record</b> is dividend &amp; rights dates; <b>Compare</b> puts shares you've picked
+  price extremes); <b>Today's Top 10 Transaction</b> shows today's busiest shares by value, volume and % change;
+  <b>AGM/EGM/Record</b> is dividend &amp; rights dates; <b>Compare</b> puts shares you've picked
   side by side. · সেরা সামগ্রিক পছন্দের জন্য <b>Suggestions</b> দিয়ে শুরু করুন — <b>High Profit</b>, <b>Spike</b> ও
-  <b>Margin</b> আরও নির্দিষ্ট সুযোগ দেখায় (আক্রমণাত্মক, হঠাৎ ওঠা, দামের চরম); <b>AGM/EGM/Record</b> লভ্যাংশ ও রাইট শেয়ারের
+  <b>Margin</b> আরও নির্দিষ্ট সুযোগ দেখায় (আক্রমণাত্মক, হঠাৎ ওঠা, দামের চরম); <b>Today's Top 10 Transaction</b> আজকের
+  সবচেয়ে বেশি লেনদেন হওয়া শেয়ার (মূল্য, ভলিউম, % পরিবর্তন) দেখায়; <b>AGM/EGM/Record</b> লভ্যাংশ ও রাইট শেয়ারের
   তারিখ; <b>Compare</b>-এ আপনার বেছে নেওয়া শেয়ারগুলো পাশাপাশি দেখুন।</div>
 <nav class="tabs hidden" data-group-tabs="manage">
   <button data-tab="portfolio" class="active">Portfolio</button>
@@ -72,14 +75,21 @@
     </div>
 
     <div class="panel top10" id="top10Panel">
-      <h2>Top 20 preferred shares · আজকের সেরা ২০ <span class="term" data-term="composite">ⓘ</span></h2>
-      <div class="sub">Best overall picks across price history, announcements and AGM/EGM record dates —
+      <div class="seg" id="top10HorizonSeg">
+        <button data-h="all" class="active">Top 20 · সব</button>
+        <button data-h="1w_2w">Short Term (1w–2w)</button>
+        <button data-h="2w_1m">Medium Term (2w–1m)</button>
+        <button data-h="1m_3m">Long Term (1m–3m)</button>
+      </div>
+      <h2 id="top10Title">Top 20 preferred shares · আজকের সেরা ২০ <span class="term" data-term="composite">ⓘ</span></h2>
+      <div class="sub" id="top10Sub">Best overall picks across price history, announcements and AGM/EGM record dates —
         cross-checked against today's <b>Spike</b> list and the 2-year <b>Margin</b> extremes (backed spikes and
         bottom-of-range reversals earn a bonus; unbacked spikes and top-of-range shares are penalised). Diversified
         (max 3 per sector), each with a purchase date, holding period, profit target and stop-loss. Hover the Why
         text for বাংলা.
         · দামের ইতিহাস, ঘোষণা ও রেকর্ড ডেটের সাথে আজকের Spike ও ২ বছরের Margin প্রান্তও মিলিয়ে দেখা হয়েছে; প্রতিটির জন্য
         কবে কিনবেন, কত দিন রাখবেন, কোন দামে মুনাফা তুলবেন ও ক্ষতি সীমিত করবেন তা দেখানো হয়েছে। "কেন" লেখায় মাউস রাখলে বাংলা।</div>
+      <div class="page-info" id="top10Meta"></div>
       <div class="tbl-wrap">
         <table id="top10Table">
           <thead><tr>
@@ -158,18 +168,6 @@
       </div>
     </details>
 
-    <div class="sug-wrap">
-      <div class="panel">
-        <h2><span class="term" data-term="score_short">Short-term picks · 1–2 weeks · স্বল্পমেয়াদি</span></h2>
-        <div class="sub"><span class="term" data-term="momentum">momentum 30%</span> · <span class="term" data-term="sma">trend 20%</span> · <span class="term" data-term="vol_ratio">volume surge 20%</span> · <span class="term" data-term="rsi">RSI zone 15%</span> · <span class="term" data-term="macd">MACD 15%</span></div>
-        <div id="shortPicks" class="loading">Loading…</div>
-      </div>
-      <div class="panel">
-        <h2><span class="term" data-term="score_long">Long-term picks · 1–2 months · দীর্ঘমেয়াদি</span></h2>
-        <div class="sub"><span class="term" data-term="sma">trend 25%</span> · <span class="term" data-term="pe">fundamentals 25%</span> · <span class="term" data-term="pos52">52-week position 20%</span> · <span class="term" data-term="volatility">consistency 15%</span> · <span class="term" data-term="momentum">momentum 15%</span></div>
-        <div id="longPicks" class="loading">Loading…</div>
-      </div>
-    </div>
   </section>
 
   <!-- ============ PORTFOLIO ============ -->
@@ -414,6 +412,49 @@
             <th data-term="fall_score">Fall score</th>
             <th class="lft" data-term="turn_date">Could start falling</th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TODAY'S TOP 10 TRANSACTION ============ -->
+  <section id="tab-toptx" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="toptx_tab">Today's busiest shares</span> — the top 10 by
+      traded value (turnover), by share volume, and by size of price move, each with the fundamentals and score
+      needed to judge it, plus a 1-month price chart. This is today's real trading activity, not a pick list —
+      cross-check the Verdict/Score and Why before acting on heavy volume alone.
+      · আজকের সবচেয়ে বেশি লেনদেন হওয়া শেয়ার — লেনদেন মূল্য, শেয়ার সংখ্যা ও দামের পরিবর্তনের আকার অনুযায়ী শীর্ষ ১০টি,
+      প্রতিটির সাথে সিদ্ধান্তের জন্য প্রয়োজনীয় তথ্য ও ১ মাসের চার্ট। এটি আজকের প্রকৃত লেনদেন কার্যকলাপ, পছন্দ তালিকা নয় —
+      শুধু ভলিউমের ভিত্তিতে সিদ্ধান্ত নেওয়ার আগে Verdict/Score ও Why দেখে নিন।</p>
+    <div class="chart-controls">
+      <div class="seg" id="txViewSeg">
+        <button data-view="value" class="active">By Value</button>
+        <button data-view="volume">By Volume</button>
+        <button data-view="change">By % Change</button>
+      </div>
+      <span class="page-info" id="txMeta"></span>
+    </div>
+    <div class="panel">
+      <h2 id="txTitle">💰 Top 10 by traded value · আজকের সর্বোচ্চ লেনদেন</h2>
+      <div class="sub" id="txSub">Sorted by today's traded value (turnover, mn BDT) — the shares moving the most
+        money right now. · আজকের লেনদেন মূল্য (টাকা) অনুযায়ী সাজানো — এই মুহূর্তে সবচেয়ে বেশি টাকা লেনদেন হওয়া শেয়ার।</div>
+      <div class="tbl-wrap tall">
+        <table id="txTable">
+          <thead><tr>
+            <th>#</th><th>★</th><th data-term="compare">⚖</th>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th>LTP / YCP</th>
+            <th data-term="spike_direction">% Chg</th>
+            <th data-term="value_today">Value (mn)</th>
+            <th data-term="volume_today">Volume</th>
+            <th data-term="rsi">RSI</th>
+            <th class="lft" data-term="verdict">Verdict</th>
+            <th data-term="composite">Score</th>
+            <th data-term="target">Target</th>
+            <th data-term="stop">Stop-loss</th>
+            <th>1-Month</th>
           </tr></thead>
           <tbody></tbody>
         </table>

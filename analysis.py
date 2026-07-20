@@ -39,6 +39,56 @@ def clamp(x, lo=0.0, hi=1.0):
     return max(lo, min(hi, x))
 
 
+def _fmt_days(days, bn=False):
+    """Trading-day count -> the most natural unit for its own size: 'd' under
+    9 sessions (~under 2 calendar weeks), 'w' up to 44 sessions (~9 weeks),
+    'm' beyond that. Half-steps allowed for weeks/months so a range's two
+    ends don't round to the same label when they shouldn't."""
+    days = max(1, days)
+    if days <= 9:
+        n = round(days)
+        return f"{n} দিন" if bn else f"{n}d"
+    if days <= 44:
+        n = round(days / 5 * 2) / 2
+        n = int(n) if n == int(n) else n
+        return f"{n} সপ্তাহ" if bn else f"{n}w"
+    n = round(days / 21 * 2) / 2
+    n = int(n) if n == int(n) else n
+    return f"{n} মাস" if bn else f"{n}m"
+
+
+def holding_period(ss, sl, vol):
+    """Continuous holding-period estimate — NOT one of three fixed buckets.
+    `t` (0..1) is how much the short-term score dominates the long-term one;
+    it slides the expected holding window anywhere from a few days (pure
+    momentum) to several months (pure fundamentals/position trade), and a
+    faster-moving share (higher volatility) resolves sooner than a slow one
+    at the same score balance. Returns (horizon_en, horizon_bn, center_days,
+    lo_days, hi_days, target_mult, target_lo, target_hi, stop_mult, stop_lo,
+    stop_hi) — the target/stop bounds are interpolated the same way so they
+    scale smoothly with the horizon instead of jumping between buckets."""
+    gap = ss - sl
+    # normalised against the actual observed spread of ss-sl across the
+    # universe (roughly -45 at the 5th percentile to +35 at the 95th) so most
+    # shares land somewhere IN the continuum instead of pinning at either end
+    t = clamp((gap + 45) / 80)          # 0 = long-term dominant, 1 = short-term dominant
+    center = 5 + (1 - t) * (63 - 5)     # 5 trading days .. 63 trading days (~3 months)
+    vol_factor = clamp(2.5 / (vol or 2.5), 0.75, 1.3)
+    center *= vol_factor
+    lo_days = max(1, center * 0.6)
+    hi_days = max(lo_days + 1, center * 1.5)
+
+    lo_en, hi_en = _fmt_days(lo_days), _fmt_days(hi_days)
+    horizon_en = lo_en if lo_en == hi_en else f"{lo_en}–{hi_en}"
+    lo_bn, hi_bn = _fmt_days(lo_days, bn=True), _fmt_days(hi_days, bn=True)
+    horizon_bn = lo_bn if lo_bn == hi_bn else f"{lo_bn}–{hi_bn}"
+
+    lerp = lambda a, b: a + (1 - t) * (b - a)  # t=1 -> a (short-side value), t=0 -> b (long-side value)
+    return (horizon_en, horizon_bn, center, lo_days, hi_days,
+            lerp(2.5, 5.0), lerp(4, 8), lerp(12, 25),
+            lerp(1.5, 2.5), lerp(2.5, 4), lerp(7, 10))
+
+
 def sma(vals, n):
     if len(vals) < n:
         return None
@@ -619,6 +669,9 @@ def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
 
     liq30 = sma(vals, min(30, len(vals)))
     m["avg_value_mn_30d"] = round(liq30, 2) if liq30 else 0.0
+    m["value_today_mn"] = round(vals[-1], 3) if vals else None
+    m["volume_today"] = int(vols[-1]) if vols else None
+    m["spark_1m"] = [round(c, 2) for c in closes[-22:]]
 
     # today's move vs yesterday's close (YCP) and vs today's open — spike
     # inputs. With the live overlay, "price" is the current intraday price, so
@@ -631,6 +684,12 @@ def analyze_ticker(ticker, rows, profile, pe_map, today, fund_hist=None):
             openp = float(last_raw.get("OpenP") or 0)
         except (ValueError, TypeError):
             pass
+        try:
+            m["trades_today"] = int(float(last_raw.get("Trades") or 0))
+        except (ValueError, TypeError):
+            m["trades_today"] = None
+    else:
+        m["trades_today"] = None
     if ycp <= 0 and len(closes) > 1:
         ycp = closes[-2]
     m["ltp"] = m["price"]  # alias: "price" IS the current/latest traded price
@@ -1047,25 +1106,20 @@ def recommend(m, prof):
         verdict = "Neutral"
 
     ss, sl = m["score_short"], m["score_long"]
-    if ss >= sl + 8:
-        horizon, hz_key = "1–2 weeks", "short"
-        tgt = clamp(2.5 * vol, 4, 12)
-        stp = clamp(1.5 * vol, 2.5, 7)
-    elif sl >= ss + 8:
-        horizon, hz_key = "1–2 months", "long"
-        tgt = clamp(5 * vol, 8, 25)
-        stp = clamp(2.5 * vol, 4, 10)
-    else:
-        horizon, hz_key = "2 weeks – 2 months", "swing"
-        tgt = clamp(4 * vol, 6, 18)
-        stp = clamp(2 * vol, 3, 8)
+    (horizon, horizon_bn, horizon_days, horizon_lo_days, horizon_hi_days,
+     tgt_mult, tgt_lo, tgt_hi, stp_mult, stp_lo, stp_hi) = holding_period(ss, sl, vol)
+    tgt = clamp(tgt_mult * vol, tgt_lo, tgt_hi)
+    stp = clamp(stp_mult * vol, stp_lo, stp_hi)
 
     price = m["price"]
     m["quality"] = round(quality, 1)
     m["composite"] = round(composite, 1)
     m["verdict"] = verdict
     m["horizon"] = horizon
-    m["horizon_key"] = hz_key
+    m["horizon_bn"] = horizon_bn
+    m["horizon_days"] = round(horizon_days)
+    m["horizon_lo_days"] = round(horizon_lo_days)
+    m["horizon_hi_days"] = round(horizon_hi_days)
     m["target_pct"] = round(tgt, 1)
     m["stop_pct"] = round(stp, 1)
     m["target_price"] = round(price * (1 + tgt / 100), 1)
@@ -1197,6 +1251,39 @@ def pick_top(results, n=20, sector_cap=3):
     candidates = sorted(
         (m for m in results.values()
          if m["eligible"] and m["verdict"] in ("Strong Buy", "Buy")),
+        key=lambda m: -m["composite"])
+    picked, per_sector = [], {}
+    for m in candidates:
+        sec = m.get("sector") or "?"
+        if per_sector.get(sec, 0) >= sector_cap:
+            continue
+        per_sector[sec] = per_sector.get(sec, 0) + 1
+        picked.append(m["_code"])
+        if len(picked) == n:
+            break
+    return picked
+
+
+# short-term Top 20 sub-views, in trading days (1w=5, 2w=10, 1m=21, 3m=63 —
+# same conversion as TRADING_DAYS elsewhere in this module)
+HORIZON_BUCKETS = {
+    "1w_2w": (TRADING_DAYS["1w"], TRADING_DAYS["2w"]),
+    "2w_1m": (TRADING_DAYS["2w"], TRADING_DAYS["1m"]),
+    "1m_3m": (TRADING_DAYS["1m"], TRADING_DAYS["3m"]),
+}
+
+
+def pick_top_by_horizon(results, lo_days, hi_days, n=20, sector_cap=3):
+    """Same diversified top-N as pick_top, but restricted to shares whose own
+    suggested hold range (horizon_lo_days..horizon_hi_days) OVERLAPS this
+    window rather than matching it exactly — since every share's range is
+    computed individually and continuously (see holding_period), a share
+    near a boundary can legitimately appear in more than one of these tabs."""
+    candidates = sorted(
+        (m for m in results.values()
+         if m["eligible"] and m["verdict"] in ("Strong Buy", "Buy")
+         and m.get("horizon_lo_days") is not None
+         and m["horizon_lo_days"] <= hi_days and m["horizon_hi_days"] >= lo_days),
         key=lambda m: -m["composite"])
     picked, per_sector = [], {}
     for m in candidates:
@@ -2204,17 +2291,74 @@ def build_spike(results, today):
             "spikes": spikes, "trend_breaks": trend_breaks}
 
 
+TOPTX_N = 10  # rows kept per filter (by value / by volume / by % change)
+
+
+def _toptx_brief(code, m):
+    return {
+        "code": code, "sector": m.get("sector"), "category": m.get("category"),
+        "price": m["price"], "ycp": m.get("ycp"), "day_change": m.get("day_change"),
+        "value_today_mn": m.get("value_today_mn"), "volume_today": m.get("volume_today"),
+        "trades_today": m.get("trades_today"),
+        "verdict": m.get("verdict"), "composite": m.get("composite"),
+        "rsi14": m.get("rsi14"), "vol_ratio": m.get("vol_ratio"), "vol_today_ratio": m.get("vol_today_ratio"),
+        "target_price": m.get("target_price"), "target_pct": m.get("target_pct"),
+        "stop_price": m.get("stop_price"), "stop_pct": m.get("stop_pct"),
+        "eligible": m.get("eligible"), "flags": m.get("flags") or [],
+        "spark_1m": m.get("spark_1m") or [],
+    }
+
+
+def build_today_top(results, market_date, n=TOPTX_N):
+    """Today's busiest shares by turnover, share count and price move — the
+    exchange-wide "what's actually trading right now" view, independent of
+    the pick-list eligibility rules (a thinly-covered mutual fund can still
+    top the volume list). Only shares that actually traded on market_date
+    (volume_today > 0) qualify — a stale/suspended listing can't rank."""
+    candidates = [(code, m) for code, m in results.items()
+                  if m.get("last_date") == market_date and (m.get("volume_today") or 0) > 0
+                  and (m.get("value_today_mn") or 0) > 0]
+
+    by_value = sorted(candidates, key=lambda cm: -(cm[1].get("value_today_mn") or 0))[:n]
+    by_volume = sorted(candidates, key=lambda cm: -(cm[1].get("volume_today") or 0))[:n]
+    by_change = sorted(candidates, key=lambda cm: -abs(cm[1].get("day_change") or 0))[:n]
+
+    return {
+        "date": market_date,
+        "by_value": [_toptx_brief(c, m) for c, m in by_value],
+        "by_volume": [_toptx_brief(c, m) for c, m in by_volume],
+        "by_change": [_toptx_brief(c, m) for c, m in by_change],
+    }
+
+
 # ================= MARKET WISDOM (cross-signal pass) =================
 # Classic market rules layered on the composite before final verdicts:
 # buy low (lower-margin share with reversal evidence), don't chase tops
 # (higher-margin share with fall risk), respect a backed spike, and never
-# chase an unbacked one. Adjusts composite ± and re-derives the verdict.
+# chase an unbacked one — plus a turnover/volume confirmation check against
+# today's actual busiest shares (same lists as Today's Top 10 Transaction).
+# Adjusts composite ± and re-derives the verdict.
+TXN_WISDOM_N = 10  # how many "busiest today" shares count for the turnover/volume check below
+
+
 def apply_market_wisdom(results, spike, margin):
     sp = {s["code"]: s for s in spike["spikes"]}
     # wisdom is anchored to the long view: the 2-year window's extremes
     mt = margin["tickers"]
     lo = {e["code"]: mt[e["code"]] for e in margin["windows"]["2y"]["lower"]}
     hi = {e["code"]: mt[e["code"]] for e in margin["windows"]["2y"]["higher"]}
+
+    # today's real trading activity — same "busiest by value / by volume"
+    # definition as the Today's Top 10 Transaction tab, so a share that tops
+    # both views is recognisably the same share, not two disconnected signals
+    market_date = spike["date"]
+    active = [(code, m) for code, m in results.items()
+              if m.get("last_date") == market_date and (m.get("volume_today") or 0) > 0
+              and (m.get("value_today_mn") or 0) > 0]
+    txn_top_value = {c for c, _ in sorted(active, key=lambda cm: -(cm[1].get("value_today_mn") or 0))[:TXN_WISDOM_N]}
+    txn_top_volume = {c for c, _ in sorted(active, key=lambda cm: -(cm[1].get("volume_today") or 0))[:TXN_WISDOM_N]}
+    txn_top_change = {c for c, _ in sorted(active, key=lambda cm: -abs(cm[1].get("day_change") or 0))[:TXN_WISDOM_N]}
+
     for code, m in results.items():
         adj = 0.0
         notes = []
@@ -2271,6 +2415,43 @@ def apply_market_wisdom(results, spike, margin):
                 f"a profit-taking zone, not an entry zone",
                 f"২ বছরের সীমার চূড়ায়, পতনের ঝুঁকি {h['fall_score']:.0f}/100 — "
                 f"এটি মুনাফা তোলার জায়গা, ঢোকার নয়"))
+
+        # turnover/volume confirmation: today's real busiest-by-value / busiest-
+        # by-volume shares get a small boost when the price also rose (real
+        # capital backing the move) and a matching penalty when it fell (heavy
+        # trading into a falling price looks like distribution, not accumulation)
+        dc = m.get("day_change")
+        in_val, in_vol = code in txn_top_value, code in txn_top_volume
+        if dc is not None and (in_val or in_vol):
+            which = "value AND volume" if (in_val and in_vol) else "value" if in_val else "volume"
+            which_bn = "মূল্য ও ভলিউম" if (in_val and in_vol) else "মূল্য" if in_val else "ভলিউম"
+            bump = 3 if (in_val and in_vol) else 2
+            if dc > 0.5:
+                adj += bump
+                notes.append((
+                    f"Among today's top {TXN_WISDOM_N} busiest shares by {which} WITH the price rising "
+                    f"{dc:+.1f}% — real capital backing the move today, not just history",
+                    f"আজকের সর্বোচ্চ {TXN_WISDOM_N} ব্যস্ত শেয়ারের মধ্যে ({which_bn}), দাম বাড়ছে "
+                    f"{dc:+.1f}% — আজকের প্রকৃত টাকা এই মুভকে সমর্থন করছে"))
+            elif dc < -0.5:
+                adj -= bump
+                m["flags"].append("heavy-volume-selling")
+                notes.append((
+                    f"Among today's top {TXN_WISDOM_N} busiest shares by {which} but the price fell "
+                    f"{dc:.1f}% — heavy trading into a falling price looks like distribution, not accumulation",
+                    f"আজকের সর্বোচ্চ {TXN_WISDOM_N} ব্যস্ত শেয়ারের মধ্যে ({which_bn}), কিন্তু দাম কমেছে "
+                    f"{dc:.1f}% — পতনের মধ্যে ভারী লেনদেন সঞ্চয় নয়, বিতরণের লক্ষণ"))
+        # a top-10 same-day mover that the stricter Spike gate did NOT confirm
+        # (missed the volume-ratio or close-position check) — informational
+        # only, no composite change, so this can't be gamed by chasing noise
+        rs = m.get("recent_spike")
+        if code in txn_top_change and not (rs and rs.get("days_ago") == 0) and dc is not None:
+            notes.append((
+                f"One of today's biggest movers ({dc:+.1f}%) but NOT confirmed by volume/close position — "
+                f"treat with caution, don't chase an unconfirmed move",
+                f"আজকের সবচেয়ে বড় ওঠানামার একটি ({dc:+.1f}%) কিন্তু ভলিউম/ক্লোজ পজিশন দ্বারা "
+                f"নিশ্চিত নয় — সতর্ক থাকুন, অনিশ্চিত মুভের পেছনে ছুটবেন না"))
+
         m["wisdom"] = notes
         if adj:
             m["composite"] = round(clamp(m["composite"] + adj, 0, 100), 1)
@@ -2663,7 +2844,11 @@ def run_analysis():
         buy_plan(m, today)
         m["why"], m["why_bn"] = build_pick_why(m)
 
+    top_transactions = build_today_top(results, spike["date"])
+
     top20 = pick_top(results, n=20, sector_cap=3)
+    top20_by_horizon = {key: pick_top_by_horizon(results, lo, hi, n=20, sector_cap=3)
+                        for key, (lo, hi) in HORIZON_BUCKETS.items()}
 
     # 1w/1m predicted price for every share (not just Top 20 — the AI
     # Prediction Chart tab lists the full universe), read from forecast.py's
@@ -2817,9 +3002,11 @@ def run_analysis():
         "overview": overview,
         "market": market,
         "top20": top20,
+        "top20_by_horizon": top20_by_horizon,
         "high_profit": high_profit,
         "margin": margin,
         "spike": spike,
+        "top_transactions": top_transactions,
         "report_card": report_card,
         "seasonality": seasonality,
         "sectors": sectors,
