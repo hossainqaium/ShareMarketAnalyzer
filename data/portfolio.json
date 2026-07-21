@@ -1,12 +1,22 @@
 {
  "holdings": [
   {
+   "id": "1784620261617",
+   "code": "ORIONINFU",
+   "qty": 50,
+   "buy_price": 293.0,
+   "buy_date": "2026-07-21"
+  }
+ ],
+ "closed": [
+  {
    "id": "1784443663446",
    "code": "APEXFOOT",
    "qty": 992,
    "buy_price": 201.6,
-   "buy_date": "2026-06-21"
+   "buy_date": "2026-06-21",
+   "sell_price": 218.0,
+   "sell_date": "2026-07-21"
   }
- ],
- "closed": []
+ ]
 }

@@ -58,6 +58,27 @@ def clean_closes(rows):
     return closes
 
 
+def naive_forecast(closes, horizon):
+    """Random walk: every future day predicted flat at the last known close.
+    The mandatory baseline — see backtest.py — and also shown next to AI
+    Pred. in the Suggestions table so the app model can be sanity-checked
+    at a glance, not just in the graded Report card."""
+    return [closes[-1]] * horizon
+
+
+def drift_forecast(closes, horizon, lookback=250):
+    """Random walk with drift: extrapolate the trailing average daily
+    log-return in a straight line. The classic textbook time-series
+    baseline, one step up from naive_forecast."""
+    n = len(closes)
+    lb = min(lookback, n - 1)
+    if lb < 20 or closes[-1] <= 0 or closes[-1 - lb] <= 0:
+        return None
+    daily = math.log(closes[-1] / closes[-1 - lb]) / lb
+    last = closes[-1]
+    return [last * math.exp(daily * t) for t in range(1, horizon + 1)]
+
+
 def project(closes, horizon=HORIZON):
     """Deterministic future closes from a share's history (see module doc)."""
     n = len(closes)

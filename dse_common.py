@@ -21,6 +21,11 @@ PE_URL = f"{BASE}/latest_PE.php"
 HOME_URL = f"{BASE}/"
 MARKET_STATS_URL = f"{BASE}/market-statistics.php"
 NEWS_URL = f"{BASE}/old_news.php"
+# amarstock aggregates the same DSE company announcements as a clean server-
+# rendered list. The 7-day page seeds an empty store; the today page is the
+# lightweight incremental poll used on every later fetch.
+AMARSTOCK_7DAY_URL = "https://www.amarstock.com/dse-last-7-days-news"
+AMARSTOCK_TODAY_URL = "https://www.amarstock.com/dse-news"
 AGM_PDF_URL = f"{BASE}/Company_AGM_EGM.pdf"
 RIGHTS_PDF_URL = f"{BASE}/Company_RecordDate_RightsEntitlement.pdf"
 USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
@@ -29,6 +34,7 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT, "data")
 HISTORY_CSV = os.path.join(ROOT, "dse_2y_history.csv")
 POTENTIAL_CSV = os.path.join(ROOT, "potential_dse_6m_history.csv")
+NEWS_CSV = os.path.join(ROOT, "news.csv")
 TICKERS_JSON = os.path.join(DATA_DIR, "tickers.json")
 SYNC_STATE_JSON = os.path.join(DATA_DIR, "sync_state.json")
 MARKET_HISTORY_JSON = os.path.join(DATA_DIR, "market_history.json")
@@ -40,9 +46,13 @@ ANALYSIS_JSON = os.path.join(DATA_DIR, "analysis.json")
 PORTFOLIO_JSON = os.path.join(DATA_DIR, "portfolio.json")
 REC_HISTORY_JSON = os.path.join(DATA_DIR, "rec_history.json")
 FUNDAMENTALS_HISTORY_JSON = os.path.join(DATA_DIR, "fundamentals_history.json")
+BACKTEST_JSON = os.path.join(DATA_DIR, "backtest_results.json")
 
 CSV_HEADER = ["Ticker", "Date", "LTP", "High", "Low", "OpenP", "CloseP", "YCP",
               "Trades", "ValueMn", "Volume"]
+# amarstock news store (fetch_amarstock_news.py). Date is ISO (YYYY-MM-DD);
+# Time24 is 24h HH:MM for sorting; PostedTime keeps the original "01:50 PM".
+NEWS_CSV_HEADER = ["Date", "Time24", "PostedTime", "Code", "Category", "Title", "Text"]
 
 SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
@@ -350,6 +360,20 @@ def load_potential():
                 except (ValueError, KeyError):
                     continue
     return data
+
+
+def load_news():
+    """Read news.csv into a list of dicts, newest first. Empty list if the
+    file doesn't exist yet (before the first news fetch)."""
+    import csv
+    rows = []
+    if not os.path.exists(NEWS_CSV):
+        return rows
+    with open(NEWS_CSV, newline="") as f:
+        for r in csv.DictReader(f):
+            rows.append(r)
+    rows.sort(key=lambda r: (r.get("Date", ""), r.get("Time24", "")), reverse=True)
+    return rows
 
 
 def load_history():

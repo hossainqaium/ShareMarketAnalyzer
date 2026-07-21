@@ -216,6 +216,7 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True, codes=None):
 
     # ---- company announcements (dividends, audit flags, halts, queries...) ----
     announce_added, announce_tickers = 0, 0
+    news_added, news_total = 0, 0
     agm_matched, agm_total = 0, 0
     rights_matched, rights_total = 0, 0
     if codes:
@@ -233,6 +234,15 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True, codes=None):
                 news_start.isoformat(), today.isoformat())
         except Exception as exc:
             progress(f"Announcements fetch failed (non-fatal): {exc}", None)
+
+        # ---- amarstock news feed (news.csv; merged into analysis + News tab) ----
+        progress("Fetching latest DSE news from amarstock...", 94)
+        try:
+            import fetch_amarstock_news
+            ns = fetch_amarstock_news.run_news_fetch(progress=progress)
+            news_added, news_total = ns["added"], ns["total"]
+        except Exception as exc:
+            progress(f"News fetch failed (non-fatal): {exc}", None)
 
         # ---- AGM/EGM & record-date PDF (dividend declarations + record dates) ----
         progress("Fetching AGM/EGM and record-date notices...", 96)
@@ -282,6 +292,8 @@ def run_sync(progress=lambda msg, pct: None, refresh_tickers=True, codes=None):
         "live_time": page_time,
         "announcements_added": announce_added,
         "announcement_tickers": announce_tickers,
+        "news_added": news_added,
+        "news_total": news_total,
         "agm_matched": agm_matched,
         "agm_total": agm_total,
         "rights_matched": rights_matched,

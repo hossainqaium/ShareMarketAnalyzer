@@ -21,10 +21,73 @@ from datetime import date, datetime, timedelta
 from dse_common import (AGM_JSON, ANALYSIS_JSON, ANNOUNCEMENTS_JSON,
                         FUNDAMENTALS_HISTORY_JSON, MARKET_HISTORY_JSON,
                         PROFILES_JSON, REC_HISTORY_JSON, load_history,
-                        load_json, load_potential, load_tickers, save_json)
+                        load_json, load_news, load_potential, load_tickers,
+                        save_json)
+from forecast import drift_forecast
 
 NEWS_LOOKBACK_DAYS = 30
 CRITICAL_NEWS_CATEGORIES = {"trading-halt", "audit-concern"}
+
+# Recent-news categories worth stating in the Why column, highest priority
+# first — one risk line and one catalyst line at most (see build_pick_why).
+NEWS_WHY_RISK = [
+    ("trading-halt", "⚠ Trading halted per a recent exchange notice — do not enter",
+     "⚠ সাম্প্রতিক নোটিশে লেনদেন স্থগিত — ঢুকবেন না"),
+    ("audit-concern", "⚠ Recent audit concern flagged (qualified opinion / going concern) — high risk",
+     "⚠ সাম্প্রতিক নিরীক্ষা উদ্বেগ (qualified opinion / going concern) — উচ্চ ঝুঁকি"),
+    ("exchange-query", "⚠ Exchange queried a recent unusual price move — the rise may be unexplained",
+     "⚠ সাম্প্রতিক অস্বাভাবিক মূল্য পরিবর্তনে এক্সচেঞ্জের প্রশ্ন — উত্থানের ব্যাখ্যা না-ও থাকতে পারে"),
+    ("rights-issue", "Recent rights-issue news — possible dilution; read the terms before buying",
+     "সাম্প্রতিক রাইট-ইস্যু সংবাদ — শেয়ার লঘুকরণ সম্ভব; শর্ত পড়ে কিনুন"),
+    ("category-change", "Recent category-change notice — re-check its trading class",
+     "সাম্প্রতিক ক্যাটাগরি পরিবর্তন নোটিশ — শ্রেণি যাচাই করুন"),
+]
+NEWS_WHY_CATALYST = [
+    ("dividend", "Recent dividend news — a cash-return catalyst",
+     "সাম্প্রতিক লভ্যাংশ সংবাদ — নগদ রিটার্নের উপলক্ষ"),
+    ("financials", "Fresh financial results published recently — a catalyst; read them before acting",
+     "সাম্প্রতিক আর্থিক ফলাফল প্রকাশিত — একটি উপলক্ষ; সিদ্ধান্তের আগে পড়ুন"),
+    ("board-meeting", "Board meeting scheduled recently — often a dividend/results decision ahead",
+     "সাম্প্রতিক বোর্ড মিটিং নির্ধারিত — প্রায়ই লভ্যাংশ/ফলাফলের সিদ্ধান্ত আসন্ন"),
+    ("credit-rating", "Credit-rating result recently published — check it before buying",
+     "সাম্প্রতিক ক্রেডিট-রেটিং ফলাফল প্রকাশিত — কেনার আগে দেখুন"),
+]
+
+# ---- news tilt on the near-term price prediction (AI Pred. 1w/1m) ----
+# A FRESH company headline nudges the short-term prediction: catalysts lift it,
+# risks dampen it. Bounded and applied on top of forecast.py's price-history
+# projection, so a single headline tilts the number without overwhelming the
+# model underneath. Only news inside NEWS_PRED_WINDOW_DAYS counts (old news has
+# already been priced in). Grade its effect over time in the Report card's AI
+# Pred. accuracy; note the walk-forward Backtest still tests the pure price
+# model, since we have no historical news snapshots to replay.
+NEWS_PRED_WINDOW_DAYS = 15
+NEWS_PRED_WEIGHTS = {          # percentage-point tilt per fresh category
+    "trading-halt": -6.0, "audit-concern": -5.0, "exchange-query": -2.0,
+    "rights-issue": -1.5, "suspension": -1.0, "category-change": -1.0,
+    "dividend": 1.5, "financials": 1.5, "board-meeting": 1.0,
+    "credit-rating": 0.5, "resumption": 0.5, "record-date": 1.0,
+}
+NEWS_PRED_CAP_DOWN, NEWS_PRED_CAP_UP = -6.0, 4.0
+# the 1-week prediction reacts to fresh news a little less than the 1-month one:
+# some catalysts (dividends, results) take weeks to play out, while immediate
+# risks still register through the (larger) negative weights above.
+NEWS_PRED_W1_FACTOR = 0.6
+
+
+def news_prediction_tilt(m, today):
+    """Bounded percentage-point tilt applied to a share's 1m price prediction
+    from its fresh news; the 1w tilt is NEWS_PRED_W1_FACTOR of it. 0.0 when the
+    share has no recent decision-relevant news. Reads recent_news + the
+    upcoming dividend record date, both already attached by apply_news_and_agm."""
+    cutoff = (today - timedelta(days=NEWS_PRED_WINDOW_DAYS)).isoformat()
+    cats = {a["category"] for a in (m.get("recent_news") or []) if a["date"] >= cutoff}
+    tilt = sum(NEWS_PRED_WEIGHTS.get(c, 0.0) for c in cats)
+    dtr = m.get("days_to_record_date")
+    if dtr is not None and 0 < dtr <= NEWS_PRED_WINDOW_DAYS and m.get("upcoming_dividend_pct"):
+        tilt += 1.0   # dividend-capture demand supports the price into the record date
+    return max(NEWS_PRED_CAP_DOWN, min(NEWS_PRED_CAP_UP, round(tilt, 2)))
+
 
 MIN_LIQUIDITY_MN = 5.0     # avg daily traded value (mn BDT) to qualify for picks
 TRADING_DAYS = {"1w": 5, "2w": 10, "1m": 21, "2m": 42, "3m": 63, "6m": 126, "1y": 250}
@@ -2331,6 +2394,101 @@ def build_today_top(results, market_date, n=TOPTX_N):
     }
 
 
+# ================= TOMORROW'S FOLLOW-UP (next-session watchlist) =================
+FOLLOWUP_N = 10           # rows kept per side (buy / sale)
+FOLLOWUP_PRED_BONUS = 8   # max points the short-term forecast can add when it agrees
+
+
+def build_followup(results, spike, margin, today, n=FOLLOWUP_N):
+    """The two short watchlists shown in the "Tomorrow's Follow-up" tab.
+
+    Sale side  = the shares whose price is most likely to keep FALLING next
+                 session; Buy side = most likely to keep RISING. This does NOT
+                 invent a new score — it ranks by the strongest of the app's
+                 already-computed directional convictions per share:
+
+      • Buy  : the margin "bottom-of-range turn-up" rise_score (a share sitting
+               at the low end of its range with MACD/RSI/OBV/news evidence that
+               the turn up has started) OR an up-spike's continuation score.
+      • Sale : the margin "top-of-range turn-down" fall_score OR a down-spike's
+               continuation score.
+
+    Whichever signal is stronger sets the conviction and supplies the reasons,
+    so every row is explainable. The 1-week forecast (AI Pred., else drift)
+    only nudges the conviction up to ±FOLLOWUP_PRED_BONUS when it agrees with
+    the direction — it never manufactures a candidate on its own. Only eligible
+    equities qualify (a halted/illiquid share is never a "follow tomorrow").
+
+    These are watch candidates for the next session, NOT guarantees — the same
+    honest caveat as every forecast in this app. See the Backtest section for
+    how well the underlying signals have actually held up on real history."""
+    spike_by_code = {}
+    for s in spike.get("spikes", []):
+        prev = spike_by_code.get(s["code"])
+        if prev is None or s["score"] > prev["score"]:
+            spike_by_code[s["code"]] = s
+    mtk = margin.get("tickers", {})
+
+    def entry(code, m, conviction, source, source_bn, why, why_bn, when):
+        pred = m.get("pred_1w_pct")
+        if pred is None:
+            pred = m.get("drift_1w_pct")
+        return {
+            "code": code, "sector": m.get("sector"), "category": m.get("category"),
+            "price": m["price"], "ycp": m.get("ycp"),
+            "conviction": round(conviction),
+            "source": source, "source_bn": source_bn,
+            "pred_1w_pct": pred, "expected_date": when,
+            "rsi14": m.get("rsi14"), "day_change": m.get("day_change"),
+            "why": (why or [])[:4], "why_bn": (why_bn or [])[:4],
+            "flags": [f for f in (m.get("flags") or [])
+                      if f in ("record-date-soon", "exchange-query", "heavy-volume-selling")],
+        }
+
+    buy, sale = [], []
+    for code, m in results.items():
+        if not m.get("eligible"):
+            continue
+        mt = mtk.get(code, {})
+        sp = spike_by_code.get(code)
+        pred = m.get("pred_1w_pct")
+        if pred is None:
+            pred = m.get("drift_1w_pct")
+
+        # ---- BUY: strongest price-increase conviction ----
+        up = []  # (score, source_en, source_bn, why, why_bn, when)
+        if "rise_score" in mt:
+            up.append((mt["rise_score"], "Bottom-of-range turn-up", "সীমার তলা থেকে ঘুরে দাঁড়ানো",
+                       mt.get("rise_why"), mt.get("rise_why_bn"), mt.get("rise_date")))
+        if sp and sp.get("direction") == "up":
+            up.append((sp["score"], "Up-spike continuation", "ঊর্ধ্বমুখী স্পাইক চলমান",
+                       sp.get("why"), sp.get("why_bn"), None))
+        if up:
+            up.sort(key=lambda p: -p[0])
+            sc, se, sb, why, why_bn, when = up[0]
+            conv = sc + (min(FOLLOWUP_PRED_BONUS, pred) if pred and pred > 0 else 0)
+            buy.append(entry(code, m, min(100, conv), se, sb, why, why_bn, when))
+
+        # ---- SALE: strongest price-decrease conviction ----
+        down = []
+        if "fall_score" in mt:
+            down.append((mt["fall_score"], "Top-of-range turn-down", "সীমার চূড়া থেকে নেমে আসা",
+                         mt.get("fall_why"), mt.get("fall_why_bn"), mt.get("fall_date")))
+        if sp and sp.get("direction") == "down":
+            down.append((sp["score"], "Down-spike continuation", "নিম্নমুখী স্পাইক চলমান",
+                         sp.get("why"), sp.get("why_bn"), None))
+        if down:
+            down.sort(key=lambda p: -p[0])
+            sc, se, sb, why, why_bn, when = down[0]
+            conv = sc + (min(FOLLOWUP_PRED_BONUS, -pred) if pred and pred < 0 else 0)
+            sale.append(entry(code, m, min(100, conv), se, sb, why, why_bn, when))
+
+    buy.sort(key=lambda e: (-e["conviction"], -(e["pred_1w_pct"] or 0)))
+    sale.sort(key=lambda e: (-e["conviction"], (e["pred_1w_pct"] or 0)))
+    return {"date": spike.get("date"), "n": n,
+            "buy": buy[:n], "sale": sale[:n]}
+
+
 # ================= MARKET WISDOM (cross-signal pass) =================
 # Classic market rules layered on the composite before final verdicts:
 # buy low (lower-margin share with reversal evidence), don't chase tops
@@ -2495,6 +2653,19 @@ def build_pick_why(m):
     elif m.get("sma50") and price > m["sma50"]:
         add(f"Medium-term trend intact (above SMA50), {r1m:+.1f}% in 1 month",
             f"মধ্যমেয়াদি প্রবণতা অটুট (SMA50-এর উপরে), ১ মাসে {r1m:+.1f}%")
+    # Fresh company news that changes a buy/sell decision — surfaced high in
+    # the Why so risks and catalysts aren't buried under technicals. One risk
+    # line and one catalyst line at most, each by category priority. Sourced
+    # from the merged news channel (amarstock news.csv + DSE old_news).
+    news_cats = {a["category"] for a in (m.get("recent_news") or [])}
+    for cat, e_, b_ in NEWS_WHY_RISK:
+        if cat in news_cats:
+            add(e_, b_)
+            break
+    for cat, e_, b_ in NEWS_WHY_CATALYST:
+        if cat in news_cats:
+            add(e_, b_)
+            break
     rel = m.get("rel_1m") or 0
     if rel > 2:
         add(f"Beating the market average by {rel:.1f}% over the last month",
@@ -2770,6 +2941,27 @@ def ticker_month_seasonality(dates, closes, month):
     return {"avg_daily": round(total / n, 3), "approx_monthly": round(total / n * 21, 1), "n": n}
 
 
+def merge_news_into_announcements(announcements):
+    """Fold the amarstock news store (news.csv) into the same {ticker: [
+    {date,title,text,category}, ...]} structure the DSE old_news feed uses, so
+    every downstream consumer — apply_news_and_agm, the margin/spike scorers
+    that read recent_news categories, and build_pick_why — sees both sources
+    through one channel with no special-casing. Deduplicated per ticker by
+    (date, title, text); mutates and returns `announcements`."""
+    for r in load_news():
+        ticker = (r.get("Code") or "").strip().upper()
+        cat = r.get("Category")
+        if not ticker or cat in (None, "notice", "nav"):
+            continue
+        entry = {"date": r.get("Date", ""), "title": r.get("Title", ""),
+                 "text": r.get("Text", ""), "category": cat}
+        lst = announcements.setdefault(ticker, [])
+        key = (entry["date"], entry["title"], entry["text"])
+        if not any((e["date"], e["title"], e["text"]) == key for e in lst):
+            lst.append(entry)
+    return announcements
+
+
 def run_analysis():
     tick_cache = load_tickers()
     tickers = tick_cache["tickers"]
@@ -2780,6 +2972,7 @@ def run_analysis():
     history = load_history()
     today = date.today()
     announcements = (load_json(ANNOUNCEMENTS_JSON, {}) or {}).get("by_ticker", {})
+    merge_news_into_announcements(announcements)  # fold in amarstock news.csv
     agm_notices = (load_json(AGM_JSON, {}) or {}).get("by_ticker", {})
 
     results = {}
@@ -2863,13 +3056,41 @@ def run_analysis():
         if fut and len(fut) >= TRADING_DAYS["1m"]:
             pred_1w = fut[TRADING_DAYS["1w"] - 1][1]
             pred_1m = fut[TRADING_DAYS["1m"] - 1][1]
-            m["pred_1w_price"] = pred_1w
-            m["pred_1m_price"] = pred_1m
+            # fold fresh news into the near-term prediction (catalysts lift,
+            # risks dampen) on top of the price-history projection
+            tilt = news_prediction_tilt(m, today)
+            m["pred_news_tilt"] = tilt
+            if tilt:
+                pred_1w = pred_1w * (1 + tilt * NEWS_PRED_W1_FACTOR / 100)
+                pred_1m = pred_1m * (1 + tilt / 100)
+            m["pred_1w_price"] = round(pred_1w, 2)
+            m["pred_1m_price"] = round(pred_1m, 2)
             m["pred_1w_pct"] = round((pred_1w / m["price"] - 1) * 100, 2) if m["price"] else None
             m["pred_1m_pct"] = round((pred_1m / m["price"] - 1) * 100, 2) if m["price"] else None
         else:
             m["pred_1w_price"] = m["pred_1m_price"] = None
             m["pred_1w_pct"] = m["pred_1m_pct"] = None
+            m["pred_news_tilt"] = 0.0
+
+        # Drift (trend-extrapolation) baseline, computed live from the same
+        # closes series — shown next to AI Pred. in the Suggestions table so
+        # a plain straight-line guess is visible alongside the app's model,
+        # not just buried in the Backtest section's graded numbers. See
+        # backtest.py for the honest, walk-forward-graded comparison
+        # (including the naive/flat baseline, which isn't repeated here since
+        # it's always just today's price by definition).
+        _, closes_c = series_cache.get(code, (None, None))
+        base = m["price"]
+        df = drift_forecast(closes_c, TRADING_DAYS["1m"]) if closes_c and len(closes_c) >= 30 and base else None
+        if df:
+            drift_1w, drift_1m = df[TRADING_DAYS["1w"] - 1], df[TRADING_DAYS["1m"] - 1]
+            m["drift_1w_price"] = round(drift_1w, 2)
+            m["drift_1m_price"] = round(drift_1m, 2)
+            m["drift_1w_pct"] = round((drift_1w / base - 1) * 100, 2)
+            m["drift_1m_pct"] = round((drift_1m / base - 1) * 100, 2)
+        else:
+            m["drift_1w_price"] = m["drift_1m_price"] = None
+            m["drift_1w_pct"] = m["drift_1m_pct"] = None
 
     # market breadth (structural, our own dataset — secondary confirmation)
     equities = [m for m in results.values() if "not-equity" not in m["flags"]]
@@ -2997,6 +3218,11 @@ def run_analysis():
         "pct_above_sma200": pct200,
     }
 
+    # tomorrow's follow-up watchlists (built after predictions exist, since the
+    # 1-week forecast nudges the conviction) — reuses the margin rise/fall and
+    # spike-continuation convictions already computed above.
+    followup = build_followup(results, spike, margin, today)
+
     out = {
         "updated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "overview": overview,
@@ -3006,6 +3232,7 @@ def run_analysis():
         "high_profit": high_profit,
         "margin": margin,
         "spike": spike,
+        "followup": followup,
         "top_transactions": top_transactions,
         "report_card": report_card,
         "seasonality": seasonality,

@@ -29,6 +29,7 @@
   <button data-group="decide" class="active" data-term="group_decide">Decide</button>
   <button data-group="manage" data-term="group_manage">Manage</button>
   <button data-group="explore" data-term="group_explore">Explore</button>
+  <button data-group="news" data-term="group_news">📰 News</button>
 </nav>
 
 <nav class="tabs" data-group-tabs="decide">
@@ -36,6 +37,7 @@
   <button data-tab="highprofit">⚡ High Profit</button>
   <button data-tab="spike">Spike</button>
   <button data-tab="margin">Margin</button>
+  <button data-tab="followup">🔭 Tomorrow's Follow-up</button>
   <button data-tab="toptx">Today's Top 10 Transaction</button>
   <button data-tab="agm">AGM/EGM/Record</button>
   <button data-tab="compare">⚖ Compare <span class="muted-count" id="compareBadge"></span></button>
@@ -56,6 +58,9 @@
   <button data-tab="potential">AI Prediction Chart</button>
   <button data-tab="screener">Screener</button>
   <button data-tab="sectors">Sectors</button>
+</nav>
+<nav class="tabs hidden" data-group-tabs="news">
+  <button data-tab="news" class="active">📰 Company News</button>
 </nav>
 
 <main>
@@ -105,6 +110,8 @@
             <th><span class="term" data-term="stop">Stop-loss</span></th>
             <th><span class="term" data-term="pred_price">AI Pred. 1w</span></th>
             <th><span class="term" data-term="pred_price">AI Pred. 1m</span></th>
+            <th><span class="term" data-term="drift_pred">Drift 1w</span></th>
+            <th><span class="term" data-term="drift_pred">Drift 1m</span></th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
           <tbody></tbody>
@@ -164,6 +171,13 @@
         <div id="rcPredWrap" style="margin-top:14px">
           <h3 style="font-size:13.5px;margin-bottom:4px"><span class="term" data-term="pred_accuracy">AI Pred. 1w/1m accuracy — is it worth trusting?</span></h3>
           <div id="rcPredBody"></div>
+        </div>
+        <div id="btWrap" style="margin-top:14px">
+          <h3 style="font-size:13.5px;margin-bottom:4px"><span class="term" data-term="backtest">Backtest — replayed against 2 years of real history · ব্যাকটেস্ট</span>
+            <button id="btRunBtn" style="margin-left:8px;font-size:11px;padding:2px 8px">Run backtest · রান করুন</button>
+            <small class="muted-count" id="btMeta"></small></h3>
+          <div class="progress hidden" id="btBarWrap"><div id="btBar"></div></div>
+          <div id="btBody"></div>
         </div>
       </div>
     </details>
@@ -420,6 +434,49 @@
   </section>
 
   <!-- ============ TODAY'S TOP 10 TRANSACTION ============ -->
+  <!-- ============ TOMORROW'S FOLLOW-UP ============ -->
+  <section id="tab-followup" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="followup_tab">Two short next-session watchlists</span> —
+      <b>📉 Sale Follow-up</b>: the 10 shares most likely to keep <b>falling</b> (watch to sell / avoid), and
+      <b>📈 Buy Follow-up</b>: the 10 most likely to keep <b>rising</b> (watch to buy). Conviction reuses the app's
+      existing signals — a bottom-of-range turn-up or top-of-range turn-down (Margin) or a spike that's still running
+      (Spike) — nudged by the 1-week forecast. These are <b>candidates to watch tomorrow, not guarantees</b>; confirm
+      the move opens in the expected direction before acting, and always keep the stop-loss.
+      · পরের সেশনের দুটি সংক্ষিপ্ত তালিকা — <b>📉 Sale Follow-up</b>: সবচেয়ে বেশি <b>পড়ার</b> সম্ভাবনাযুক্ত ১০টি শেয়ার
+      (বিক্রি/এড়ানোর জন্য নজরে রাখুন), এবং <b>📈 Buy Follow-up</b>: সবচেয়ে বেশি <b>ওঠার</b> সম্ভাবনাযুক্ত ১০টি (কেনার জন্য
+      নজরে রাখুন)। আস্থা অ্যাপের বিদ্যমান সংকেত থেকে — সীমার তলা থেকে ঘুরে দাঁড়ানো বা চূড়া থেকে নেমে আসা (Margin) বা চলমান
+      স্পাইক (Spike) — ১ সপ্তাহের পূর্বাভাস দিয়ে সামান্য সমন্বিত। এগুলো <b>আগামীকাল নজরে রাখার প্রার্থী, নিশ্চয়তা নয়</b>;
+      পদক্ষেপের আগে নিশ্চিত হন ও স্টপ-লস রাখুন।</p>
+    <div class="chart-controls">
+      <div class="seg" id="fuViewSeg">
+        <button data-view="sale" class="active">📉 Sale Follow-up</button>
+        <button data-view="buy">📈 Buy Follow-up</button>
+      </div>
+      <span class="page-info" id="fuMeta"></span>
+    </div>
+    <div class="panel">
+      <h2 id="fuTitle">📉 Sale Follow-up · কাল বিক্রির জন্য নজরে</h2>
+      <div class="sub" id="fuSub"></div>
+      <div class="tbl-wrap tall">
+        <table id="fuTable">
+          <thead><tr>
+            <th>#</th><th>★</th><th data-term="compare">⚖</th>
+            <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th><th class="lft" data-term="category">Cat</th>
+            <th>LTP / YCP</th>
+            <th data-term="spike_direction">% Chg</th>
+            <th data-term="rsi">RSI</th>
+            <th><span class="term" data-term="followup_conviction">Conviction</span></th>
+            <th class="lft"><span class="term" data-term="followup_source">Signal</span></th>
+            <th><span class="term" data-term="pred_price">AI Pred. 1w</span></th>
+            <th class="lft" data-term="followup_when">Expected by</th>
+            <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
   <section id="tab-toptx" class="hidden">
     <p class="disclaimer"><span class="term" data-term="toptx_tab">Today's busiest shares</span> — the top 10 by
       traded value (turnover), by share volume, and by size of price move, each with the fundamentals and score
@@ -726,6 +783,30 @@
         </tr></thead>
         <tbody></tbody>
       </table>
+    </div>
+  </section>
+
+  <!-- ============ COMPANY NEWS ============ -->
+  <section id="tab-news" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="news_tab">DSE company news</span>, newest first, fetched from
+      amarstock and stored locally in <b>news.csv</b>. The first fetch pulls the last 7 days; each later fetch pulls
+      only today's page and stores just the new items. This same feed is folded into the analysis — a fresh dividend,
+      results, board meeting, exchange query, halt or audit concern shows up in a share's <b>Why</b> and shifts its
+      scores. Click <b>News Fetch</b> to pull the latest now, then <b>Update Data</b> to fold it into the analysis.
+      · DSE কোম্পানি সংবাদ, সর্বশেষটি আগে, amarstock থেকে এনে স্থানীয় <b>news.csv</b>-তে সংরক্ষিত। প্রথমবার গত ৭ দিন, এরপর
+      প্রতিবার শুধু আজকের নতুন সংবাদ। এই সংবাদ বিশ্লেষণেও যুক্ত হয় — লভ্যাংশ, ফলাফল, বোর্ড মিটিং, এক্সচেঞ্জ প্রশ্ন, লেনদেন
+      স্থগিত বা নিরীক্ষা উদ্বেগ শেয়ারের <b>Why</b>-তে দেখা যায় ও স্কোর বদলায়। এখন আনতে <b>News Fetch</b>, তারপর বিশ্লেষণে
+      যুক্ত করতে <b>Update Data</b> চাপুন।</p>
+    <div class="chart-controls">
+      <button class="primary" id="btnNewsFetch">News Fetch · সংবাদ আনুন</button>
+      <input type="text" id="newsSearch" placeholder="Filter by code, category, title or text…">
+      <span class="page-info" id="newsMeta"></span>
+      <div class="progress hidden" id="newsBarWrap"><div id="newsBar"></div></div>
+    </div>
+    <div class="panel" id="newsPanel">
+      <h2><span class="term" data-term="news_tab">📰 Company News · কোম্পানি সংবাদ</span>
+        <small class="muted-count" id="newsCount"></small></h2>
+      <div id="newsList"><div class="loading">Loading…</div></div>
     </div>
   </section>
 </main>

@@ -484,3 +484,26 @@ details.overview-toggle > .panel:first-of-type { border-top: 1px solid var(--bor
   background: var(--page); color: var(--ink);
 }
 .mplan.calc select { width: auto; }
+
+/* ---------------- Company News list ---------------- */
+.news-item {
+  display: grid; grid-template-columns: 92px 1fr; gap: 10px;
+  padding: 9px 4px; border-bottom: 1px solid var(--border);
+}
+.news-item:last-child { border-bottom: none; }
+.news-when { color: var(--muted); font-size: 11px; line-height: 1.35; }
+.news-when b { display: block; color: var(--ink); font-size: 11.5px; }
+.news-body h4 { margin: 0 0 2px; font-size: 13px; }
+.news-body p { margin: 3px 0 0; font-size: 12px; color: var(--ink-2); }
+.news-code {
+  font-weight: 700; text-decoration: none; color: var(--accent);
+  margin-right: 6px;
+}
+.news-code.tracked { cursor: pointer; }
+.news-code.untracked { color: var(--muted); }
+.news-cat {
+  display: inline-block; font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .3px; padding: 1px 6px; border-radius: 10px; vertical-align: 1px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent);
+}
+.news-cat.risk { background: color-mix(in srgb, #d64545 18%, transparent); color: #d64545; }

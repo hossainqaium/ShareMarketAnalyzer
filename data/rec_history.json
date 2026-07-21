@@ -865,5 +865,258 @@
     "pred_1m": 50.19
    }
   }
+ },
+ "2026-07-21": {
+  "strong_buy": [
+   "ACI",
+   "APEXFOOT",
+   "BSC",
+   "BSRMLTD",
+   "CONFIDCEM",
+   "CVOPRL",
+   "DBH",
+   "DHAKABANK",
+   "IBNSINA",
+   "KOHINOOR",
+   "PHARMAID",
+   "SANDHANINS",
+   "SONALIPAPR",
+   "TECHNODRUG",
+   "UNITEDINS"
+  ],
+  "buy": [
+   "ACIFORMULA",
+   "ACMELAB",
+   "ADNTEL",
+   "AGNISYSL",
+   "AMANFEED",
+   "ARGONDENIM",
+   "BATBC",
+   "BDCOM",
+   "BEACONPHAR",
+   "BPPL",
+   "BSCPLC",
+   "BSRMSTEEL",
+   "CITYBANK",
+   "CITYGENINS",
+   "DOREENPWR",
+   "DSHGARME",
+   "DUTCHBANGL",
+   "EASTRNLUB",
+   "EGEN",
+   "EHL",
+   "ENVOYTEX",
+   "ETL",
+   "FARCHEM",
+   "FEKDIL",
+   "GENEXIL",
+   "GPHISPAT",
+   "HEIDELBCEM",
+   "HWAWELLTEX",
+   "IBP",
+   "IDLC",
+   "INDEXAGRO",
+   "ITC",
+   "JAMUNAOIL",
+   "KARNAPHULI",
+   "KDSALTD",
+   "LANKABAFIN",
+   "LHB",
+   "LINDEBD",
+   "MAGURAPLEX",
+   "MARICO",
+   "MATINSPINN",
+   "MEGHNAINS",
+   "MIDLANDBNK",
+   "MIRAKHTER",
+   "MJLBD",
+   "MONOSPOOL",
+   "MTB",
+   "NAVANAPHAR",
+   "NCCBANK",
+   "NHFIL",
+   "NPOLYMER",
+   "OLYMPIC",
+   "PADMAOIL",
+   "PENINSULA",
+   "PREMIERCEM",
+   "PRIMEBANK",
+   "PRIMEINSUR",
+   "PTL",
+   "QUASEMIND",
+   "QUEENSOUTH",
+   "RAKCERAMIC",
+   "RANFOUNDRY",
+   "RENATA",
+   "ROBI",
+   "SAIHAMCOT",
+   "SAIHAMTEX",
+   "SALVO",
+   "SAPORTL",
+   "SEAPEARL",
+   "SHAHJABANK",
+   "SHARPIND",
+   "SHASHADNIM",
+   "SILCOPHL",
+   "SILVAPHL",
+   "SIMTEX",
+   "SIPLC",
+   "SONALIANSH",
+   "SOUTHEASTB",
+   "SPCL",
+   "SQUARETEXT",
+   "SQURPHARMA",
+   "SUMITPOWER",
+   "TAMIJTEX",
+   "TOSRIFA",
+   "TRUSTBANK",
+   "UNIONINS",
+   "UNIQUEHRL",
+   "UNITEDFIN",
+   "UPGDCL",
+   "WALTONHIL",
+   "WATACHEM"
+  ],
+  "top20": [
+   "EASTRNLUB",
+   "LANKABAFIN",
+   "BSRMSTEEL",
+   "DUTCHBANGL",
+   "LHB",
+   "CVOPRL",
+   "IDLC",
+   "APEXFOOT",
+   "BSRMLTD",
+   "PHARMAID",
+   "KOHINOOR",
+   "DBH",
+   "MIDLANDBNK",
+   "IBNSINA",
+   "AMANFEED",
+   "CONFIDCEM",
+   "DHAKABANK",
+   "UNITEDINS",
+   "SANDHANINS",
+   "SONALIPAPR"
+  ],
+  "high_profit": [
+   "SALVO",
+   "ITC",
+   "IBP",
+   "APEXSPINN",
+   "KARNAPHULI",
+   "LANKABAFIN",
+   "CITYBANK",
+   "AGNISYSL",
+   "NPOLYMER",
+   "ISNLTD",
+   "SHAHJABANK",
+   "DBH",
+   "FINEFOODS",
+   "SOUTHEASTB",
+   "ACMELAB"
+  ],
+  "pred": {
+   "EASTRNLUB": {
+    "price": 2138.7,
+    "pred_1w": 2210.5,
+    "pred_1m": 2249.1
+   },
+   "LANKABAFIN": {
+    "price": 18.9,
+    "pred_1w": 19.27,
+    "pred_1m": 20.49
+   },
+   "BSRMSTEEL": {
+    "price": 98.5,
+    "pred_1w": 99.53,
+    "pred_1m": 106.39
+   },
+   "DUTCHBANGL": {
+    "price": 49.8,
+    "pred_1w": 50.92,
+    "pred_1m": 53.03
+   },
+   "LHB": {
+    "price": 61.1,
+    "pred_1w": 62.58,
+    "pred_1m": 68.69
+   },
+   "CVOPRL": {
+    "price": 180.6,
+    "pred_1w": 182.06,
+    "pred_1m": 188.34
+   },
+   "IDLC": {
+    "price": 46.5,
+    "pred_1w": 48.51,
+    "pred_1m": 54.6
+   },
+   "APEXFOOT": {
+    "price": 221.4,
+    "pred_1w": 223.7,
+    "pred_1m": 231.98
+   },
+   "BSRMLTD": {
+    "price": 106.8,
+    "pred_1w": 107.93,
+    "pred_1m": 114.65
+   },
+   "PHARMAID": {
+    "price": 624.5,
+    "pred_1w": 633.11,
+    "pred_1m": 678.97
+   },
+   "KOHINOOR": {
+    "price": 532.4,
+    "pred_1w": 534.57,
+    "pred_1m": 542.94
+   },
+   "DBH": {
+    "price": 43.8,
+    "pred_1w": 44.43,
+    "pred_1m": 47.1
+   },
+   "MIDLANDBNK": {
+    "price": 19.5,
+    "pred_1w": 19.47,
+    "pred_1m": 17.55
+   },
+   "IBNSINA": {
+    "price": 323.7,
+    "pred_1w": 325.92,
+    "pred_1m": 334.6
+   },
+   "AMANFEED": {
+    "price": 38.7,
+    "pred_1w": 39.07,
+    "pred_1m": 39.24
+   },
+   "CONFIDCEM": {
+    "price": 70.6,
+    "pred_1w": 71.34,
+    "pred_1m": 74.88
+   },
+   "DHAKABANK": {
+    "price": 12.5,
+    "pred_1w": 12.56,
+    "pred_1m": 13.18
+   },
+   "UNITEDINS": {
+    "price": 50.0,
+    "pred_1w": 51.34,
+    "pred_1m": 54.58
+   },
+   "SANDHANINS": {
+    "price": 28.7,
+    "pred_1w": 29.52,
+    "pred_1m": 32.12
+   },
+   "SONALIPAPR": {
+    "price": 246.3,
+    "pred_1w": 250.56,
+    "pred_1m": 268.46
+   }
+  }
  }
 }

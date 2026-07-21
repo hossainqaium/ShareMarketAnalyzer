@@ -14,9 +14,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import analysis as analysis_mod
 import sync as sync_mod
-from dse_common import (AGM_JSON, ANALYSIS_JSON, PORTFOLIO_JSON,
+from dse_common import (AGM_JSON, ANALYSIS_JSON, BACKTEST_JSON, PORTFOLIO_JSON,
                         PROFILES_JSON, RIGHTS_JSON, ROOT, load_history, load_json,
-                        load_potential, save_json)
+                        load_news, load_potential, save_json)
 
 STATIC_DIR = os.path.join(ROOT, "static")
 
@@ -27,6 +27,8 @@ _state = {
     "potential": None,        # {ticker: [(date, close), ...]} projected future
 
     "update": {"running": False, "message": "", "pct": 0, "done": False, "error": None},
+    "backtest": {"running": False, "message": "", "pct": 0, "done": False, "error": None},
+    "news": {"running": False, "message": "", "pct": 0, "done": False, "error": None},
     "lock": threading.Lock(),
 }
 
@@ -137,6 +139,65 @@ def run_update_job(codes=None):
         st["message"] = f"Fetch failed: {e}"
     finally:
         st["running"] = False
+
+
+def run_backtest_job():
+    st = _state["backtest"]
+    try:
+        def progress(msg, pct):
+            st["message"] = msg
+            if pct is not None:
+                st["pct"] = pct
+        import backtest as backtest_mod
+        result = backtest_mod.run_backtest(progress=progress)
+        st["pct"] = 100
+        st["message"] = (f"Backtest complete: {result['universe']['tickers_used']} shares, "
+                         f"{result['universe']['total_samples']} samples per model.")
+        st["done"] = True
+    except Exception as e:
+        st["error"] = str(e)
+        st["message"] = f"Backtest failed: {e}"
+    finally:
+        st["running"] = False
+
+
+def run_news_job():
+    st = _state["news"]
+    try:
+        def progress(msg, pct):
+            st["message"] = msg
+            if pct is not None:
+                st["pct"] = pct
+        import fetch_amarstock_news
+        summary = fetch_amarstock_news.run_news_fetch(progress=progress)
+        st["pct"] = 100
+        st["message"] = (f"Fetched {summary['source']} news: +{summary['added']} new, "
+                         f"{summary['total']} stored. Click Update Data to fold into analysis.")
+        st["done"] = True
+    except Exception as e:
+        st["error"] = str(e)
+        st["message"] = f"News fetch failed: {e}"
+    finally:
+        st["running"] = False
+
+
+def news_view(limit=300, q=""):
+    """The News tab's list, newest first, from news.csv. Optional case-
+    insensitive filter on code / category / title / text."""
+    rows = load_news()
+    q = (q or "").strip().upper()
+    if q:
+        rows = [r for r in rows if q in (r.get("Code", "") + " " + r.get("Category", "")
+                + " " + r.get("Title", "") + " " + r.get("Text", "")).upper()]
+    total = len(rows)
+    items = [{
+        "date": r.get("Date"), "time": r.get("PostedTime"),
+        "code": r.get("Code"), "category": r.get("Category"),
+        "title": r.get("Title"), "text": r.get("Text"),
+        # is this code in our analysed universe? (so the UI can make it clickable)
+        "tracked": r.get("Code") in get_analysis().get("tickers", {}),
+    } for r in rows[:limit]]
+    return {"total": total, "shown": len(items), "items": items}
 
 
 def reload_from_disk():
@@ -562,6 +623,19 @@ class Handler(BaseHTTPRequestHandler):
         if route == "/api/update/status":
             return self.send_json(_state["update"])
 
+        if route == "/api/backtest":
+            return self.send_json(load_json(BACKTEST_JSON, {}))
+
+        if route == "/api/backtest/status":
+            return self.send_json(_state["backtest"])
+
+        if route == "/api/news":
+            limit = min(1000, int(q.get("limit", 300)))
+            return self.send_json(news_view(limit=limit, q=q.get("q", "")))
+
+        if route == "/api/news/fetch/status":
+            return self.send_json(_state["news"])
+
         if route == "/api/portfolio":
             return self.send_json(portfolio_view())
 
@@ -647,6 +721,24 @@ class Handler(BaseHTTPRequestHandler):
                                 "done": False, "error": None}
             threading.Thread(target=run_update_job, kwargs={"codes": codes}, daemon=True).start()
             return self.send_json({"started": True, "codes": codes})
+
+        if route == "/api/backtest/run":
+            st = _state["backtest"]
+            if st["running"]:
+                return self.send_json({"started": False, "reason": "already running"})
+            _state["backtest"] = {"running": True, "message": "Starting...", "pct": 0,
+                                  "done": False, "error": None}
+            threading.Thread(target=run_backtest_job, daemon=True).start()
+            return self.send_json({"started": True})
+
+        if route == "/api/news/fetch":
+            st = _state["news"]
+            if st["running"]:
+                return self.send_json({"started": False, "reason": "already running"})
+            _state["news"] = {"running": True, "message": "Starting...", "pct": 0,
+                              "done": False, "error": None}
+            threading.Thread(target=run_news_job, daemon=True).start()
+            return self.send_json({"started": True})
 
         if route == "/api/reload":
             reload_from_disk()

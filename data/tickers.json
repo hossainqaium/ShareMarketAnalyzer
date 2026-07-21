@@ -144,6 +144,7 @@
   "GHAIL": "https://www.dsebd.org/displayCompany.php?name=GHAIL",
   "GHCL": "https://www.dsebd.org/displayCompany.php?name=GHCL",
   "GLDNJMF": "https://www.dsebd.org/displayCompany.php?name=GLDNJMF",
+  "GLOBALINS": "https://www.dsebd.org/displayCompany.php?name=GLOBALINS",
   "GOLDENSON": "https://www.dsebd.org/displayCompany.php?name=GOLDENSON",
   "GP": "https://www.dsebd.org/displayCompany.php?name=GP",
   "GPHISPAT": "https://www.dsebd.org/displayCompany.php?name=GPHISPAT",
@@ -181,6 +182,7 @@
   "IPDC": "https://www.dsebd.org/displayCompany.php?name=IPDC",
   "ISLAMIBANK": "https://www.dsebd.org/displayCompany.php?name=ISLAMIBANK",
   "ISLAMICFIN": "https://www.dsebd.org/displayCompany.php?name=ISLAMICFIN",
+  "ISLAMIINS": "https://www.dsebd.org/displayCompany.php?name=ISLAMIINS",
   "ISNLTD": "https://www.dsebd.org/displayCompany.php?name=ISNLTD",
   "ITC": "https://www.dsebd.org/displayCompany.php?name=ITC",
   "JAMUNABANK": "https://www.dsebd.org/displayCompany.php?name=JAMUNABANK",
@@ -262,6 +264,7 @@
   "PADMALIFE": "https://www.dsebd.org/displayCompany.php?name=PADMALIFE",
   "PADMAOIL": "https://www.dsebd.org/displayCompany.php?name=PADMAOIL",
   "PARAMOUNT": "https://www.dsebd.org/displayCompany.php?name=PARAMOUNT",
+  "PBLPBOND": "https://www.dsebd.org/displayCompany.php?name=PBLPBOND",
   "PDL": "https://www.dsebd.org/displayCompany.php?name=PDL",
   "PENINSULA": "https://www.dsebd.org/displayCompany.php?name=PENINSULA",
   "PEOPLESINS": "https://www.dsebd.org/displayCompany.php?name=PEOPLESINS",
@@ -273,6 +276,7 @@
   "PIONEERINS": "https://www.dsebd.org/displayCompany.php?name=PIONEERINS",
   "PLFSL": "https://www.dsebd.org/displayCompany.php?name=PLFSL",
   "POPULAR1MF": "https://www.dsebd.org/displayCompany.php?name=POPULAR1MF",
+  "POPULARLIF": "https://www.dsebd.org/displayCompany.php?name=POPULARLIF",
   "POWERGRID": "https://www.dsebd.org/displayCompany.php?name=POWERGRID",
   "PRAGATIINS": "https://www.dsebd.org/displayCompany.php?name=PRAGATIINS",
   "PRAGATILIF": "https://www.dsebd.org/displayCompany.php?name=PRAGATILIF",
@@ -359,8 +363,9 @@
   "TAKAFULINS": "https://www.dsebd.org/displayCompany.php?name=TAKAFULINS",
   "TALLUSPIN": "https://www.dsebd.org/displayCompany.php?name=TALLUSPIN",
   "TAMIJTEX": "https://www.dsebd.org/displayCompany.php?name=TAMIJTEX",
-  "TB2Y1026": "https://www.dsebd.org/displayCompany.php?name=TB2Y1026",
-  "TB5Y0429": "https://www.dsebd.org/displayCompany.php?name=TB5Y0429",
+  "TB20Y0831": "https://www.dsebd.org/displayCompany.php?name=TB20Y0831",
+  "TB5Y0928": "https://www.dsebd.org/displayCompany.php?name=TB5Y0928",
+  "TB5Y1128": "https://www.dsebd.org/displayCompany.php?name=TB5Y1128",
   "TECHNODRUG": "https://www.dsebd.org/displayCompany.php?name=TECHNODRUG",
   "TILIL": "https://www.dsebd.org/displayCompany.php?name=TILIL",
   "TITASGAS": "https://www.dsebd.org/displayCompany.php?name=TITASGAS",
@@ -389,5 +394,5 @@
   "ZAHINTEX": "https://www.dsebd.org/displayCompany.php?name=ZAHINTEX",
   "ZEALBANGLA": "https://www.dsebd.org/displayCompany.php?name=ZEALBANGLA"
  },
- "fetched_at": "2026-07-20 15:40:22"
+ "fetched_at": "2026-07-21 16:06:31"
 }

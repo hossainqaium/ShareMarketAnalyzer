@@ -704,6 +704,18 @@
     "record_date": "2026-06-04"
    }
   ],
+  "RUPALILIFE": [
+   {
+    "company_name": "Rupali Life Insurance Company Limited",
+    "purpose": "12% Cash Dividend",
+    "dividend_pct": 12.0,
+    "dividend_kind": "cash",
+    "agm_date_text": "24-Sep-26",
+    "agm_date": "2026-09-24",
+    "record_date_text": "20-Aug-26",
+    "record_date": "2026-08-20"
+   }
+  ],
   "SANDHANINS": [
    {
     "company_name": "Sandhani Life Insurance Company Ltd.",
@@ -901,7 +913,7 @@
    "record_date": "2024-06-06"
   }
  ],
- "total_rows": 76,
- "matched_count": 72,
- "fetched_at": "2026-07-20 15:40:27"
+ "total_rows": 77,
+ "matched_count": 73,
+ "fetched_at": "2026-07-21 16:06:33"
 }

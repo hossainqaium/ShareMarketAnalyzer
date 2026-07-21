@@ -240,6 +240,8 @@ const GLOSSARY = {
   group_decide: { t: "Decide", en: "Everything that helps you choose what to buy or watch right now: Suggestions (Top 20 + scored picks), ⚡High Profit (aggressive setups), Spike (sudden movers), and Margin (range-extreme reversal candidates).", bn: "এখন কী কিনবেন বা নজরে রাখবেন তা ঠিক করতে সাহায্য করে এমন সবকিছু: Suggestions, ⚡High Profit, Spike, এবং Margin।" },
   group_manage: { t: "Manage", en: "Your own holdings — the Portfolio tab: trade journal, exit engine, sell alerts, and diversification check.", bn: "আপনার নিজের শেয়ার — Portfolio ট্যাব: লেনদেন খাতা, এক্সিট ইঞ্জিন, বিক্রির সতর্কতা, বৈচিত্র্য পরীক্ষা।" },
   group_explore: { t: "Explore", en: "Tools for digging through the data yourself: Charts, AI Prediction Chart, the full Screener table, and Sectors.", bn: "নিজে তথ্য ঘেঁটে দেখার সরঞ্জাম: Charts, AI Prediction Chart, পূর্ণ Screener টেবিল, এবং Sectors।" },
+  group_news: { t: "News", en: "The live DSE company-news feed (from amarstock, stored in news.csv). The same feed the analysis reads — fresh dividends, results, board meetings, exchange queries, halts and audit concerns flow into each share's Why and scores.", bn: "সরাসরি DSE কোম্পানি সংবাদ (amarstock থেকে, news.csv-তে সংরক্ষিত)। বিশ্লেষণ এই সংবাদই পড়ে — লভ্যাংশ, ফলাফল, বোর্ড মিটিং, এক্সচেঞ্জ প্রশ্ন, লেনদেন স্থগিত ও নিরীক্ষা উদ্বেগ প্রতিটি শেয়ারের Why ও স্কোরে যুক্ত হয়।" },
+  news_tab: { t: "Company News", en: "DSE company announcements, newest first, fetched from amarstock into news.csv. First fetch = last 7 days; later fetches pull only today's page and keep only new items (fast). Categories that matter for a decision — dividend, results (financials), board-meeting, credit-rating, exchange-query, trading-halt, audit-concern — are the same tags the analysis uses, so they also appear in the Why column and adjust scores. A code shown in the app's colour is tracked (click it for the detail view); a greyed code isn't in the analysed universe (e.g. a government bond).", bn: "DSE কোম্পানি ঘোষণা, সর্বশেষটি আগে, amarstock থেকে news.csv-তে আনা। প্রথমবার = গত ৭ দিন; পরে শুধু আজকের নতুন সংবাদ (দ্রুত)। সিদ্ধান্তের জন্য গুরুত্বপূর্ণ ক্যাটাগরি — লভ্যাংশ, ফলাফল, বোর্ড মিটিং, ক্রেডিট রেটিং, এক্সচেঞ্জ প্রশ্ন, লেনদেন স্থগিত, নিরীক্ষা উদ্বেগ — বিশ্লেষণে ব্যবহৃত একই ট্যাগ, তাই Why কলামেও দেখা যায় ও স্কোর বদলায়। অ্যাপের রঙে দেখানো কোড ট্র্যাক করা (ক্লিক করলে বিস্তারিত); ধূসর কোড বিশ্লেষণের বাইরে (যেমন সরকারি বন্ড)।" },
   market_overview_toggle: { t: "Market overview & report card", en: "Click to expand: the official DSEX/DS30/DSES/DSMEX snapshot, turnover, breadth, and the report card grading past recommendations. Collapsed by default to keep the Top 20 and picks front and centre — this is supporting context, not something to check every visit.", bn: "ক্লিক করে বিস্তারিত দেখুন: অফিসিয়াল DSEX/DS30/DSES/DSMEX স্ন্যাপশট, টার্নওভার, ব্রেডথ, এবং অতীত সুপারিশের রিপোর্ট কার্ড। ডিফল্টে সংকুচিত থাকে যাতে Top 20 ও পিকস সামনে থাকে — এটি সহায়ক প্রেক্ষাপট, প্রতিবার দেখার প্রয়োজন নেই।" },
   more_filters: { t: "More filters", en: "Additional Screener filters grouped by theme: Technical (RSI, score, ATR), Fundamental (size, P/NAV, dividend yield, EPS trend), Risk & ownership (liquidity, flags, institutional accumulation), and cross-tab (also appears in Spike/High Profit/Margin).", bn: "থিম অনুযায়ী গোষ্ঠীবদ্ধ অতিরিক্ত Screener ফিল্টার: টেকনিক্যাল, মৌলভিত্তি, ঝুঁকি ও মালিকানা, এবং ক্রস-ট্যাব (অন্য ট্যাবেও আছে কিনা)।" },
   cross_tab_filter: { t: "Also appears in", en: "Filter to shares that also show up in one of the other analysis tabs right now — e.g. a share that's both eligible here AND currently in the Spike list has extra same-day momentum confirmation.", bn: "যেসব শেয়ার এই মুহূর্তে অন্য কোনো বিশ্লেষণ ট্যাবেও দেখা যাচ্ছে সেগুলো ফিল্টার করুন — যেমন এখানে যোগ্য এবং একই সাথে Spike তালিকায় থাকা শেয়ারের অতিরিক্ত একইদিনের নিশ্চয়তা আছে।" },
@@ -247,7 +249,9 @@ const GLOSSARY = {
   clear_filters: { t: "Clear all filters", en: "Resets every Screener filter (search, dropdowns, checkboxes, and the More Filters section) back to its default — the full unfiltered list.", bn: "সব Screener ফিল্টার (সার্চ, ড্রপডাউন, চেকবক্স, More Filters) ডিফল্টে ফিরিয়ে দেয় — সম্পূর্ণ তালিকা দেখায়।" },
   chart_type: { t: "Chart type", en: "Line = the closing price only (smoothest to read trend). Candlestick = each session's open/high/low/close as a coloured body + wick (green = closed above open, red = below) — shows intraday strength/rejection a line hides. OHLC Bars = the same open/high/low/close as classic tick bars (left tick = open, right tick = close). SMA20/50 overlay stays visible in every mode.", bn: "Line = শুধু ক্লোজিং দাম (প্রবণতা বোঝার জন্য সবচেয়ে মসৃণ)। Candlestick = প্রতিটি সেশনের open/high/low/close রঙিন বডি ও উইক আকারে (সবুজ = ক্লোজ ওপেনের উপরে, লাল = নিচে) — লাইনে যা লুকানো থাকে সেই দিনের ভেতরের শক্তি/প্রত্যাখ্যান দেখায়। OHLC Bars = একই তথ্য ক্লাসিক টিক বার আকারে (বাম টিক = ওপেন, ডান টিক = ক্লোজ)। SMA20/50 ওভারলে সব মোডেই দেখা যায়।" },
   pred_accuracy: { t: "AI Pred. price accuracy", en: "Every AI Pred. 1w/1m shown for the Top 20 gets snapshotted, then graded once enough trading days pass — same self-grading principle as the Report card above, applied to the price forecast itself. Direction accuracy is compared against a naive \"always guess up\" baseline so you can tell if the model is actually adding anything beyond the market's normal upward drift.", bn: "টপ ২০-এর প্রতিটি AI Pred. 1w/1m সংরক্ষণ হয়, পর্যাপ্ত ট্রেডিং দিন পার হলে নম্বর দেওয়া হয় — উপরের Report card-এর মতোই নীতি, দামের পূর্বাভাসের জন্য প্রয়োগ করা। দিকনির্দেশনার নির্ভুলতা একটি সরল \"সবসময় বাড়বে ধরে নাও\" মানদণ্ডের সাথে তুলনা করা হয়, যাতে বোঝা যায় মডেলটি বাজারের স্বাভাবিক ঊর্ধ্বমুখী প্রবণতার চেয়ে বাড়তি কিছু দিচ্ছে কিনা।" },
-  pred_price: { t: "AI Pred. price", en: "Labeled \"AI Pred.\" but — to be precise — the method is a deterministic statistical projection (drift from recent momentum + a damped seasonal shape from the last year) anchored to today's price, not a trained machine-learning model, and not a promise. Same inputs always produce the same output. See Pred. accuracy under Report card for real graded results, and the AI Prediction Chart tab for the full 6-month curve.", bn: "লেবেলে \"AI Pred.\" লেখা থাকলেও পদ্ধতিটি একটি নির্ধারক পরিসংখ্যানগত প্রক্ষেপণ (সাম্প্রতিক গতির প্রবণতা + গত বছরের ঋতুভিত্তিক আকৃতি) আজকের দামের ভিত্তিতে — প্রশিক্ষিত মেশিন-লার্নিং মডেল নয়, প্রতিশ্রুতিও নয়। একই তথ্যে সবসময় একই ফল আসে। প্রকৃত গ্রেড করা ফলাফলের জন্য Report card-এর নিচে Pred. accuracy দেখুন, আর পূর্ণ ৬ মাসের রেখার জন্য AI Prediction Chart ট্যাব দেখুন।" },
+  backtest: { t: "Backtest", en: "Pred. accuracy above only grades predictions as real calendar time passes — weeks to build up a sample. This replays the SAME question against 2 years of history that already happened: at many past points per share, each model is shown only the data before that point, forecasts 1w/1m ahead, and is checked against the real price that followed — instantly, at a scale of thousands of samples instead of a few. Three models are compared: naive (flat — tomorrow = today, the mandatory baseline), drift (extrapolates the recent average daily return in a straight line, the classic textbook method), and the app's own AI Pred. model. A model that can't beat naive on both average error and direction accuracy isn't adding value — check honestly before trusting it. Two calm years can't reveal crash behaviour, so this is a sanity check, not a guarantee.", bn: "উপরের Pred. accuracy শুধু বাস্তব সময় পার হলেই নম্বর দেয় — নমুনা জমতে সপ্তাহ লাগে। এটি একই প্রশ্ন গত ২ বছরের ইতিহাসে সরাসরি যাচাই করে: প্রতিটি শেয়ারের বহু পুরনো মুহূর্তে, প্রতিটি মডেলকে শুধু সেই মুহূর্তের আগের তথ্য দেখানো হয়, ১ সপ্তাহ/১ মাস আগে ভবিষ্যদ্বাণী করতে বলা হয়, তারপর প্রকৃত দামের সাথে মিলিয়ে দেখা হয় — মুহূর্তেই, হাজার হাজার নমুনায়। তিনটি মডেল তুলনা করা হয়: naive (স্থির — আগামীকাল = আজ, বাধ্যতামূলক ভিত্তি), drift (সাম্প্রতিক গড় দৈনিক রিটার্ন সরলরেখায় প্রসারিত, ক্লাসিক পদ্ধতি), এবং অ্যাপের নিজস্ব AI Pred. মডেল। কোনো মডেল যদি naive-কে গড় ত্রুটি ও দিকনির্দেশনা উভয়েই হারাতে না পারে তবে সেটি অতিরিক্ত কিছু দিচ্ছে না — বিশ্বাস করার আগে সততার সাথে যাচাই করুন। দুই শান্ত বছর ধস পরিস্থিতি প্রকাশ করতে পারে না, তাই এটি নিরাপত্তা যাচাই, নিশ্চয়তা নয়।" },
+  drift_pred: { t: "Drift forecast", en: "A classic textbook baseline: extrapolates the recent average daily return in a straight line — no seasonal shape, no damping, just \"whatever it's been doing, keep doing.\" One step up from Naive. See the Backtest section (under Report card) for how it actually compares to AI Pred. and Naive on real history.", bn: "ক্লাসিক পরিসংখ্যানগত ভিত্তি: সাম্প্রতিক গড় দৈনিক রিটার্ন সরলরেখায় প্রসারিত করে — কোনো ঋতুভিত্তিক আকৃতি বা ক্ষয় নেই, শুধু \"যা চলছিল তাই চলতে থাকবে\"। Naive-এর চেয়ে এক ধাপ উন্নত। প্রকৃত ইতিহাসে AI Pred. ও Naive-এর তুলনায় এটি আসলে কেমন করে তা জানতে Report card-এর নিচে Backtest বিভাগ দেখুন।" },
+  pred_price: { t: "AI Pred. price", en: "Labeled \"AI Pred.\" but — to be precise — the base method is a deterministic statistical projection (drift from recent momentum + a damped seasonal shape from the last year) anchored to today's price, not a trained machine-learning model, and not a promise. On TOP of that base, fresh company news tilts the 1w/1m number: catalysts (dividend, results, board meeting, rating, upcoming record date) lift it and risks (trading halt, audit concern, exchange query, rights issue) dampen it — a bounded nudge (up to about +4% / −6%), stronger on the 1-month than the 1-week. A 📰 marker on a value means news moved it; hover the marker for how much. The full 6-month curve (AI Prediction Chart tab) stays the pure price shape. See Pred. accuracy under Report card for real graded results.", bn: "লেবেলে \"AI Pred.\" হলেও মূল পদ্ধতিটি একটি নির্ধারক পরিসংখ্যানগত প্রক্ষেপণ (সাম্প্রতিক গতির প্রবণতা + গত বছরের ঋতুভিত্তিক আকৃতি) আজকের দামের ভিত্তিতে — প্রশিক্ষিত মডেল নয়, প্রতিশ্রুতিও নয়। এর উপরে সাম্প্রতিক কোম্পানি সংবাদ ১ সপ্তাহ/১ মাসের সংখ্যা সামান্য বদলায়: উপলক্ষ (লভ্যাংশ, ফলাফল, বোর্ড মিটিং, রেটিং, আসন্ন রেকর্ড ডেট) বাড়ায় ও ঝুঁকি (লেনদেন স্থগিত, নিরীক্ষা উদ্বেগ, এক্সচেঞ্জ প্রশ্ন, রাইট ইস্যু) কমায় — সীমাবদ্ধ (প্রায় +৪% / −৬% পর্যন্ত), ১ মাসে বেশি, ১ সপ্তাহে কম। কোনো মানের পাশে 📰 থাকলে সংবাদ সেটি নাড়িয়েছে; কতটা তা জানতে 📰-তে মাউস রাখুন। পূর্ণ ৬ মাসের রেখা (AI Prediction Chart) খাঁটি দামভিত্তিক থাকে। গ্রেড করা ফলাফলের জন্য Report card-এর Pred. accuracy দেখুন।" },
   chart_zoom: { t: "Zoom", en: "1M/3M/6M/1Y/All jump to a preset window (defaults to All — the full price history). Scroll the mouse wheel over the chart to zoom in/out around the cursor; click and drag to pan left/right through history. Manual zoom/pan deselects the preset buttons; click one again to snap back. Volume and RSI below scroll in sync.", bn: "1M/3M/6M/1Y/All প্রি-সেট সময়সীমায় লাফ দেয় (ডিফল্ট All — সম্পূর্ণ দামের ইতিহাস)। চার্টের উপর মাউস হুইল স্ক্রল করলে কার্সারকে কেন্দ্র করে জুম ইন/আউট হয়; ক্লিক করে টেনে ধরলে বাম/ডানে ইতিহাসে চলাচল করা যায়। ম্যানুয়াল জুম/প্যান প্রিসেট বাটন থেকে সরিয়ে দেয়; আবার ক্লিক করলে ফিরে আসে। নিচের Volume ও RSI একসাথে স্ক্রল হয়।" },
   sector_bar_chart: { t: "Sector performance chart", en: "Average 1-month return per sector as horizontal bars growing from zero — green bars (sectors moving up) vs red bars (moving down) make sector rotation visible at a glance, sorted strongest-to-weakest. Hover a bar for its 1w/3m returns and breadth too.", bn: "প্রতিটি খাতের গড় ১ মাসের রিটার্ন অনুভূমিক বার আকারে, শূন্য থেকে বাড়ে — সবুজ বার (বাড়ছে) বনাম লাল বার (কমছে) থেকে সেক্টর রোটেশন এক নজরে বোঝা যায়, শক্তিশালী থেকে দুর্বল ক্রমে সাজানো। বারে মাউস রাখলে ১ সপ্তাহ/৩ মাসের রিটার্ন ও ব্রেডথও দেখা যাবে।" },
   spike_tab: { t: "Spike & Trend Break", en: "Two kinds of alert, each its own sub-tab, both sorted by how recently it happened (today first; same day, sorted by price). ⚡ Spike: shares that suddenly moved 3%+ — up ▲ or down ▼ — today or yesterday, CONFIRMED by abnormal volume (≥2× the 30-day average — real buying/selling demand, not a thin-volume wobble) and a close that backs the direction (upper half of that day's own range for an up-move, lower half for a down-move); a price move without both is excluded, not just down-scored, which is why this list stays short and actionable instead of listing every small wiggle. Update Data during trading hours fetches live prices, so 'today' compares right now against the start of the day. 📐 Trend Break: shares that held a clean uptrend, downtrend, or tight sideways range for a long time (up to a year) and have just broken that established pattern in the last few sessions — flagged even without a big single-day % move, since the alert here is 'the character of the price action changed'. Both get a 0–100 score weighing volume, trend, catalysts and (for spikes) this share's own follow-through history.", bn: "দুই ধরনের সতর্কতা, প্রতিটির নিজস্ব সাব-ট্যাব, উভয়ই কতদিন আগে ঘটেছে তা অনুযায়ী সাজানো (আজকেরটি আগে; একই দিনে দাম অনুযায়ী)। ⚡ Spike: আজ বা গতকাল হঠাৎ ৩%+ ওঠা ▲ বা নামা ▼ শেয়ার, তবে শুধু তখনই যখন অস্বাভাবিক ভলিউম (৩০ দিনের গড়ের ≥২ গুণ) ও দিক-নিশ্চিতকারী ক্লোজ (ওঠার জন্য দিনের উপরের অর্ধেক, নামার জন্য নিচের অর্ধেক) দুটোই মেলে — শুধু দাম পরিবর্তন হলেই তালিকায় আসে না, তাই তালিকা ছোট ও কার্যকর থাকে। লেনদেন চলাকালে Update Data চাপলে এই মুহূর্তের দামের সাথে দিনের শুরুর তুলনা হয়। 📐 Trend Break: যে শেয়ার দীর্ঘদিন (এক বছর পর্যন্ত) পরিষ্কার ঊর্ধ্বমুখী, নিম্নমুখী বা সংকীর্ণ সীমায় ছিল এবং গত কয়েক সেশনে তা ভেঙেছে। উভয়ই ভলিউম, ট্রেন্ড ও উপলক্ষ মিলিয়ে ০–১০০ স্কোর পায়।" },
@@ -271,6 +275,10 @@ const GLOSSARY = {
   from_high: { t: "Below period high", en: "How far the price sits below the selected period's high. Small = right at the top of that range.", bn: "নির্বাচিত সময়ের সর্বোচ্চ থেকে দাম কতটা নিচে। কম মানে ওই সীমার একেবারে চূড়ায়।" },
   potential: { t: "AI Prediction Chart", en: "Left of the divider: the real past year, plus past 1w/1m/2m returns (what already happened). Right of the divider, and in the AI Pred. 1w/1m badges: a deterministic 6-month projection — momentum of the last 60/120/250 sessions, damped over time, plus last year's detrended seasonal shape at half strength. Despite the \"AI\" label this is a statistical shape to support your decision, NOT a trained model or a guarantee; regenerated from the freshest history on every Update Data. See Pred. accuracy under Report card for its real graded track record.", bn: "দাগের বাঁয়ে: গত ১ বছরের প্রকৃত দাম, সাথে past 1w/1m/2m রিটার্ন (যা ইতিমধ্যে ঘটেছে)। দাগের ডানে ও AI Pred. 1w/1m ব্যাজে: পরবর্তী ৬ মাসের গাণিতিক অভিক্ষেপ — সাম্প্রতিক গতি (ক্রমশ ক্ষীয়মাণ) ও গত বছরের ঋতুভিত্তিক আকৃতির অর্ধেক মিলিয়ে। \"AI\" লেখা থাকলেও এটি সিদ্ধান্তে সহায়ক পরিসংখ্যানিক আকৃতি, প্রশিক্ষিত মডেল বা গ্যারান্টি নয়; প্রতি Update Data-তে সর্বশেষ ইতিহাস থেকে নতুন করে তৈরি হয়। প্রকৃত গ্রেড করা ফলাফলের জন্য Report card-এর নিচে Pred. accuracy দেখুন।" },
   toptx_tab: { t: "Today's Top 10 Transaction", en: "The exchange's actual trading activity today, independent of the pick-list rules — three views of the same session: By Value (highest turnover, mn BDT), By Volume (most shares traded) and By % Change (biggest movers, up or down). A share can top this list purely on activity even if its Verdict is Avoid — heavy volume alone isn't a buy signal, check the Verdict/Score and Why before acting.", bn: "আজকের প্রকৃত লেনদেন কার্যকলাপ, পছন্দ তালিকার নিয়মের বাইরে — একই সেশনের তিনটি দৃষ্টিকোণ: By Value (সর্বোচ্চ লেনদেন মূল্য), By Volume (সর্বোচ্চ শেয়ার সংখ্যা), By % Change (সবচেয়ে বেশি ওঠা/নামা)। কেবল কার্যকলাপের ভিত্তিতে একটি শেয়ার এই তালিকায় আসতে পারে, এমনকি তার Verdict Avoid হলেও — শুধু বেশি ভলিউম মানেই কেনার সংকেত নয়, আগে Verdict/Score ও Why দেখুন।" },
+  followup_tab: { t: "Tomorrow's Follow-up", en: "Two short next-session watchlists: Sale Follow-up = the 10 shares most likely to keep FALLING (watch to sell or stay out), Buy Follow-up = the 10 most likely to keep RISING (watch to buy). Nothing new is invented — each share is ranked by the strongest of the app's already-computed directional signals: a Margin bottom-of-range turn-up / top-of-range turn-down, or a Spike that's still running, nudged slightly by the 1-week forecast when it agrees. Candidates to watch tomorrow, NOT guarantees — confirm the open goes the expected way and keep your stop-loss. See the Backtest section (under Report card) for how these signals have actually held up on real history.", bn: "পরের সেশনের দুটি সংক্ষিপ্ত তালিকা: Sale Follow-up = সবচেয়ে বেশি পড়ার সম্ভাবনাযুক্ত ১০টি শেয়ার (বিক্রি বা দূরে থাকার জন্য নজরে), Buy Follow-up = সবচেয়ে বেশি ওঠার সম্ভাবনাযুক্ত ১০টি (কেনার জন্য নজরে)। নতুন কিছু তৈরি হয়নি — প্রতিটি শেয়ার অ্যাপের বিদ্যমান সবচেয়ে শক্তিশালী দিকনির্দেশক সংকেত দিয়ে সাজানো: Margin-এর সীমার তলা থেকে ঘুরে দাঁড়ানো / চূড়া থেকে নেমে আসা, বা চলমান Spike, ১ সপ্তাহের পূর্বাভাস মিললে সামান্য সমন্বিত। এগুলো আগামীকাল নজরে রাখার প্রার্থী, নিশ্চয়তা নয় — খোলার সময় নিশ্চিত হন ও স্টপ-লস রাখুন। প্রকৃত ইতিহাসে সংকেতগুলো কেমন করেছে তা Report card-এর নিচে Backtest বিভাগে দেখুন।" },
+  followup_conviction: { t: "Conviction", en: "0–100 strength of the directional signal behind this row — it IS the underlying Margin rise/fall score or Spike continuation score (whichever is stronger for this share), plus up to +8 when the 1-week forecast agrees with the direction. Higher = a stronger, better-evidenced setup, but never a certainty. It does not tell you the size of the expected move, only the conviction that the direction is right.", bn: "এই সারির পেছনের দিকনির্দেশক সংকেতের শক্তি ০–১০০ — এটি মূলত Margin-এর rise/fall স্কোর বা Spike ধারাবাহিকতা স্কোর (যেটি বেশি শক্তিশালী), সাথে পূর্বাভাস দিক মিললে +৮ পর্যন্ত। বেশি = শক্তিশালী, ভালো-প্রমাণিত সেটআপ, তবে নিশ্চয়তা নয়। এটি প্রত্যাশিত পরিবর্তনের আকার বলে না, শুধু দিক সঠিক হওয়ার আস্থা বলে।" },
+  followup_source: { t: "Signal", en: "Which existing app signal put this share on the list: a Margin bottom-of-range turn-up / top-of-range turn-down (a range-extreme reversal with MACD/RSI/OBV/news evidence) or a Spike continuation (a recent sharp move backed by volume that's likely to keep going). Open the Margin or Spike tab for that share's full detail.", bn: "কোন বিদ্যমান সংকেত শেয়ারটিকে তালিকায় এনেছে: Margin-এর সীমার তলা থেকে ঘুরে দাঁড়ানো / চূড়া থেকে নেমে আসা (MACD/RSI/OBV/সংবাদ প্রমাণসহ সীমা-প্রান্তের রিভার্সাল) বা Spike ধারাবাহিকতা (ভলিউম-সমর্থিত সাম্প্রতিক তীব্র মুভ যা চলতে পারে)। বিস্তারিত জানতে Margin বা Spike ট্যাব দেখুন।" },
+  followup_when: { t: "Expected by", en: "For range-reversal candidates, the app's estimate of roughly when the turn is due, based on how long this share has historically taken to revert from a similar range extreme. Blank for spike-continuation rows, where the move is already underway. An estimate for context, not a deadline.", bn: "সীমা-রিভার্সাল প্রার্থীদের জন্য, অ্যাপের অনুমান কখন নাগাদ মোড় ঘোরা উচিত — অতীতে একই সীমা-প্রান্ত থেকে ফিরতে এই শেয়ারের সাধারণত কত সময় লেগেছে তার ভিত্তিতে। Spike-ধারাবাহিকতার সারিতে ফাঁকা, যেখানে মুভ ইতিমধ্যে চলছে। প্রসঙ্গের জন্য অনুমান, নির্দিষ্ট সময়সীমা নয়।" },
   value_today: { t: "Today's traded value", en: "Total money (mn BDT) traded in this share today — price × volume, summed across every trade. The market's own measure of how much capital is actually moving through a share right now.", bn: "আজ এই শেয়ারে লেনদেন হওয়া মোট টাকা (মিলিয়ন) — দাম × ভলিউম, সব লেনদেন মিলিয়ে। এই মুহূর্তে শেয়ারটিতে আসলে কত টাকা ঘুরছে তার প্রকৃত পরিমাপ।" },
   volume_today: { t: "Today's volume", en: "Total number of shares traded today (raw count, not a ratio). High volume with a price rise suggests real buying interest; high volume with a flat/falling price can mean distribution.", bn: "আজ লেনদেন হওয়া মোট শেয়ার সংখ্যা (আসল সংখ্যা, অনুপাত নয়)। দাম বাড়ার সাথে বেশি ভলিউম মানে সত্যিকারের কেনার আগ্রহ; দাম স্থির/কমার সাথে বেশি ভলিউম বিতরণের ইঙ্গিত হতে পারে।" },
 };
@@ -619,6 +627,18 @@ document.addEventListener("mouseout", (e) => {
   if (e.target.closest("[data-bn]")) hideTooltip();
 });
 
+/* generic rich tooltip: any element with data-tip shows that HTML on hover.
+   Lower priority than data-term/data-bn so those keep their dedicated styling. */
+document.addEventListener("mouseover", (e) => {
+  if (e.target.closest("[data-term]") || e.target.closest("[data-bn]")) return;
+  const el = e.target.closest("[data-tip]");
+  if (!el || !el.dataset.tip) return;
+  showTooltip(`<div style="max-width:360px">${el.dataset.tip}</div>`, e.clientX, e.clientY);
+});
+document.addEventListener("mouseout", (e) => {
+  if (e.target.closest("[data-tip]")) hideTooltip();
+});
+
 /* help modal: full glossary, filterable — 157+ terms is too many to scan unaided */
 $("#btnHelp").addEventListener("click", () => {
   $("#helpTable tbody").innerHTML = Object.values(GLOSSARY)
@@ -641,15 +661,16 @@ $("#helpBg").addEventListener("click", (e) => {
 
 /* ---------------- tabs (two-level: group -> sub-tab) ---------------- */
 const TAB_GROUPS = {
-  decide: ["suggestions", "highprofit", "spike", "margin", "toptx", "agm", "compare"],
+  decide: ["suggestions", "highprofit", "spike", "margin", "followup", "toptx", "agm", "compare"],
   manage: ["portfolio"],
   explore: ["charts", "potential", "screener", "sectors"],
+  news: ["news"],
 };
 const ALL_TABS = Object.values(TAB_GROUPS).flat();
 function tabGroupOf(tab) {
   return Object.keys(TAB_GROUPS).find((g) => TAB_GROUPS[g].includes(tab));
 }
-const lastTabInGroup = { decide: "suggestions", manage: "portfolio", explore: "charts" };
+const lastTabInGroup = { decide: "suggestions", manage: "portfolio", explore: "charts", news: "news" };
 
 function activateTab(tabName) {
   const group = tabGroupOf(tabName);
@@ -678,7 +699,9 @@ function activateTab(tabName) {
   if (tabName === "sectors" && state.summary) renderSectors(); // sector bar chart needs real dimensions
   if (tabName === "compare" && state.summary) renderCompare(); // ditto for the mini sparklines
   if (tabName === "toptx" && state.summary) renderTopTx(); // ditto for the 1-month sparklines
+  if (tabName === "followup" && state.summary) renderFollowup();
   if (tabName === "agm") { if (!state.agmData) loadAgm(); else renderAgm(); }
+  if (tabName === "news") { if (!state.newsData) loadNews(); else renderNews(); }
 }
 
 document.querySelectorAll(".tab-groups button").forEach((b) => {
@@ -699,7 +722,9 @@ async function loadSummary() {
   renderSpike();
   renderSpikeSummary();
   renderTopTx();
+  renderFollowup();
   renderReportCard();
+  loadBacktest();
   renderMarket();
   // portfolio add-form helpers: ticker autocomplete + default date
   $("#pfCodeList").innerHTML = Object.keys(state.summary.tickers).sort()
@@ -891,6 +916,29 @@ function actionSentence(m) {
   return `Buy ${m.buy_date}${extra}, hold ${m.horizon}`;
 }
 
+/* the concise, one-line "main action" for the narrow Action column; the full
+   actionSentence() is shown on hover via data-tip. */
+function actionShort(m) {
+  if (!m.eligible || m.verdict === "Avoid") return "Avoid";
+  if (m.verdict === "Watch" || m.verdict === "Neutral") return "Wait";
+  return `Buy ${m.buy_date || "now"}`;
+}
+
+/* 📰 marker shown on an AI Pred. cell when fresh news moved the value.
+   `factor` is the horizon weight (1w = 0.6 of the 1m tilt, matching the
+   backend). Empty string when there's no news tilt. */
+function newsTiltMarker(m, factor) {
+  const tilt = m.pred_news_tilt;
+  if (!tilt) return "";
+  const eff = tilt * factor;
+  const cls = eff > 0 ? "pos" : "neg";
+  return ` <span class="${cls}" style="font-size:9px" data-tip="${escAttr(
+    "<b>📰 News-adjusted</b><br>Fresh company news moved this AI Pred. by "
+    + (eff > 0 ? "+" : "") + eff.toFixed(1) + "% on top of the price-history projection."
+    + "<br>সাম্প্রতিক সংবাদ এই পূর্বাভাস " + (eff > 0 ? "+" : "") + eff.toFixed(1)
+    + "% বদলেছে।")}">📰${eff > 0 ? "+" : ""}${eff.toFixed(1)}%</span>`;
+}
+
 function verdictBadge(v) {
   const cls = { "Strong Buy": "v-strong", "Buy": "v-buy", "Watch": "v-watch",
                 "Neutral": "v-neutral", "Avoid": "v-avoid" }[v] || "v-neutral";
@@ -903,10 +951,10 @@ const TOP10_HORIZON_META = {
     sub: `Best overall picks across price history, announcements and AGM/EGM record dates —
       cross-checked against today's <b>Spike</b> list and the 2-year <b>Margin</b> extremes (backed spikes and
       bottom-of-range reversals earn a bonus; unbacked spikes and top-of-range shares are penalised). Diversified
-      (max 3 per sector), each with a purchase date, holding period, profit target and stop-loss. Hover the Why
-      text for বাংলা.
+      (max 3 per sector), each with a purchase date, holding period, profit target and stop-loss. Why shows বাংলা;
+      hover the Action or Why text for the full English detail.
       · দামের ইতিহাস, ঘোষণা ও রেকর্ড ডেটের সাথে আজকের Spike ও ২ বছরের Margin প্রান্তও মিলিয়ে দেখা হয়েছে; প্রতিটির জন্য
-      কবে কিনবেন, কত দিন রাখবেন, কোন দামে মুনাফা তুলবেন ও ক্ষতি সীমিত করবেন তা দেখানো হয়েছে। "কেন" লেখায় মাউস রাখলে বাংলা।`,
+      কবে কিনবেন, কত দিন রাখবেন, কোন দামে মুনাফা তুলবেন ও ক্ষতি সীমিত করবেন তা দেখানো হয়েছে। Action বা "কেন" লেখায় মাউস রাখলে পূর্ণ বিবরণ।`,
   },
   "1w_2w": {
     title: `Top 20 preferred shares · Short Term (1w–2w) · স্বল্পমেয়াদি (১–২ সপ্তাহ)`,
@@ -949,22 +997,29 @@ function renderTop10() {
       ? m.why.slice(0, 4)
       : [...(m.reasons_long || []), ...(m.reasons_short || [])].slice(0, 2);
     const whyBn = (m.why_bn || []).slice(0, 4);
+    // default: Bengali, 2 bullets (compact); hover: full detail in both languages
+    const whyBnShort = (whyBn.length ? whyBn : why).slice(0, 2);
+    const whyTip =
+      "<b>Why (details)</b><br>" + why.map((w) => "• " + w).join("<br>") +
+      (whyBn.length ? "<br><br><b>কেন (বিস্তারিত)</b><br>" + whyBn.map((w) => "• " + w).join("<br>") : "");
     return `<tr data-code="${c}">
       <td>${i + 1}</td>
       <td>${starBtn(c)}</td>
       <td>${compareBtn(c)}</td>
-      <td class="lft"><b>${c}</b><br><small style="color:var(--muted)">${m.sector || ""}</small></td>
+      <td class="lft" style="max-width:80px;white-space:normal;overflow-wrap:break-word"><b>${c}</b><br><small style="color:var(--muted)">${m.sector || ""}</small></td>
       <td>${ltpYcp(m.price, m.ycp)}</td>
       <td class="lft">${verdictBadge(m.verdict)}</td>
       <td><b>${fmt(m.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>
-      <td class="lft" data-term="action_plan" style="max-width:160px;white-space:normal">${actionSentence(m)}</td>
+      <td class="lft" style="min-width:130px;white-space:nowrap" data-tip="${escAttr("<b>Action · পদক্ষেপ</b><br>" + actionSentence(m))}"><b>${actionShort(m)}</b></td>
       <td class="pos" data-term="target">${fmt(m.target_price, 1)}<br><small>+${fmt(m.target_pct, 0)}%</small></td>
       <td class="neg" data-term="stop">${fmt(m.stop_price, 1)}<br><small>−${fmt(m.stop_pct, 0)}%</small></td>
-      <td data-term="pred_price">${fmt(m.pred_1w_price, 1)}<br><small class="${m.pred_1w_pct > 0 ? "pos" : m.pred_1w_pct < 0 ? "neg" : ""}">${m.pred_1w_pct > 0 ? "+" : ""}${fmt(m.pred_1w_pct, 1)}%</small></td>
-      <td data-term="pred_price">${fmt(m.pred_1m_price, 1)}<br><small class="${m.pred_1m_pct > 0 ? "pos" : m.pred_1m_pct < 0 ? "neg" : ""}">${m.pred_1m_pct > 0 ? "+" : ""}${fmt(m.pred_1m_pct, 1)}%</small></td>
-      <td class="lft why-cell" style="max-width:380px"><small data-bn="${escAttr(whyBn.map((w) => "• " + w).join("<br>"))}">${why.map((w) => "• " + w).join("<br>")}</small></td>
+      <td><span data-term="pred_price">${fmt(m.pred_1w_price, 1)}<br><small class="${m.pred_1w_pct > 0 ? "pos" : m.pred_1w_pct < 0 ? "neg" : ""}">${m.pred_1w_pct > 0 ? "+" : ""}${fmt(m.pred_1w_pct, 1)}%</small></span>${newsTiltMarker(m, 0.6)}</td>
+      <td><span data-term="pred_price">${fmt(m.pred_1m_price, 1)}<br><small class="${m.pred_1m_pct > 0 ? "pos" : m.pred_1m_pct < 0 ? "neg" : ""}">${m.pred_1m_pct > 0 ? "+" : ""}${fmt(m.pred_1m_pct, 1)}%</small></span>${newsTiltMarker(m, 1.0)}</td>
+      <td data-term="drift_pred">${fmt(m.drift_1w_price, 1)}<br><small class="${m.drift_1w_pct > 0 ? "pos" : m.drift_1w_pct < 0 ? "neg" : ""}">${m.drift_1w_pct > 0 ? "+" : ""}${fmt(m.drift_1w_pct, 1)}%</small></td>
+      <td data-term="drift_pred">${fmt(m.drift_1m_price, 1)}<br><small class="${m.drift_1m_pct > 0 ? "pos" : m.drift_1m_pct < 0 ? "neg" : ""}">${m.drift_1m_pct > 0 ? "+" : ""}${fmt(m.drift_1m_pct, 1)}%</small></td>
+      <td class="lft why-cell" style="max-width:280px"><small data-tip="${escAttr(whyTip)}">${whyBnShort.map((w) => "• " + w).join("<br>")}</small></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="13" class="loading">No qualifying shares in this hold-range window today</td></tr>`;
+  }).join("") || `<tr><td colspan="15" class="loading">No qualifying shares in this hold-range window today</td></tr>`;
   wireStarButtons($("#top10Table"));
   wireCompareButtons($("#top10Table"));
   $("#top10Table tbody").querySelectorAll("tr[data-code]").forEach((tr) =>
@@ -1253,6 +1308,88 @@ function renderPredAccuracy(pa) {
     <div class="axis-note" style="margin-top:6px">✓ = beats a naive "always guess up" baseline · avg error is mean absolute
       percentage-point gap between predicted and actual move.</div>`;
 }
+
+/* ---------------- backtest (walk-forward, replayed against 2yr history) ---------------- */
+const BT_LABELS = {
+  naive: ["Naive (flat)", "Naive (স্থির)",
+    "নাইভ মডেল: ধরে নেয় দাম অপরিবর্তিত থাকবে — আগামীকালের দাম = আজকের দাম, কোনো ওঠানামা নেই। এটি বাধ্যতামূলক তুলনার ভিত্তি — অন্য কোনো মডেল একে হারাতে না পারলে সেটি বাড়তি কোনো মূল্য যোগ করছে না।"],
+  drift: ["Drift (trend extrapolation)", "Drift (প্রবণতা প্রসারণ)",
+    "ড্রিফট মডেল: সাম্প্রতিক দিনগুলোর গড় দৈনিক রিটার্ন হিসাব করে সেটিকে সরলরেখায় ভবিষ্যতে প্রসারিত করে। পরিসংখ্যানের একটি ক্লাসিক, সহজ পদ্ধতি — কোনো AI বা প্রশিক্ষণ নেই।"],
+  app_model: ["App's AI Pred. model", "অ্যাপের AI Pred. মডেল",
+    "এই অ্যাপে যেটাকে \"AI Pred.\" বলা হয় সেই মডেল — সাম্প্রতিক গতির প্রবণতা ও গত বছরের ঋতুভিত্তিক আকৃতি মিলিয়ে তৈরি একটি নির্ধারক (deterministic) হিসাব, প্রশিক্ষিত মেশিন লার্নিং মডেল নয়। এখানে ঠিক সেই একই কোড ইতিহাসের বিপরীতে যাচাই করা হচ্ছে।"],
+};
+const BT_ORDER = ["naive", "drift", "app_model"];
+const BT_AVG_ERR_BN = "গড় ত্রুটি: পূর্বাভাসিত ও প্রকৃত মূল্য-পরিবর্তনের মধ্যে গড় পার্থক্য (শতাংশ পয়েন্টে) — যত কম তত ভালো।";
+const BT_DIR_BN = "দিকনির্দেশনা নির্ভুলতা: মডেলটি কত শতাংশ সময় সঠিকভাবে ধরতে পেরেছে দাম বাড়বে না কমবে — ৫০% মানে টস করার সমান, তার বেশি হলে তবেই বাড়তি মূল্য আছে।";
+
+async function loadBacktest() {
+  const res = await fetch("/api/backtest");
+  state.backtestData = await res.json();
+  renderBacktest();
+}
+
+function renderBacktest() {
+  const bt = state.backtestData;
+  if (!bt || !bt.models) {
+    $("#btMeta").textContent = "";
+    $("#btBody").innerHTML = `<div class="axis-note">Not run yet — click "Run backtest" to replay the forecast
+      models against 2 years of real history and see honest accuracy numbers in seconds.
+      · এখনো চালানো হয়নি — "Run backtest"-এ ক্লিক করলে মডেলগুলো ২ বছরের প্রকৃত ইতিহাসে যাচাই হবে।</div>`;
+    return;
+  }
+  const metaBn = `মোট ${bt.universe.tickers_used}টি শেয়ার যাচাই করা হয়েছে, প্রতি মডেলে ${bt.universe.total_samples}টি পূর্বাভাস-বনাম-প্রকৃত জোড়া (নমুনা) ব্যবহার করে, সর্বশেষ চালানো হয়েছে ${bt.generated_at}-তে।`;
+  $("#btMeta").innerHTML = `<span data-bn="${escAttr(metaBn)}">${bt.universe.tickers_used} shares · ${bt.universe.total_samples} samples/model · as of ${bt.generated_at}</span>`;
+  const row = (name) => {
+    const hs = bt.models[name] || {};
+    const [label, labelBn, bn] = BT_LABELS[name];
+    const cell = (h) => {
+      const a = hs[h];
+      if (!a) return `<td colspan="2" data-bn="${escAttr("এই মডেলের জন্য এই সময়সীমায় পর্যাপ্ত নমুনা পাওয়া যায়নি।")}">–</td>`;
+      const beatsNaive = name === "naive" ? true
+        : (bt.models.naive[h] && a.mae_pct <= bt.models.naive[h].mae_pct && a.direction_accuracy >= bt.models.naive[h].direction_accuracy);
+      const horizonBn = h === "1w" ? "১ সপ্তাহ (৫ ট্রেডিং দিন)" : "১ মাস (২১ ট্রেডিং দিন)";
+      const maeValBn = `${labelBn} মডেল ${horizonBn} আগে থেকে দেওয়া পূর্বাভাসে গড়ে ±${fmt(a.mae_pct)}% ভুল করেছে — পূর্বাভাসিত মূল্য-পরিবর্তন ও প্রকৃত মূল্য-পরিবর্তনের মধ্যে গড় পার্থক্য এতটুকু (n=${a.n} নমুনা)। যত কম তত ভালো।`;
+      const dirVerdictBn = a.direction_accuracy > 50 ? "টসের চেয়ে ভালো" : a.direction_accuracy === 50 ? "টসের ঠিক সমান" : "টসের চেয়েও খারাপ";
+      const dirValBn = `${labelBn} মডেল ${horizonBn} আগে থেকে ${a.direction_accuracy}% সময় সঠিকভাবে বলতে পেরেছে দাম বাড়বে না কমবে — এটি ${dirVerdictBn} (৫০% = টস করার সমান)।`;
+      const checkBn = `✓ মানে ${labelBn} এই দুই মাপকাঠিতেই (গড় ত্রুটি ও দিকনির্দেশনা) Naive-কে হারিয়েছে — অর্থাৎ বাড়তি মূল্য যোগ করছে।`;
+      return `<td><span data-bn="${escAttr(maeValBn)}">±${fmt(a.mae_pct)}%</span><small style="color:var(--muted)" data-bn="${escAttr(BT_AVG_ERR_BN)}"> avg err</small></td>
+        <td><b data-bn="${escAttr(dirValBn)}">${a.direction_accuracy}%</b><small style="color:var(--muted)" data-bn="${escAttr(BT_DIR_BN)}"> dir.</small>${beatsNaive && name !== "naive" ? ` <span data-bn="${escAttr(checkBn)}">✓</span>` : ""}</td>`;
+    };
+    return `<tr><td class="lft" data-bn="${escAttr(bn)}">${label}</td>${cell("1w")}${cell("1m")}</tr>`;
+  };
+  const thModelBn = "যে পদ্ধতিতে ভবিষ্যতের দাম অনুমান করা হয়েছে।";
+  const th1wBn = "৫ ট্রেডিং দিন (প্রায় ১ সপ্তাহ) আগে থেকে দেওয়া পূর্বাভাসের ফলাফল।";
+  const th1mBn = "২১ ট্রেডিং দিন (প্রায় ১ মাস) আগে থেকে দেওয়া পূর্বাভাসের ফলাফল।";
+  const methodBn = `Walk-forward পদ্ধতি: প্রতি ${bt.universe.step_days} ট্রেডিং দিন পরপর, প্রতিটি মডেলকে শুধু সেই মুহূর্তের আগের দামের ইতিহাস দেখানো হয় এবং ${bt.horizons_days["1w"]}/${bt.horizons_days["1m"]} সেশন পরের দাম অনুমান করতে বলা হয়; পূর্বাভাসটি সেই তারিখে সত্যিই যা ঘটেছিল তার সাথে মেলানো হয়। পূর্বাভাসের সময় মডেলে কোনো ভবিষ্যৎ তথ্য পৌঁছায় না।`;
+  const footnoteBn = `✓ = avg error ও direction উভয়েই naive-কে হারালে · "সবসময় বাড়বে" ধরে নিলে ১ সপ্তাহে ${bt.always_up_baseline["1w"]}%, ১ মাসে ${bt.always_up_baseline["1m"]}% সঠিক হতো · ${methodBn}`;
+  $("#btBody").innerHTML = `<div class="tbl-wrap"><table>
+    <thead><tr><th class="lft" data-bn="${escAttr(thModelBn)}">Model</th>
+      <th colspan="2" data-bn="${escAttr(th1wBn)}">1 week</th>
+      <th colspan="2" data-bn="${escAttr(th1mBn)}">1 month</th></tr></thead>
+    <tbody>${BT_ORDER.map(row).join("")}</tbody></table></div>
+    <div class="axis-note" style="margin-top:6px" data-bn="${escAttr(footnoteBn)}">✓ = beats naive on both avg error and direction · "always guess up"
+      would score ${bt.always_up_baseline["1w"]}% direction at 1w, ${bt.always_up_baseline["1m"]}% at 1m ·
+      ${bt.method}</div>`;
+}
+
+$("#btRunBtn").addEventListener("click", async () => {
+  const btn = $("#btRunBtn");
+  const r = await (await fetch("/api/backtest/run", { method: "POST" })).json();
+  if (!r.started) { $("#btMeta").textContent = "A backtest is already running — wait for it to finish."; return; }
+  btn.disabled = true;
+  $("#btBarWrap").classList.remove("hidden");
+  const timer = setInterval(async () => {
+    const st = await (await fetch("/api/backtest/status")).json();
+    $("#btMeta").textContent = st.message;
+    $("#btBar").style.width = (st.pct || 0) + "%";
+    if (!st.running) {
+      clearInterval(timer);
+      btn.disabled = false;
+      setTimeout(() => $("#btBarWrap").classList.add("hidden"), 1200);
+      if (!st.error) loadBacktest();
+    }
+  }, 800);
+});
 
 /* ---------------- spike (sudden movers) + trend break (regime changes) ---------------- */
 const TREND_BREAK_LABEL_BN = {
@@ -1581,6 +1718,65 @@ $("#txViewSeg").querySelectorAll("button").forEach((b) => b.addEventListener("cl
   $("#txViewSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
   state.txView = b.dataset.view;
   renderTopTx();
+}));
+
+/* ---------------- tomorrow's follow-up (next-session buy / sale watchlists) ---------------- */
+const FU_VIEW_META = {
+  sale: { title: "📉 Sale Follow-up · কাল বিক্রির জন্য নজরে",
+    sub: "The 10 shares most likely to keep <b>falling</b> next session — watch to sell or stay out. Ranked by the " +
+      "app's own top-of-range turn-down / down-spike conviction; the move must still open lower to confirm. " +
+      "· পরের সেশনে সবচেয়ে বেশি <b>পড়ার</b> সম্ভাবনাযুক্ত ১০টি শেয়ার — বিক্রি বা দূরে থাকার জন্য নজরে রাখুন।" },
+  buy: { title: "📈 Buy Follow-up · কাল কেনার জন্য নজরে",
+    sub: "The 10 shares most likely to keep <b>rising</b> next session — watch to buy. Ranked by the app's own " +
+      "bottom-of-range turn-up / up-spike conviction; confirm it opens higher before acting, and keep the stop-loss. " +
+      "· পরের সেশনে সবচেয়ে বেশি <b>ওঠার</b> সম্ভাবনাযুক্ত ১০টি শেয়ার — কেনার জন্য নজরে রাখুন।" },
+};
+
+function fuRowHtml(e, i, view) {
+  const chgCls = e.day_change > 0 ? "pos" : e.day_change < 0 ? "neg" : "";
+  const predCls = e.pred_1w_pct > 0 ? "pos" : e.pred_1w_pct < 0 ? "neg" : "";
+  const convCls = e.conviction >= 70 ? "pos" : e.conviction >= 50 ? "" : "neg";
+  const flags = (e.flags || []).map((f) => `<span class="chip flag" data-term="flag:${f}">${f}</span>`).join(" ");
+  const srcBn = view === "sale" ? "নিম্নমুখী সংকেত" : "ঊর্ধ্বমুখী সংকেত";
+  return `<tr data-code="${e.code}">
+    <td>${i + 1}</td>
+    <td>${starBtn(e.code)}</td>
+    <td>${compareBtn(e.code)}</td>
+    <td class="lft"><b>${e.code}</b></td>
+    <td class="lft">${e.sector || "–"}</td>
+    <td class="lft">${e.category || "–"}</td>
+    <td>${ltpYcp(e.price, e.ycp)}</td>
+    <td class="${chgCls}">${e.day_change > 0 ? "+" : ""}${fmt(e.day_change, 1)}%</td>
+    <td>${fmt(e.rsi14, 0)}</td>
+    <td data-term="followup_conviction"><b class="${convCls}">${e.conviction}</b><small style="color:var(--muted)">/100</small></td>
+    <td class="lft" data-term="followup_source"><span data-bn="${escAttr((e.source_bn || srcBn))}">${e.source || "–"}</span> ${flags}</td>
+    <td data-term="pred_price"><span class="${predCls}">${e.pred_1w_pct > 0 ? "+" : ""}${fmt(e.pred_1w_pct, 1)}%</span></td>
+    <td class="lft" data-term="followup_when">${e.expected_date || "–"}</td>
+    <td class="lft why-cell" style="max-width:420px"><small data-bn="${escAttr((e.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(e.why || []).map((w) => "• " + w).join("<br>")}</small></td>
+  </tr>`;
+}
+
+function renderFollowup() {
+  const fu = state.summary.followup;
+  if (!fu) return;
+  const view = state.fuView || "sale";
+  const rows = fu[view] || [];
+  const meta = FU_VIEW_META[view];
+  $("#fuTitle").innerHTML = meta.title;
+  $("#fuSub").innerHTML = meta.sub;
+  $("#fuMeta").textContent = fu.date ? `session ${fu.date} · top ${rows.length}` : "";
+  $("#fuTable tbody").innerHTML = rows.map((e, i) => fuRowHtml(e, i, view)).join("") ||
+    `<tr><td colspan="14" class="loading">No qualifying shares to follow this session — check again after the next Update Data.</td></tr>`;
+  wireStarButtons($("#fuTable"));
+  wireCompareButtons($("#fuTable"));
+  $("#fuTable tbody").querySelectorAll("tr[data-code]").forEach((tr) =>
+    tr.addEventListener("click", (ev) => { if (!ev.target.closest("button")) openDetail(tr.dataset.code); }));
+}
+
+$("#fuViewSeg").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+  $("#fuViewSeg").querySelectorAll("button").forEach((x) => x.classList.toggle("active", x === b));
+  state.fuView = b.dataset.view;
+  renderFollowup();
 }));
 
 /* ---------------- AGM/EGM/Record (parsed from DSE's own PDFs) ---------------- */
@@ -2756,6 +2952,70 @@ window.addEventListener("resize", () => {
   if (!$("#modalBg").classList.contains("hidden")) drawDetailCharts();
 });
 
+/* ---------------- company news (amarstock feed → news.csv) ---------------- */
+const NEWS_RISK_CATS = new Set(["trading-halt", "audit-concern", "exchange-query",
+  "suspension", "rights-issue", "category-change"]);
+
+async function loadNews() {
+  const q = ($("#newsSearch").value || "").trim();
+  const res = await fetch(`/api/news?q=${encodeURIComponent(q)}&limit=400`);
+  state.newsData = await res.json();
+  renderNews();
+}
+
+function renderNews() {
+  const nd = state.newsData;
+  if (!nd) return;
+  $("#newsCount").textContent = nd.total
+    ? `${nd.shown} of ${nd.total} shown` : "";
+  if (!nd.items.length) {
+    $("#newsList").innerHTML = `<div class="axis-note">No news stored yet — click <b>News Fetch</b> to pull the
+      latest from amarstock. · এখনো কোনো সংবাদ নেই — <b>News Fetch</b> চাপুন।</div>`;
+    return;
+  }
+  $("#newsList").innerHTML = nd.items.map((n) => {
+    const catCls = NEWS_RISK_CATS.has(n.category) ? "news-cat risk" : "news-cat";
+    const codeCls = n.tracked ? "news-code tracked" : "news-code untracked";
+    const codeAttr = n.tracked ? ` data-code="${n.code}" title="Open ${n.code} detail"` : "";
+    return `<div class="news-item">
+      <div class="news-when"><b>${n.date || ""}</b>${n.time || ""}</div>
+      <div class="news-body">
+        <h4><span class="${codeCls}"${codeAttr}>${escAttr(n.code || "")}</span>
+          <span class="${catCls}">${escAttr((n.category || "").replace(/-/g, " "))}</span>
+          ${escAttr(n.title || "")}</h4>
+        <p>${escAttr(n.text || "")}</p>
+      </div>
+    </div>`;
+  }).join("");
+  $("#newsList").querySelectorAll(".news-code.tracked").forEach((el) =>
+    el.addEventListener("click", () => openDetail(el.dataset.code)));
+}
+
+let newsSearchTimer = null;
+$("#newsSearch").addEventListener("input", () => {
+  clearTimeout(newsSearchTimer);
+  newsSearchTimer = setTimeout(loadNews, 250);
+});
+
+$("#btnNewsFetch").addEventListener("click", async () => {
+  const btn = $("#btnNewsFetch");
+  const r = await (await fetch("/api/news/fetch", { method: "POST" })).json();
+  if (!r.started) { $("#newsMeta").textContent = "A news fetch is already running…"; return; }
+  btn.disabled = true;
+  $("#newsBarWrap").classList.remove("hidden");
+  const timer = setInterval(async () => {
+    const st = await (await fetch("/api/news/fetch/status")).json();
+    $("#newsMeta").textContent = st.message;
+    $("#newsBar").style.width = (st.pct || 0) + "%";
+    if (!st.running) {
+      clearInterval(timer);
+      btn.disabled = false;
+      setTimeout(() => $("#newsBarWrap").classList.add("hidden"), 1200);
+      if (!st.error) loadNews();
+    }
+  }, 800);
+});
+
 /* ---------------- fetch data (network) / update data (render from disk) ---------------- */
 // #updateStatus is CSS-truncated (single line, ellipsis) so a long message can
 // never force the header buttons to wrap onto a new line; the full text still
@@ -2828,10 +3088,12 @@ async function renderFromStorage() {
   state.chartsData = null;
   state.potData = null;
   state.agmData = null;
+  state.newsData = null;
   await loadSummary();
   if (!$("#tab-charts").classList.contains("hidden")) loadCharts();
   if (!$("#tab-potential").classList.contains("hidden")) loadPotential();
   if (!$("#tab-agm").classList.contains("hidden")) loadAgm();
+  if (!$("#tab-news").classList.contains("hidden")) loadNews();
   if (!$("#tab-portfolio").classList.contains("hidden")) loadPortfolio();
   $("#btnRender").disabled = false;
   setUpdateStatus(`Rendered from saved data · ${new Date().toLocaleTimeString()}`);
