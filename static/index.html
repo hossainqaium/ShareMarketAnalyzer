@@ -38,18 +38,20 @@
   <button data-tab="spike">Spike</button>
   <button data-tab="margin">Margin</button>
   <button data-tab="followup">🔭 Tomorrow's Follow-up</button>
-  <button data-tab="toptx">Today's Top 10 Transaction</button>
+  <button data-tab="toptx">Today's Top 20 Transaction</button>
   <button data-tab="agm">AGM/EGM/Record</button>
+  <button data-tab="shortlisted">★ Shortlisted <span class="muted-count" id="shortlistedBadge"></span></button>
   <button data-tab="compare">⚖ Compare <span class="muted-count" id="compareBadge"></span></button>
 </nav>
 <div class="decide-legend" data-group-tabs="decide">Start with <b>Suggestions</b> for the best overall picks —
   <b>High Profit</b>, <b>Spike</b> and <b>Margin</b> surface more specific setups (aggressive, sudden movers,
-  price extremes); <b>Today's Top 10 Transaction</b> shows today's busiest shares by value, volume and % change;
-  <b>AGM/EGM/Record</b> is dividend &amp; rights dates; <b>Compare</b> puts shares you've picked
+  price extremes); <b>Today's Top 20 Transaction</b> shows today's busiest shares by value, volume and % change;
+  <b>AGM/EGM/Record</b> is dividend &amp; rights dates; <b>Shortlisted</b> collects shares you've starred (★);
+  <b>Compare</b> puts shares you've picked
   side by side. · সেরা সামগ্রিক পছন্দের জন্য <b>Suggestions</b> দিয়ে শুরু করুন — <b>High Profit</b>, <b>Spike</b> ও
-  <b>Margin</b> আরও নির্দিষ্ট সুযোগ দেখায় (আক্রমণাত্মক, হঠাৎ ওঠা, দামের চরম); <b>Today's Top 10 Transaction</b> আজকের
+  <b>Margin</b> আরও নির্দিষ্ট সুযোগ দেখায় (আক্রমণাত্মক, হঠাৎ ওঠা, দামের চরম); <b>Today's Top 20 Transaction</b> আজকের
   সবচেয়ে বেশি লেনদেন হওয়া শেয়ার (মূল্য, ভলিউম, % পরিবর্তন) দেখায়; <b>AGM/EGM/Record</b> লভ্যাংশ ও রাইট শেয়ারের
-  তারিখ; <b>Compare</b>-এ আপনার বেছে নেওয়া শেয়ারগুলো পাশাপাশি দেখুন।</div>
+  তারিখ; <b>Shortlisted</b>-এ আপনার স্টার (★) করা শেয়ার; <b>Compare</b>-এ আপনার বেছে নেওয়া শেয়ারগুলো পাশাপাশি দেখুন।</div>
 <nav class="tabs hidden" data-group-tabs="manage">
   <button data-tab="portfolio" class="active">Portfolio</button>
 </nav>
@@ -303,6 +305,7 @@
             <th data-term="support">Room%</th>
             <th data-term="spike_score">Score</th>
             <th class="lft" data-term="spike_score">Outlook</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
           <tbody></tbody>
@@ -330,6 +333,7 @@
             <th data-term="rsi">RSI now</th>
             <th data-term="spike_score">Score</th>
             <th class="lft" data-term="spike_score">Outlook</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
           <tbody></tbody>
@@ -401,6 +405,7 @@
             <th data-term="rsi">RSI</th>
             <th data-term="returns">1w%</th><th data-term="returns">1m%</th>
             <th data-term="rise_score">Rise score</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th class="lft" data-term="turn_date">Could start rising</th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
@@ -424,6 +429,7 @@
             <th data-term="rsi">RSI</th>
             <th data-term="returns">1w%</th><th data-term="returns">1m%</th>
             <th data-term="fall_score">Fall score</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th class="lft" data-term="turn_date">Could start falling</th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
           </tr></thead>
@@ -467,6 +473,7 @@
             <th data-term="rsi">RSI</th>
             <th><span class="term" data-term="followup_conviction">Conviction</span></th>
             <th class="lft"><span class="term" data-term="followup_source">Signal</span></th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th><span class="term" data-term="pred_price">AI Pred. 1w</span></th>
             <th class="lft" data-term="followup_when">Expected by</th>
             <th class="lft"><span class="term" data-term="why_col">Why · কেন</span></th>
@@ -478,11 +485,11 @@
   </section>
 
   <section id="tab-toptx" class="hidden">
-    <p class="disclaimer"><span class="term" data-term="toptx_tab">Today's busiest shares</span> — the top 10 by
+    <p class="disclaimer"><span class="term" data-term="toptx_tab">Today's busiest shares</span> — the top 20 by
       traded value (turnover), by share volume, and by size of price move, each with the fundamentals and score
       needed to judge it, plus a 1-month price chart. This is today's real trading activity, not a pick list —
       cross-check the Verdict/Score and Why before acting on heavy volume alone.
-      · আজকের সবচেয়ে বেশি লেনদেন হওয়া শেয়ার — লেনদেন মূল্য, শেয়ার সংখ্যা ও দামের পরিবর্তনের আকার অনুযায়ী শীর্ষ ১০টি,
+      · আজকের সবচেয়ে বেশি লেনদেন হওয়া শেয়ার — লেনদেন মূল্য, শেয়ার সংখ্যা ও দামের পরিবর্তনের আকার অনুযায়ী শীর্ষ ২০টি,
       প্রতিটির সাথে সিদ্ধান্তের জন্য প্রয়োজনীয় তথ্য ও ১ মাসের চার্ট। এটি আজকের প্রকৃত লেনদেন কার্যকলাপ, পছন্দ তালিকা নয় —
       শুধু ভলিউমের ভিত্তিতে সিদ্ধান্ত নেওয়ার আগে Verdict/Score ও Why দেখে নিন।</p>
     <div class="chart-controls">
@@ -494,7 +501,7 @@
       <span class="page-info" id="txMeta"></span>
     </div>
     <div class="panel">
-      <h2 id="txTitle">💰 Top 10 by traded value · আজকের সর্বোচ্চ লেনদেন</h2>
+      <h2 id="txTitle">💰 Top 20 by traded value · আজকের সর্বোচ্চ লেনদেন</h2>
       <div class="sub" id="txSub">Sorted by today's traded value (turnover, mn BDT) — the shares moving the most
         money right now. · আজকের লেনদেন মূল্য (টাকা) অনুযায়ী সাজানো — এই মুহূর্তে সবচেয়ে বেশি টাকা লেনদেন হওয়া শেয়ার।</div>
       <div class="tbl-wrap tall">
@@ -541,6 +548,7 @@
         <table id="agmTable">
           <thead><tr>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th class="lft">Purpose</th><th>Dividend</th>
             <th class="lft" data-term="record_date">Record date</th><th class="lft">AGM/EGM date</th>
           </tr></thead>
@@ -556,6 +564,7 @@
         <table id="rightsTable">
           <thead><tr>
             <th class="lft">Code</th><th class="lft" data-term="sector">Sector</th>
+            <th class="lft"><span class="term" data-term="verdict">Verdict</span></th>
             <th class="lft">Ratio</th><th>Issue price</th>
             <th class="lft" data-term="record_date">Record date</th><th class="lft">Subscription window</th>
             <th class="lft">Remarks</th>
@@ -563,6 +572,25 @@
           <tbody></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <!-- ============ SHORTLISTED ============ -->
+  <section id="tab-shortlisted" class="hidden">
+    <p class="disclaimer"><span class="term" data-term="shortlist">Shortlisted shares</span> you've marked with the
+      ★ button anywhere in the app, with the Verdict, AI Pred. and Drift forecasts (1w / 1m) and a short Why —
+      hover the Why text for the full detail.
+      · অ্যাপের যেকোনো জায়গায় ★ বাটনে চিহ্নিত শেয়ারগুলো — Verdict, AI Pred. ও Drift পূর্বাভাস (১ সপ্তাহ / ১ মাস) এবং সংক্ষিপ্ত Why সহ; বিস্তারিত জানতে Why-এর উপর মাউস রাখুন।</p>
+
+    <div class="panel" id="shortlistedEmptyPanel">
+      <div class="axis-note" style="padding:24px 0; text-align:center">No shares shortlisted yet. Click the <b>★</b>
+        button next to any share — in Charts, AI Prediction Chart, Screener or elsewhere — to add it here.
+        · এখনো কোনো শেয়ার শর্টলিস্টে নেই। যেকোনো শেয়ারের পাশের <b>★</b> বাটনে ক্লিক করে এখানে যোগ করুন।</div>
+    </div>
+
+    <div class="panel shortlist-panel hidden" id="scrShortlistPanel">
+      <h2 class="term" data-term="shortlist">★ Shortlisted <span class="muted-count" id="scrShortlistCount"></span></h2>
+      <div class="tbl-wrap"><table id="scrShortlistTable"><thead><tr></tr></thead><tbody></tbody></table></div>
     </div>
   </section>
 
@@ -631,10 +659,6 @@
 
   <!-- ============ SCREENER ============ -->
   <section id="tab-screener" class="hidden">
-    <div class="panel shortlist-panel hidden" id="scrShortlistPanel">
-      <h2 class="term" data-term="shortlist">★ Shortlisted <span class="muted-count" id="scrShortlistCount"></span></h2>
-      <div class="tbl-wrap"><table id="scrShortlistTable"><thead><tr></tr></thead><tbody></tbody></table></div>
-    </div>
     <div class="scr-controls">
       <input type="text" id="scrSearch" placeholder="Filter by code or sector…">
       <select id="fltSector" data-term="sector"><option value="">All sectors</option></select>

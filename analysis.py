@@ -2354,7 +2354,7 @@ def build_spike(results, today):
             "spikes": spikes, "trend_breaks": trend_breaks}
 
 
-TOPTX_N = 10  # rows kept per filter (by value / by volume / by % change)
+TOPTX_N = 20  # rows kept per filter (by value / by volume / by % change)
 
 
 def _toptx_brief(code, m):

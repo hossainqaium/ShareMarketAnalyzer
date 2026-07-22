@@ -1118,5 +1118,242 @@
     "pred_1m": 268.46
    }
   }
+ },
+ "2026-07-22": {
+  "strong_buy": [
+   "ACIFORMULA",
+   "APEXFOOT",
+   "BATBC",
+   "BSRMSTEEL",
+   "CVOPRL",
+   "DBH",
+   "DHAKABANK",
+   "LHB",
+   "PHARMAID",
+   "SANDHANINS",
+   "TECHNODRUG",
+   "UNITEDINS"
+  ],
+  "buy": [
+   "ACI",
+   "ACMELAB",
+   "ADNTEL",
+   "AGNISYSL",
+   "AMANFEED",
+   "ARAMIT",
+   "ARGONDENIM",
+   "BSC",
+   "BSCPLC",
+   "BSRMLTD",
+   "CITYBANK",
+   "CITYGENINS",
+   "CONFIDCEM",
+   "DOREENPWR",
+   "DSHGARME",
+   "DUTCHBANGL",
+   "EASTRNLUB",
+   "EHL",
+   "ENVOYTEX",
+   "FARCHEM",
+   "FEKDIL",
+   "FUWANGCER",
+   "GENEXIL",
+   "GPHISPAT",
+   "HWAWELLTEX",
+   "IBNSINA",
+   "IBP",
+   "IDLC",
+   "INDEXAGRO",
+   "ITC",
+   "JAMUNAOIL",
+   "KARNAPHULI",
+   "KOHINOOR",
+   "LANKABAFIN",
+   "LINDEBD",
+   "MAGURAPLEX",
+   "MATINSPINN",
+   "MIDLANDBNK",
+   "MIRAKHTER",
+   "MJLBD",
+   "MONOSPOOL",
+   "MTB",
+   "NAVANAPHAR",
+   "NHFIL",
+   "NPOLYMER",
+   "OLYMPIC",
+   "PADMAOIL",
+   "PREMIERCEM",
+   "PRIMEBANK",
+   "PUBALIBANK",
+   "QUASEMIND",
+   "QUEENSOUTH",
+   "RAKCERAMIC",
+   "RANFOUNDRY",
+   "RENATA",
+   "ROBI",
+   "RUNNERAUTO",
+   "SAIHAMCOT",
+   "SAIHAMTEX",
+   "SALVO",
+   "SAPORTL",
+   "SHAHJABANK",
+   "SHASHADNIM",
+   "SILCOPHL",
+   "SIMTEX",
+   "SIPLC",
+   "SONALIANSH",
+   "SONALIPAPR",
+   "SOUTHEASTB",
+   "SPCL",
+   "SQURPHARMA",
+   "SUMITPOWER",
+   "TAMIJTEX",
+   "UNIONINS",
+   "UNIQUEHRL",
+   "UNITEDFIN",
+   "UPGDCL",
+   "WALTONHIL"
+  ],
+  "top20": [
+   "ACIFORMULA",
+   "EASTRNLUB",
+   "IDLC",
+   "DBH",
+   "APEXFOOT",
+   "BATBC",
+   "TECHNODRUG",
+   "CVOPRL",
+   "DUTCHBANGL",
+   "LHB",
+   "BSRMSTEEL",
+   "AMANFEED",
+   "DHAKABANK",
+   "UNITEDINS",
+   "ITC",
+   "RENATA",
+   "LANKABAFIN",
+   "SANDHANINS",
+   "SHASHADNIM",
+   "SONALIANSH"
+  ],
+  "high_profit": [
+   "ACIFORMULA",
+   "AGNISYSL",
+   "BSRMSTEEL",
+   "MIDLANDBNK",
+   "SALVO",
+   "SHAHJABANK",
+   "APEXSPINN",
+   "CITYBANK",
+   "VFSTDL",
+   "DBH",
+   "FARCHEM",
+   "LANKABAFIN",
+   "JAMUNAOIL",
+   "ASIAINS",
+   "PTL"
+  ],
+  "pred": {
+   "ACIFORMULA": {
+    "price": 177.1,
+    "pred_1w": 179.2,
+    "pred_1m": 184.42
+   },
+   "EASTRNLUB": {
+    "price": 2113.7,
+    "pred_1w": 2168.05,
+    "pred_1m": 2184.02
+   },
+   "IDLC": {
+    "price": 47.5,
+    "pred_1w": 49.57,
+    "pred_1m": 55.1
+   },
+   "DBH": {
+    "price": 44.4,
+    "pred_1w": 45.04,
+    "pred_1m": 47.64
+   },
+   "APEXFOOT": {
+    "price": 219.2,
+    "pred_1w": 221.4,
+    "pred_1m": 229.42
+   },
+   "BATBC": {
+    "price": 228.1,
+    "pred_1w": 231.93,
+    "pred_1m": 238.15
+   },
+   "TECHNODRUG": {
+    "price": 48.4,
+    "pred_1w": 48.98,
+    "pred_1m": 49.23
+   },
+   "CVOPRL": {
+    "price": 178.3,
+    "pred_1w": 179.19,
+    "pred_1m": 185.08
+   },
+   "DUTCHBANGL": {
+    "price": 50.0,
+    "pred_1w": 51.34,
+    "pred_1m": 52.77
+   },
+   "LHB": {
+    "price": 60.0,
+    "pred_1w": 61.72,
+    "pred_1m": 67.19
+   },
+   "BSRMSTEEL": {
+    "price": 96.7,
+    "pred_1w": 98.08,
+    "pred_1m": 104.41
+   },
+   "AMANFEED": {
+    "price": 38.9,
+    "pred_1w": 39.21,
+    "pred_1m": 39.33
+   },
+   "DHAKABANK": {
+    "price": 12.5,
+    "pred_1w": 12.56,
+    "pred_1m": 13.16
+   },
+   "UNITEDINS": {
+    "price": 48.5,
+    "pred_1w": 49.5,
+    "pred_1m": 52.13
+   },
+   "ITC": {
+    "price": 53.1,
+    "pred_1w": 53.83,
+    "pred_1m": 56.31
+   },
+   "RENATA": {
+    "price": 473.4,
+    "pred_1w": 481.6,
+    "pred_1m": 495.45
+   },
+   "LANKABAFIN": {
+    "price": 18.7,
+    "pred_1w": 19.08,
+    "pred_1m": 20.21
+   },
+   "SANDHANINS": {
+    "price": 27.7,
+    "pred_1w": 28.5,
+    "pred_1m": 30.98
+   },
+   "SHASHADNIM": {
+    "price": 27.8,
+    "pred_1w": 28.03,
+    "pred_1m": 29.02
+   },
+   "SONALIANSH": {
+    "price": 212.1,
+    "pred_1w": 215.42,
+    "pred_1m": 228.13
+   }
+  }
  }
 }

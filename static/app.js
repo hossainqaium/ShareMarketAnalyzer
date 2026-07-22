@@ -15,6 +15,7 @@ const state = {
   topHorizon: "all",
   agmData: null, agmSearch: "",
   portfolio: null,
+  portfolioCodes: new Set(), // codes currently held — shown in blue across all reports
   detail: null, // cached /api/history payload for the open modal
   shortlist: loadShortlistSet(),
   compareSet: loadCompareSet(),
@@ -57,6 +58,8 @@ function refreshShortlistUI() {
   if (state.chartsData) loadChartsShortlist();
   if (state.potData) loadPotentialShortlist();
   if (state.summary) renderScreenerShortlist();
+  const badge = $("#shortlistedBadge");
+  if (badge) badge.textContent = state.shortlist.size ? `(${state.shortlist.size})` : "";
 }
 
 /* ---------------- compare (persisted in localStorage) ---------------- */
@@ -177,7 +180,7 @@ const GLOSSARY = {
   "flag:top-of-range": { t: "top-of-range", en: "Trading in the top quarter of its 2-year range with a meaningful fall score — the Margin analysis sees this as a profit-taking zone, not an entry zone. Blocks a Strong Buy verdict.", bn: "২ বছরের সীমার উপরের ২৫%-এ আছে এবং পতনের স্কোর উল্লেখযোগ্য — Margin বিশ্লেষণ একে মুনাফা তোলার জায়গা মনে করে, ঢোকার নয়। Strong Buy রায় আটকে দেয়।" },
   "flag:spike-fade-risk": { t: "spike-fade-risk", en: "This share spiked today but the continuation score is low (thin volume / no news / weak trend) — the Spike analysis expects the jump to fade. Don't chase it.", bn: "শেয়ারটি আজ স্পাইক করেছে কিন্তু ধারাবাহিকতা-স্কোর কম (কম ভলিউম / খবর নেই / দুর্বল ট্রেন্ড) — Spike বিশ্লেষণ ধারণা করছে লাফটি মিলিয়ে যাবে। পেছনে ছুটবেন না।" },
   "flag:spike-down-risk": { t: "spike-down-risk", en: "This share dropped sharply recently and the Spike analysis sees signs the decline continues (volume backing, downtrend context, bad news) — a reason to reassess a holding or avoid buying the dip.", bn: "শেয়ারটি সম্প্রতি ব্যাপক পড়েছে এবং Spike বিশ্লেষণ পতন চলতে থাকার লক্ষণ দেখছে (ভলিউম সমর্থন, নিম্নগতির প্রেক্ষাপট, খারাপ খবর) — হোল্ডিং পুনর্মূল্যায়ন করার বা কমা দামে না কেনার কারণ।" },
-  why_col: { t: "Why · কেন", en: "The detailed, data-backed reasons behind this row — trend, relative strength, volume, fundamentals, signal history, record dates, plus cross-checks against today's Spike list, the 2-year Margin extremes, and today's Top 10 Transaction activity (turnover/volume confirmation). Hover the text itself to read it in Bengali.", bn: "এই সারির পেছনের বিস্তারিত, তথ্যভিত্তিক কারণ — ট্রেন্ড, আপেক্ষিক শক্তি, ভলিউম, মৌলভিত্তি, সংকেতের ইতিহাস, রেকর্ড ডেট, এবং আজকের Spike, Margin ও Today's Top 10 Transaction কার্যকলাপের (লেনদেন/ভলিউম নিশ্চিতকরণ) সাথে মিলিয়ে দেখা। লেখাটির উপর মাউস রাখলে বাংলায় পড়া যাবে।" },
+  why_col: { t: "Why · কেন", en: "The detailed, data-backed reasons behind this row — trend, relative strength, volume, fundamentals, signal history, record dates, plus cross-checks against today's Spike list, the 2-year Margin extremes, and today's Top 20 Transaction activity (turnover/volume confirmation). Hover the text itself to read it in Bengali.", bn: "এই সারির পেছনের বিস্তারিত, তথ্যভিত্তিক কারণ — ট্রেন্ড, আপেক্ষিক শক্তি, ভলিউম, মৌলভিত্তি, সংকেতের ইতিহাস, রেকর্ড ডেট, এবং আজকের Spike, Margin ও Today's Top 20 Transaction কার্যকলাপের (লেনদেন/ভলিউম নিশ্চিতকরণ) সাথে মিলিয়ে দেখা। লেখাটির উপর মাউস রাখলে বাংলায় পড়া যাবে।" },
   "flag:record-date-soon": { t: "record-date-soon", en: "The dividend record date is within ~20 days — a near-term reason to hold through that date if you want the dividend.", bn: "লভ্যাংশের রেকর্ড ডেট প্রায় ২০ দিনের মধ্যে — লভ্যাংশ পেতে চাইলে ওই তারিখ পর্যন্ত ধরে রাখার একটি কারণ।" },
   "news:dividend": { t: "dividend news", en: "Company announced or disbursed a dividend.", bn: "কোম্পানি লভ্যাংশ ঘোষণা বা বিতরণ করেছে।" },
   "news:financials": { t: "financials news", en: "Quarterly or annual financial results were published — may move EPS/P/E.", bn: "ত্রৈমাসিক বা বার্ষিক আর্থিক ফলাফল প্রকাশিত হয়েছে — EPS/P/E বদলাতে পারে।" },
@@ -188,7 +191,7 @@ const GLOSSARY = {
   "news:resumption": { t: "resumption", en: "Trading resumed after a suspension.", bn: "স্থগিতাদেশের পর লেনদেন আবার শুরু হয়েছে।" },
   "news:other": { t: "other announcement", en: "A company announcement that didn't fall into a specific tracked category — read the title for context.", bn: "নির্দিষ্ট কোনো শ্রেণিতে না পড়া কোম্পানি ঘোষণা — বিস্তারিত জানতে শিরোনাম দেখুন।" },
   theme_toggle: { t: "Theme", en: "Click to cycle Auto (follows your browser/OS setting) → Light → Dark. Useful when your browser reports a color scheme you don't want here (e.g. Safari showing light while Chrome shows dark) — pick Light or Dark to force it, independent of the browser. Saved in this browser only.", bn: "ক্লিক করলে Auto (ব্রাউজার/OS-এর সেটিং অনুসরণ করে) → Light → Dark ক্রমে বদলায়। ব্রাউজার ভুল থিম দেখালে (যেমন Safari-তে হালকা কিন্তু Chrome-এ গাঢ়) Light বা Dark বেছে জোর করে নির্ধারণ করুন। শুধু এই ব্রাউজারে সংরক্ষিত হয়।" },
-  shortlist: { t: "Shortlist", en: "Click the ☆ on any share to shortlist it — shortlisted shares are pinned in their own section at the top of the Charts, AI Prediction Chart, and Screener tabs. Saved in this browser only (not shared across devices).", bn: "যেকোনো শেয়ারের ☆ চিহ্নে ক্লিক করলে তা শর্টলিস্টে যোগ হয় — শর্টলিস্ট করা শেয়ারগুলো Charts, AI Prediction Chart ও Screener ট্যাবের উপরে আলাদা অংশে দেখা যাবে। শুধু এই ব্রাউজারে সংরক্ষিত হয় (অন্য ডিভাইসে নয়)।" },
+  shortlist: { t: "Shortlist", en: "Click the ☆ on any share to shortlist it — shortlisted shares are collected in the dedicated Shortlisted tab (under Decide) and also pinned at the top of the Charts and AI Prediction Chart tabs. Saved in this browser only (not shared across devices).", bn: "যেকোনো শেয়ারের ☆ চিহ্নে ক্লিক করলে তা শর্টলিস্টে যোগ হয় — শর্টলিস্ট করা শেয়ারগুলো Decide-এর অধীনে আলাদা Shortlisted ট্যাবে জমা হয় এবং Charts ও AI Prediction Chart ট্যাবের উপরেও দেখা যায়। শুধু এই ব্রাউজারে সংরক্ষিত হয় (অন্য ডিভাইসে নয়)।" },
   compare: { t: "Compare", en: "Click the ⚖ on any share (Suggestions, Spike, High Profit, Margin, Charts, AI Prediction Chart, or Screener) to add it to the Compare tab — up to 6 at once. Compare shows every share side by side and ranks them against EACH OTHER, unlike every other tab which ranks against the whole market. Saved in this browser only.", bn: "যেকোনো শেয়ারের ⚖ চিহ্নে ক্লিক করলে তা Compare ট্যাবে যোগ হয় — একসাথে সর্বোচ্চ ৬টি। Compare শেয়ারগুলোকে পাশাপাশি দেখায় ও একে অপরের তুলনায় র‍্যাঙ্ক করে — বাকি সব ট্যাব যেখানে পুরো বাজারের তুলনায় র‍্যাঙ্ক করে। শুধু এই ব্রাউজারে সংরক্ষিত হয়।" },
   compare_tab: { t: "Compare", en: "Side-by-side comparison of shares you've marked with ⚖ across the app (up to 6). Every metric — score, target/stop, technicals, fundamentals, record dates, risk flags, and whether each is currently flagged in Spike/High Profit/Margin — sits in one table so you can weigh them at a glance before deciding which to actually buy.", bn: "অ্যাপ জুড়ে ⚖ দিয়ে চিহ্নিত শেয়ারগুলোর পাশাপাশি তুলনা (সর্বোচ্চ ৬টি)। প্রতিটি তথ্য — স্কোর, টার্গেট/স্টপ, টেকনিক্যাল, মৌলভিত্তি, রেকর্ড ডেট, ঝুঁকি-চিহ্ন এবং Spike/High Profit/Margin-এ চিহ্নিত কিনা — একই টেবিলে থাকে যাতে কোনটি আসলে কিনবেন তা এক নজরে বিবেচনা করতে পারেন।" },
   compare_insights: { t: "Head-to-head insights", en: "Automatically generated callouts comparing ONLY the shares you've selected against each other — best composite, best risk/reward, earliest buy date, closest record date, and any risk flags — ending with which one looks like the strongest overall pick among this specific group.", bn: "শুধুমাত্র আপনার নির্বাচিত শেয়ারগুলোকে একে অপরের সাথে তুলনা করে স্বয়ংক্রিয়ভাবে তৈরি পর্যবেক্ষণ — সেরা কম্পোজিট, সেরা ঝুঁকি-পুরস্কার, সবচেয়ে আগের কেনার তারিখ, নিকটতম রেকর্ড ডেট এবং ঝুঁকি-চিহ্ন — শেষে কোনটি এই নির্দিষ্ট দলের মধ্যে সবচেয়ে শক্তিশালী তার সিদ্ধান্তসহ।" },
@@ -237,7 +240,7 @@ const GLOSSARY = {
   diversification: { t: "Diversification check", en: "Pairwise correlation of daily returns among your current holdings, computed from real price history — not just sector labels. A pair at 0.7+ moves together closely: holding both is largely one bet wearing two tickers, not real diversification, even if they're in 'different' sectors.", bn: "আপনার বর্তমান হোল্ডিংগুলোর মধ্যে দৈনিক রিটার্নের জোড়ার-হারে সহসম্পর্ক, প্রকৃত দামের ইতিহাস থেকে হিসাব করা — শুধু সেক্টরের লেবেল নয়। ০.৭+ মানে দুটি একসাথে চলে: 'ভিন্ন' সেক্টরে থাকলেও দুটো ধরে রাখা মূলত একই বাজি দুই টিকারে, প্রকৃত বৈচিত্র্য নয়।" },
   csv_export: { t: "Export CSV", en: "Downloads the currently filtered and sorted Screener table as a CSV file — exactly what you see on screen, ready for a spreadsheet.", bn: "বর্তমানে ফিল্টার ও সাজানো Screener টেবিলটি CSV ফাইল হিসেবে ডাউনলোড করে — স্ক্রিনে যা দেখছেন ঠিক তাই, স্প্রেডশিটের জন্য প্রস্তুত।" },
   saved_filters: { t: "Quick screens", en: "A few built-in curated screens (Value picks, Momentum breakouts, Income, Turnarounds, Institutional accumulation) plus any you save yourself under a name — stored in this browser only (localStorage), not shared across devices. Loading a screen replaces your current filters; built-ins can't be deleted.", bn: "কয়েকটি বিল্ট-ইন কিউরেটেড স্ক্রিন (Value picks, Momentum breakouts, Income, Turnarounds, Institutional accumulation) এবং আপনার নিজের সংরক্ষিত ফিল্টার — শুধু এই ব্রাউজারে (localStorage) সংরক্ষিত। স্ক্রিন লোড করলে বর্তমান ফিল্টার প্রতিস্থাপিত হয়; বিল্ট-ইন মোছা যাবে না।" },
-  group_decide: { t: "Decide", en: "Everything that helps you choose what to buy or watch right now: Suggestions (Top 20 + scored picks), ⚡High Profit (aggressive setups), Spike (sudden movers), and Margin (range-extreme reversal candidates).", bn: "এখন কী কিনবেন বা নজরে রাখবেন তা ঠিক করতে সাহায্য করে এমন সবকিছু: Suggestions, ⚡High Profit, Spike, এবং Margin।" },
+  group_decide: { t: "Decide", en: "Everything that helps you choose what to buy or watch right now: Suggestions (Top 20 + scored picks), ⚡High Profit (aggressive setups), Spike (sudden movers), Margin (range-extreme reversal candidates), ★ Shortlisted (shares you've starred), and ⚖ Compare.", bn: "এখন কী কিনবেন বা নজরে রাখবেন তা ঠিক করতে সাহায্য করে এমন সবকিছু: Suggestions, ⚡High Profit, Spike, Margin, ★ Shortlisted (আপনার স্টার করা শেয়ার), এবং ⚖ Compare।" },
   group_manage: { t: "Manage", en: "Your own holdings — the Portfolio tab: trade journal, exit engine, sell alerts, and diversification check.", bn: "আপনার নিজের শেয়ার — Portfolio ট্যাব: লেনদেন খাতা, এক্সিট ইঞ্জিন, বিক্রির সতর্কতা, বৈচিত্র্য পরীক্ষা।" },
   group_explore: { t: "Explore", en: "Tools for digging through the data yourself: Charts, AI Prediction Chart, the full Screener table, and Sectors.", bn: "নিজে তথ্য ঘেঁটে দেখার সরঞ্জাম: Charts, AI Prediction Chart, পূর্ণ Screener টেবিল, এবং Sectors।" },
   group_news: { t: "News", en: "The live DSE company-news feed (from amarstock, stored in news.csv). The same feed the analysis reads — fresh dividends, results, board meetings, exchange queries, halts and audit concerns flow into each share's Why and scores.", bn: "সরাসরি DSE কোম্পানি সংবাদ (amarstock থেকে, news.csv-তে সংরক্ষিত)। বিশ্লেষণ এই সংবাদই পড়ে — লভ্যাংশ, ফলাফল, বোর্ড মিটিং, এক্সচেঞ্জ প্রশ্ন, লেনদেন স্থগিত ও নিরীক্ষা উদ্বেগ প্রতিটি শেয়ারের Why ও স্কোরে যুক্ত হয়।" },
@@ -274,7 +277,7 @@ const GLOSSARY = {
   from_low: { t: "Above period low", en: "How far the price has already recovered above the selected period's low. Small = still at the very bottom of that range.", bn: "নির্বাচিত সময়ের সর্বনিম্ন থেকে দাম কতটা উঠেছে। কম মানে ওই সীমার একেবারে তলানিতে।" },
   from_high: { t: "Below period high", en: "How far the price sits below the selected period's high. Small = right at the top of that range.", bn: "নির্বাচিত সময়ের সর্বোচ্চ থেকে দাম কতটা নিচে। কম মানে ওই সীমার একেবারে চূড়ায়।" },
   potential: { t: "AI Prediction Chart", en: "Left of the divider: the real past year, plus past 1w/1m/2m returns (what already happened). Right of the divider, and in the AI Pred. 1w/1m badges: a deterministic 6-month projection — momentum of the last 60/120/250 sessions, damped over time, plus last year's detrended seasonal shape at half strength. Despite the \"AI\" label this is a statistical shape to support your decision, NOT a trained model or a guarantee; regenerated from the freshest history on every Update Data. See Pred. accuracy under Report card for its real graded track record.", bn: "দাগের বাঁয়ে: গত ১ বছরের প্রকৃত দাম, সাথে past 1w/1m/2m রিটার্ন (যা ইতিমধ্যে ঘটেছে)। দাগের ডানে ও AI Pred. 1w/1m ব্যাজে: পরবর্তী ৬ মাসের গাণিতিক অভিক্ষেপ — সাম্প্রতিক গতি (ক্রমশ ক্ষীয়মাণ) ও গত বছরের ঋতুভিত্তিক আকৃতির অর্ধেক মিলিয়ে। \"AI\" লেখা থাকলেও এটি সিদ্ধান্তে সহায়ক পরিসংখ্যানিক আকৃতি, প্রশিক্ষিত মডেল বা গ্যারান্টি নয়; প্রতি Update Data-তে সর্বশেষ ইতিহাস থেকে নতুন করে তৈরি হয়। প্রকৃত গ্রেড করা ফলাফলের জন্য Report card-এর নিচে Pred. accuracy দেখুন।" },
-  toptx_tab: { t: "Today's Top 10 Transaction", en: "The exchange's actual trading activity today, independent of the pick-list rules — three views of the same session: By Value (highest turnover, mn BDT), By Volume (most shares traded) and By % Change (biggest movers, up or down). A share can top this list purely on activity even if its Verdict is Avoid — heavy volume alone isn't a buy signal, check the Verdict/Score and Why before acting.", bn: "আজকের প্রকৃত লেনদেন কার্যকলাপ, পছন্দ তালিকার নিয়মের বাইরে — একই সেশনের তিনটি দৃষ্টিকোণ: By Value (সর্বোচ্চ লেনদেন মূল্য), By Volume (সর্বোচ্চ শেয়ার সংখ্যা), By % Change (সবচেয়ে বেশি ওঠা/নামা)। কেবল কার্যকলাপের ভিত্তিতে একটি শেয়ার এই তালিকায় আসতে পারে, এমনকি তার Verdict Avoid হলেও — শুধু বেশি ভলিউম মানেই কেনার সংকেত নয়, আগে Verdict/Score ও Why দেখুন।" },
+  toptx_tab: { t: "Today's Top 20 Transaction", en: "The exchange's actual trading activity today, independent of the pick-list rules — three views of the same session: By Value (highest turnover, mn BDT), By Volume (most shares traded) and By % Change (biggest movers, up or down). A share can top this list purely on activity even if its Verdict is Avoid — heavy volume alone isn't a buy signal, check the Verdict/Score and Why before acting.", bn: "আজকের প্রকৃত লেনদেন কার্যকলাপ, পছন্দ তালিকার নিয়মের বাইরে — একই সেশনের তিনটি দৃষ্টিকোণ: By Value (সর্বোচ্চ লেনদেন মূল্য), By Volume (সর্বোচ্চ শেয়ার সংখ্যা), By % Change (সবচেয়ে বেশি ওঠা/নামা)। কেবল কার্যকলাপের ভিত্তিতে একটি শেয়ার এই তালিকায় আসতে পারে, এমনকি তার Verdict Avoid হলেও — শুধু বেশি ভলিউম মানেই কেনার সংকেত নয়, আগে Verdict/Score ও Why দেখুন।" },
   followup_tab: { t: "Tomorrow's Follow-up", en: "Two short next-session watchlists: Sale Follow-up = the 10 shares most likely to keep FALLING (watch to sell or stay out), Buy Follow-up = the 10 most likely to keep RISING (watch to buy). Nothing new is invented — each share is ranked by the strongest of the app's already-computed directional signals: a Margin bottom-of-range turn-up / top-of-range turn-down, or a Spike that's still running, nudged slightly by the 1-week forecast when it agrees. Candidates to watch tomorrow, NOT guarantees — confirm the open goes the expected way and keep your stop-loss. See the Backtest section (under Report card) for how these signals have actually held up on real history.", bn: "পরের সেশনের দুটি সংক্ষিপ্ত তালিকা: Sale Follow-up = সবচেয়ে বেশি পড়ার সম্ভাবনাযুক্ত ১০টি শেয়ার (বিক্রি বা দূরে থাকার জন্য নজরে), Buy Follow-up = সবচেয়ে বেশি ওঠার সম্ভাবনাযুক্ত ১০টি (কেনার জন্য নজরে)। নতুন কিছু তৈরি হয়নি — প্রতিটি শেয়ার অ্যাপের বিদ্যমান সবচেয়ে শক্তিশালী দিকনির্দেশক সংকেত দিয়ে সাজানো: Margin-এর সীমার তলা থেকে ঘুরে দাঁড়ানো / চূড়া থেকে নেমে আসা, বা চলমান Spike, ১ সপ্তাহের পূর্বাভাস মিললে সামান্য সমন্বিত। এগুলো আগামীকাল নজরে রাখার প্রার্থী, নিশ্চয়তা নয় — খোলার সময় নিশ্চিত হন ও স্টপ-লস রাখুন। প্রকৃত ইতিহাসে সংকেতগুলো কেমন করেছে তা Report card-এর নিচে Backtest বিভাগে দেখুন।" },
   followup_conviction: { t: "Conviction", en: "0–100 strength of the directional signal behind this row — it IS the underlying Margin rise/fall score or Spike continuation score (whichever is stronger for this share), plus up to +8 when the 1-week forecast agrees with the direction. Higher = a stronger, better-evidenced setup, but never a certainty. It does not tell you the size of the expected move, only the conviction that the direction is right.", bn: "এই সারির পেছনের দিকনির্দেশক সংকেতের শক্তি ০–১০০ — এটি মূলত Margin-এর rise/fall স্কোর বা Spike ধারাবাহিকতা স্কোর (যেটি বেশি শক্তিশালী), সাথে পূর্বাভাস দিক মিললে +৮ পর্যন্ত। বেশি = শক্তিশালী, ভালো-প্রমাণিত সেটআপ, তবে নিশ্চয়তা নয়। এটি প্রত্যাশিত পরিবর্তনের আকার বলে না, শুধু দিক সঠিক হওয়ার আস্থা বলে।" },
   followup_source: { t: "Signal", en: "Which existing app signal put this share on the list: a Margin bottom-of-range turn-up / top-of-range turn-down (a range-extreme reversal with MACD/RSI/OBV/news evidence) or a Spike continuation (a recent sharp move backed by volume that's likely to keep going). Open the Margin or Spike tab for that share's full detail.", bn: "কোন বিদ্যমান সংকেত শেয়ারটিকে তালিকায় এনেছে: Margin-এর সীমার তলা থেকে ঘুরে দাঁড়ানো / চূড়া থেকে নেমে আসা (MACD/RSI/OBV/সংবাদ প্রমাণসহ সীমা-প্রান্তের রিভার্সাল) বা Spike ধারাবাহিকতা (ভলিউম-সমর্থিত সাম্প্রতিক তীব্র মুভ যা চলতে পারে)। বিস্তারিত জানতে Margin বা Spike ট্যাব দেখুন।" },
@@ -661,7 +664,7 @@ $("#helpBg").addEventListener("click", (e) => {
 
 /* ---------------- tabs (two-level: group -> sub-tab) ---------------- */
 const TAB_GROUPS = {
-  decide: ["suggestions", "highprofit", "spike", "margin", "followup", "toptx", "agm", "compare"],
+  decide: ["suggestions", "highprofit", "spike", "margin", "followup", "toptx", "agm", "shortlisted", "compare"],
   manage: ["portfolio"],
   explore: ["charts", "potential", "screener", "sectors"],
   news: ["news"],
@@ -697,6 +700,7 @@ function activateTab(tabName) {
     else { renderPotential(); loadPotentialShortlist(); }
   }
   if (tabName === "sectors" && state.summary) renderSectors(); // sector bar chart needs real dimensions
+  if (tabName === "shortlisted" && state.summary) renderScreenerShortlist(); // canvases/table need real dimensions
   if (tabName === "compare" && state.summary) renderCompare(); // ditto for the mini sparklines
   if (tabName === "toptx" && state.summary) renderTopTx(); // ditto for the 1-month sparklines
   if (tabName === "followup" && state.summary) renderFollowup();
@@ -730,7 +734,7 @@ async function loadSummary() {
   $("#pfCodeList").innerHTML = Object.keys(state.summary.tickers).sort()
     .map((c) => `<option value="${c}">`).join("");
   if (!$("#pfDate").value) $("#pfDate").value = new Date().toISOString().slice(0, 10);
-  if (state.portfolio) loadPortfolio(); // re-price holdings after fresh analysis
+  loadPortfolio(); // re-price holdings + refresh the held-codes set (blue codes across all reports)
   renderAlerts();
   renderSignals();
   renderSectors();
@@ -945,6 +949,92 @@ function verdictBadge(v) {
   return `<span class="verdict ${cls}" data-term="verdict">${v}<small>${VERDICT_BN[v] || ""}</small></span>`;
 }
 
+/* A share-code label used in every report table/list. Codes held in the
+   Portfolio render in blue (.in-portfolio); remove the holding and they fall
+   back to the default colour. The data-code lets applyPortfolioHighlight() flip
+   already-rendered codes live when a holding is added/sold, without re-render. */
+function codeTag(code) {
+  return `<b class="share-code${portClass(code)}" data-code="${code}">${code}</b>`;
+}
+/* " in-portfolio" when held, "" otherwise — to append onto an element that
+   already carries its own class (e.g. .hp-code, .code, .t) while still opting
+   it into the blue portfolio colour and the live recolour pass. */
+function portClass(code) {
+  return state.portfolioCodes && state.portfolioCodes.has(code) ? " in-portfolio" : "";
+}
+function applyPortfolioHighlight() {
+  document.querySelectorAll(".share-code[data-code]").forEach((el) =>
+    el.classList.toggle("in-portfolio", state.portfolioCodes.has(el.dataset.code)));
+}
+
+/* verdict badge for a code by looking it up in the master ticker table — for
+   lists/charts whose own row objects don't carry the verdict field. */
+function verdictBadgeFor(code) {
+  const m = state.summary && state.summary.tickers[code];
+  return m && m.verdict ? verdictBadge(m.verdict) : "–";
+}
+
+/* Short বাংলা labels for the news categories on a ticker's recent_news, so the
+   📰 hover can present the news content in বাংলা. */
+const NEWS_CAT_BN = {
+  dividend: "লভ্যাংশ ঘোষণা", financials: "আর্থিক ফলাফল", "board-meeting": "বোর্ড মিটিং",
+  "credit-rating": "ক্রেডিট রেটিং", "rights-issue": "রাইট শেয়ার ইস্যু", suspension: "লেনদেন স্থগিত",
+  resumption: "লেনদেন পুনরায় চালু", "record-date": "রেকর্ড ডেট", "trading-halt": "লেনদেন বন্ধ",
+  "audit-concern": "নিরীক্ষা উদ্বেগ", "exchange-query": "এক্সচেঞ্জ প্রশ্ন", "category-change": "ক্যাটাগরি পরিবর্তন",
+  nav: "সম্পদমূল্য (NAV)", other: "অন্যান্য ঘোষণা",
+};
+function newsCatBn(c) { return NEWS_CAT_BN[c] || (c || "").replace(/-/g, " "); }
+
+/* One-line বাংলা context for a news category — shown under each item in the
+   News tab (the announcement body itself is English from the source and can't
+   be auto-translated offline, so we frame what the news IS in বাংলা). */
+const NEWS_CTX_BN = {
+  dividend: "কোম্পানি লভ্যাংশ ঘোষণা করেছে।",
+  financials: "ত্রৈমাসিক/বার্ষিক আর্থিক ফলাফল প্রকাশিত হয়েছে।",
+  "board-meeting": "বোর্ড মিটিং নির্ধারিত হয়েছে (প্রায়ই লভ্যাংশ/ফলাফল অনুমোদনের জন্য)।",
+  "credit-rating": "নতুন ক্রেডিট রেটিং প্রকাশিত হয়েছে।",
+  "rights-issue": "রাইট শেয়ার ইস্যু সংক্রান্ত ঘোষণা — শেয়ার ডাইলিউশনের ঝুঁকি।",
+  suspension: "লেনদেন সাময়িকভাবে স্থগিত (সাধারণত রেকর্ড ডেটের আশেপাশে)।",
+  resumption: "স্থগিতাদেশের পর লেনদেন আবার শুরু হয়েছে।",
+  "record-date": "রেকর্ড ডেট সংক্রান্ত ঘোষণা।",
+  "trading-halt": "শেয়ারের লেনদেন বন্ধ করা হয়েছে।",
+  "audit-concern": "নিরীক্ষা সংক্রান্ত উদ্বেগ প্রকাশ পেয়েছে।",
+  "exchange-query": "এক্সচেঞ্জ কোম্পানির কাছে ব্যাখ্যা চেয়েছে।",
+  "category-change": "শেয়ারের ক্যাটাগরি (A/B/N/Z) পরিবর্তিত হয়েছে।",
+  nav: "সম্পদমূল্য (NAV) সংক্রান্ত তথ্য প্রকাশিত হয়েছে।",
+  other: "কোম্পানির সাধারণ ঘোষণা — বিস্তারিত শিরোনামে।",
+};
+function newsCtxBn(c) { return NEWS_CTX_BN[c] || "কোম্পানির ঘোষণা।"; }
+
+/* "2026-07-22" + "08:10 AM" → "22 Jul 2026, 08:10 AM" for the hover tooltip. */
+const MON_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function newsFullWhen(date, time) {
+  const parts = String(date || "").split("-");
+  let d = date || "";
+  if (parts.length === 3) {
+    const mi = parseInt(parts[1], 10) - 1;
+    d = `${parseInt(parts[2], 10)} ${MON_ABBR[mi] || parts[1]} ${parts[0]}`;
+  }
+  return time ? `${d}, ${time}` : d;
+}
+
+/* 📰 icon placed beside a share in any list or chart that has recent company
+   news. The hover shows that news framed in বাংলা — each item's category
+   translated to বাংলা with its date and headline. Returns "" (no icon) when the
+   share has no recent news, so the marker only appears where there IS news. */
+function newsIcon(code) {
+  const m = state.summary && state.summary.tickers[code];
+  const news = (m && m.recent_news) || [];
+  if (!news.length) return "";
+  const risky = news.some((n) => NEWS_RISK_CATS.has(n.category));
+  const items = news.slice(0, 5).map((n) =>
+    `• <b>${newsCatBn(n.category)}</b> <span style="opacity:.7">${n.date || ""}</span>` +
+    (n.title ? `<br><span style="opacity:.85">${n.title}</span>` : "")).join("<br>");
+  const more = news.length > 5 ? `<br>… আরও ${news.length - 5}টি সংবাদ` : "";
+  const tip = `<b>📰 সাম্প্রতিক কোম্পানি সংবাদ (${news.length}টি)</b><br>${items}${more}`;
+  return `<span class="news-icon${risky ? " risk" : ""}" data-tip="${escAttr(tip)}">📰</span>`;
+}
+
 const TOP10_HORIZON_META = {
   all: {
     title: `Top 20 preferred shares · আজকের সেরা ২০ <span class="term" data-term="composite">ⓘ</span>`,
@@ -1006,7 +1096,7 @@ function renderTop10() {
       <td>${i + 1}</td>
       <td>${starBtn(c)}</td>
       <td>${compareBtn(c)}</td>
-      <td class="lft" style="max-width:80px;white-space:normal;overflow-wrap:break-word"><b>${c}</b><br><small style="color:var(--muted)">${m.sector || ""}</small></td>
+      <td class="lft" style="max-width:80px;white-space:normal;overflow-wrap:break-word">${codeTag(c)}${newsIcon(c)}<br><small style="color:var(--muted)">${m.sector || ""}</small></td>
       <td>${ltpYcp(m.price, m.ycp)}</td>
       <td class="lft">${verdictBadge(m.verdict)}</td>
       <td><b>${fmt(m.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>
@@ -1055,8 +1145,9 @@ function hpCardHtml(p, rank) {
     <div class="hp-head">
       <span class="rank">${rank}</span>
       ${starBtn(p.code)}${compareBtn(p.code)}
-      <b class="hp-code">${p.code}</b>
+      <b class="hp-code share-code${portClass(p.code)}" data-code="${p.code}">${p.code}</b>${newsIcon(p.code)}
       <small class="hp-sec">${p.sector || ""}</small>
+      <span class="hp-verdict">${verdictBadgeFor(p.code)}</span>
       <span class="hp-badge ${s.cls} term" data-term="hp:${p.strategy}">${s.label}<small>${s.bn}</small></span>
       <span class="hp-conf term" data-term="hp_conf">${"★".repeat(p.conf)}${"☆".repeat(3 - p.conf)}</span>
     </div>
@@ -1098,7 +1189,15 @@ function renderHighProfit() {
 async function loadPortfolio() {
   const res = await fetch("/api/portfolio");
   state.portfolio = await res.json();
+  syncPortfolioCodes();
   renderPortfolio();
+}
+
+/* Refresh the held-codes set from the loaded portfolio and recolour any codes
+   already on screen (other report tabs may be rendered but hidden). */
+function syncPortfolioCodes() {
+  state.portfolioCodes = new Set((state.portfolio?.holdings || []).map((h) => h.code));
+  applyPortfolioHighlight();
 }
 
 function pfAlertBadge(a) {
@@ -1140,7 +1239,7 @@ function renderPortfolio() {
   const alerts = pf.alerts || [];
   $("#pfAlertsPanel").classList.toggle("hidden", !alerts.length);
   $("#pfAlerts").innerHTML = alerts.map((a) =>
-    `<div class="sig-row"><a class="sig-code" data-code="${a.code}"><b>${a.code}</b></a>
+    `<div class="sig-row"><a class="sig-code" data-code="${a.code}">${codeTag(a.code)}</a>
       <span class="chip sig ${a.level === "bad" ? "alert-bad" : ""}" data-bn="${escAttr(a.bn)}">${a.kind}</span>
       <span style="font-size:12.5px;color:var(--ink-2)">${a.en}</span></div>`).join("");
   $("#pfAlerts").querySelectorAll(".sig-code").forEach((el) =>
@@ -1150,7 +1249,7 @@ function renderPortfolio() {
   $("#pfCount").textContent = rows.length ? `(${rows.length})` : "";
   $("#pfTable tbody").innerHTML = rows.map((h) => `<tr data-code="${h.code}">
     <td>${starBtn(h.code)}</td>
-    <td class="lft"><b>${h.code}</b><br><small style="color:var(--muted)">${h.sector || ""}</small></td>
+    <td class="lft">${codeTag(h.code)}<br><small style="color:var(--muted)">${h.sector || ""}</small></td>
     <td>${h.qty}</td>
     <td class="lft">${h.buy_date}</td>
     <td>${fmt(h.buy_price)}</td>
@@ -1196,7 +1295,7 @@ function renderPortfolio() {
     const pnl = c.qty * (c.sell_price - c.buy_price);
     const pct = (c.sell_price / c.buy_price - 1) * 100;
     return `<tr>
-      <td class="lft"><b>${c.code}</b></td><td>${c.qty}</td>
+      <td class="lft">${codeTag(c.code)}</td><td>${c.qty}</td>
       <td class="lft">${c.buy_date}</td><td>${fmt(c.buy_price)}</td>
       <td class="lft">${c.sell_date}</td><td>${fmt(c.sell_price)}</td>
       <td class="${pcls(pnl)}">${nf(pnl)}</td>
@@ -1449,7 +1548,7 @@ function renderSpike() {
       <td>${i + 1}</td>
       <td>${starBtn(s.code)}</td>
       <td>${compareBtn(s.code)}</td>
-      <td class="lft"><b>${s.code}</b></td>
+      <td class="lft">${codeTag(s.code)}${newsIcon(s.code)}</td>
       <td class="lft">${s.sector || "–"}</td>
       <td class="lft">${s.category || "–"}</td>
       <td data-bn="${escAttr(daysAgoLabelBn(s.days_ago))}">${daysAgoLabel(s.days_ago)}</td>
@@ -1461,16 +1560,17 @@ function renderSpike() {
       <td>${fmt(room)}</td>
       <td><b class="${s.score >= 60 ? "pos" : ""}">${fmt(s.score, 0)}</b><small style="color:var(--muted)">/100</small></td>
       <td class="lft">${spikeOutlookBadge(s)}</td>
+      <td class="lft">${verdictBadgeFor(s.code)}</td>
       <td class="lft why-cell"><small data-bn="${escAttr((s.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(s.why || []).join(" · ")}</small> ${spikeFlagsHtml(s)}</td>
     </tr>`;
-  }).join("") || `<tr><td colspan="16" class="loading">No spikes in the last ${sp.lookback || 5} sessions — check again after the next Update Data.</td></tr>`;
+  }).join("") || `<tr><td colspan="17" class="loading">No spikes in the last ${sp.lookback || 5} sessions — check again after the next Update Data.</td></tr>`;
   wireScreenerTable($("#spTable"));
 
   $("#tbTable tbody").innerHTML = breaks.map((s, i) => `<tr data-code="${s.code}">
       <td>${i + 1}</td>
       <td>${starBtn(s.code)}</td>
       <td>${compareBtn(s.code)}</td>
-      <td class="lft"><b>${s.code}</b></td>
+      <td class="lft">${codeTag(s.code)}${newsIcon(s.code)}</td>
       <td class="lft">${s.sector || "–"}</td>
       <td class="lft">${s.category || "–"}</td>
       <td data-bn="${escAttr(daysAgoLabelBn(s.days_ago))}">${daysAgoLabel(s.days_ago)}</td>
@@ -1481,8 +1581,9 @@ function renderSpike() {
       <td>${fmt(s.rsi14, 0)}</td>
       <td><b class="${s.score >= 55 ? "pos" : ""}">${fmt(s.score, 0)}</b><small style="color:var(--muted)">/100</small></td>
       <td class="lft">${trendBreakOutlookBadge(s)}</td>
+      <td class="lft">${verdictBadgeFor(s.code)}</td>
       <td class="lft why-cell"><small data-bn="${escAttr((s.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(s.why || []).join(" · ")}</small> ${spikeFlagsHtml(s)}</td>
-    </tr>`).join("") || `<tr><td colspan="15" class="loading">No trend breaks in the last ${sp.lookback || 5} sessions — check again after the next Update Data.</td></tr>`;
+    </tr>`).join("") || `<tr><td colspan="16" class="loading">No trend breaks in the last ${sp.lookback || 5} sessions — check again after the next Update Data.</td></tr>`;
   wireScreenerTable($("#tbTable"));
 }
 
@@ -1493,7 +1594,7 @@ function sugSpikeItem(s) {
   const cls = s.direction === "up" ? "pos" : "neg";
   return `<div class="sug-spike-item" data-code="${s.code}">
     ${starBtn(s.code)}${compareBtn(s.code)}
-    <span class="code">${s.code}</span>
+    <span class="code share-code${portClass(s.code)}" data-code="${s.code}">${s.code}</span>
     <span class="sector">${s.sector || ""}</span>
     <span class="chg ${cls}">${dirArrow(s.direction)} ${s.change_pct > 0 ? "+" : ""}${fmt(s.change_pct, 1)}%</span>
     <b class="${s.score >= 60 ? "pos" : ""}">${fmt(s.score, 0)}</b>
@@ -1503,7 +1604,7 @@ function sugBreakItem(s) {
   const regimeLabel = { downtrend: "downtrend", uptrend: "uptrend", range: "range" }[s.regime] || s.regime;
   return `<div class="sug-spike-item" data-code="${s.code}">
     ${starBtn(s.code)}${compareBtn(s.code)}
-    <span class="code">${s.code}</span>
+    <span class="code share-code${portClass(s.code)}" data-code="${s.code}">${s.code}</span>
     <span class="sector">${s.sector || ""}</span>
     <span class="chip sig pattern-chip">${dirArrow(s.direction)} ${s.regime_sessions}d ${regimeLabel}</span>
     <b class="${s.score >= 55 ? "pos" : ""}">${fmt(s.score, 0)}</b>
@@ -1574,7 +1675,7 @@ function mgRowHtml(e, i, dir) {
     <td>${i + 1}</td>
     <td>${starBtn(e.code)}</td>
     <td>${compareBtn(e.code)}</td>
-    <td class="lft"><b>${e.code}</b></td>
+    <td class="lft">${codeTag(e.code)}${newsIcon(e.code)}</td>
     <td class="lft">${e.sector || "–"}</td>
     <td class="lft">${e.category || "–"}</td>
     <td>${ltpYcp(e.price, e.ycp)}</td>
@@ -1583,6 +1684,7 @@ function mgRowHtml(e, i, dir) {
     <td>${fmt(e.rsi14, 0)}</td>
     <td>${pct(e.r_1w)}</td><td>${pct(e.r_1m)}</td>
     ${mgScoreCell(e.score, dir)}
+    <td class="lft">${verdictBadgeFor(e.code)}</td>
     <td class="lft turn-cell"><b>${e.turn_date}</b><br><small style="color:var(--muted);white-space:normal">${e.turn_note}</small></td>
     <td class="lft why-cell"><small data-bn="${escAttr((e.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(e.why || []).join(" · ")}</small> ${flags}</td>
   </tr>`;
@@ -1635,10 +1737,10 @@ function renderMargin() {
     : `${higher.length} shares in the top 25% of their ${label} range`;
   $("#mgLowerTable tbody").innerHTML =
     lower.map((e, i) => mgRowHtml(e, i, "lower")).join("") ||
-    `<tr><td colspan="15" class="loading">No shares in the lower margin of the ${label} range right now</td></tr>`;
+    `<tr><td colspan="16" class="loading">No shares in the lower margin of the ${label} range right now</td></tr>`;
   $("#mgHigherTable tbody").innerHTML =
     higher.map((e, i) => mgRowHtml(e, i, "higher")).join("") ||
-    `<tr><td colspan="15" class="loading">No shares in the higher margin of the ${label} range right now</td></tr>`;
+    `<tr><td colspan="16" class="loading">No shares in the higher margin of the ${label} range right now</td></tr>`;
   wireScreenerTable($("#mgLowerTable"));
   wireScreenerTable($("#mgHigherTable"));
 }
@@ -1658,15 +1760,15 @@ $("#mgSearch").addEventListener("input", debounce(() => {
   renderMargin();
 }, 250));
 
-/* ---------------- Today's Top 10 Transaction (by value / volume / % change) ---------------- */
+/* ---------------- Today's Top 20 Transaction (by value / volume / % change) ---------------- */
 const TX_VIEW_META = {
-  value: { title: "💰 Top 10 by traded value · আজকের সর্বোচ্চ লেনদেন",
+  value: { title: "💰 Top 20 by traded value · আজকের সর্বোচ্চ লেনদেন",
     sub: "Sorted by today's traded value (turnover, mn BDT) — the shares moving the most money right now. " +
       "· আজকের লেনদেন মূল্য (টাকা) অনুযায়ী সাজানো — এই মুহূর্তে সবচেয়ে বেশি টাকা লেনদেন হওয়া শেয়ার।" },
-  volume: { title: "📦 Top 10 by volume · আজকের সর্বোচ্চ শেয়ার সংখ্যা",
+  volume: { title: "📦 Top 20 by volume · আজকের সর্বোচ্চ শেয়ার সংখ্যা",
     sub: "Sorted by today's share count traded — the most actively changing hands, regardless of price. " +
       "· আজকের লেনদেন হওয়া শেয়ার সংখ্যা অনুযায়ী সাজানো — দাম নির্বিশেষে সবচেয়ে বেশি হাতবদল।" },
-  change: { title: "📈 Top 10 by % change · আজকের সবচেয়ে বেশি ওঠা/নামা",
+  change: { title: "📈 Top 20 by % change · আজকের সবচেয়ে বেশি ওঠা/নামা",
     sub: "Sorted by size of today's move either direction (▲ or ▼) vs yesterday's close — the day's biggest swings. " +
       "· গতকালের ক্লোজের তুলনায় আজকের পরিবর্তনের আকার অনুযায়ী সাজানো (▲ বা ▼) — দিনের সবচেয়ে বড় ওঠানামা।" },
 };
@@ -1680,7 +1782,7 @@ function txRowHtml(e, i) {
     <td>${i + 1}</td>
     <td>${starBtn(e.code)}</td>
     <td>${compareBtn(e.code)}</td>
-    <td class="lft"><b>${e.code}</b></td>
+    <td class="lft">${codeTag(e.code)}${newsIcon(e.code)}</td>
     <td class="lft">${e.sector || "–"}</td>
     <td class="lft">${e.category || "–"}</td>
     <td>${ltpYcp(e.price, e.ycp)}</td>
@@ -1742,7 +1844,7 @@ function fuRowHtml(e, i, view) {
     <td>${i + 1}</td>
     <td>${starBtn(e.code)}</td>
     <td>${compareBtn(e.code)}</td>
-    <td class="lft"><b>${e.code}</b></td>
+    <td class="lft">${codeTag(e.code)}${newsIcon(e.code)}</td>
     <td class="lft">${e.sector || "–"}</td>
     <td class="lft">${e.category || "–"}</td>
     <td>${ltpYcp(e.price, e.ycp)}</td>
@@ -1750,6 +1852,7 @@ function fuRowHtml(e, i, view) {
     <td>${fmt(e.rsi14, 0)}</td>
     <td data-term="followup_conviction"><b class="${convCls}">${e.conviction}</b><small style="color:var(--muted)">/100</small></td>
     <td class="lft" data-term="followup_source"><span data-bn="${escAttr((e.source_bn || srcBn))}">${e.source || "–"}</span> ${flags}</td>
+    <td class="lft">${verdictBadgeFor(e.code)}</td>
     <td data-term="pred_price"><span class="${predCls}">${e.pred_1w_pct > 0 ? "+" : ""}${fmt(e.pred_1w_pct, 1)}%</span></td>
     <td class="lft" data-term="followup_when">${e.expected_date || "–"}</td>
     <td class="lft why-cell" style="max-width:420px"><small data-bn="${escAttr((e.why_bn || []).map((w) => "• " + w).join("<br>"))}">${(e.why || []).map((w) => "• " + w).join("<br>")}</small></td>
@@ -1766,7 +1869,7 @@ function renderFollowup() {
   $("#fuSub").innerHTML = meta.sub;
   $("#fuMeta").textContent = fu.date ? `session ${fu.date} · top ${rows.length}` : "";
   $("#fuTable tbody").innerHTML = rows.map((e, i) => fuRowHtml(e, i, view)).join("") ||
-    `<tr><td colspan="14" class="loading">No qualifying shares to follow this session — check again after the next Update Data.</td></tr>`;
+    `<tr><td colspan="15" class="loading">No qualifying shares to follow this session — check again after the next Update Data.</td></tr>`;
   wireStarButtons($("#fuTable"));
   wireCompareButtons($("#fuTable"));
   $("#fuTable tbody").querySelectorAll("tr[data-code]").forEach((tr) =>
@@ -1848,8 +1951,9 @@ function rightsRowBn(e) {
 
 function agmRowHtml(e) {
   return `<tr data-code="${e.ticker}" data-bn="${escAttr(agmRowBn(e))}">
-    <td class="lft"><b>${e.ticker}</b></td>
+    <td class="lft"><b>${e.ticker}</b>${newsIcon(e.ticker)}</td>
     <td class="lft">${e.sector || "–"}</td>
+    <td class="lft">${verdictBadgeFor(e.ticker)}</td>
     <td class="lft" style="white-space:normal">${e.purpose || "–"}</td>
     <td>${e.dividend_pct !== null && e.dividend_pct !== undefined ? `${fmt(e.dividend_pct, 1)}% ${e.dividend_kind || ""}` : "–"}</td>
     <td class="lft"><b>${e.record_date || e.record_date_text || "–"}</b></td>
@@ -1859,8 +1963,9 @@ function agmRowHtml(e) {
 
 function rightsRowHtml(e) {
   return `<tr data-code="${e.ticker}" data-bn="${escAttr(rightsRowBn(e))}">
-    <td class="lft"><b>${e.ticker}</b></td>
+    <td class="lft"><b>${e.ticker}</b>${newsIcon(e.ticker)}</td>
     <td class="lft">${e.sector || "–"}</td>
+    <td class="lft">${verdictBadgeFor(e.ticker)}</td>
     <td class="lft" style="white-space:normal">${e.ratio_text || "–"}</td>
     <td>${e.issue_price_text || "–"}</td>
     <td class="lft"><b>${e.record_date || e.record_date_text || "–"}</b></td>
@@ -1884,9 +1989,9 @@ function renderAgm() {
   $("#rightsCount").textContent = `(${rights.length})`;
 
   $("#agmTable tbody").innerHTML = agm.map(agmRowHtml).join("") ||
-    `<tr><td colspan="6" class="loading">No AGM/EGM notices match.</td></tr>`;
+    `<tr><td colspan="7" class="loading">No AGM/EGM notices match.</td></tr>`;
   $("#rightsTable tbody").innerHTML = rights.map(rightsRowHtml).join("") ||
-    `<tr><td colspan="7" class="loading">No rights-entitlement notices match.</td></tr>`;
+    `<tr><td colspan="8" class="loading">No rights-entitlement notices match.</td></tr>`;
   wireAgmTable($("#agmTable"));
   wireAgmTable($("#rightsTable"));
 }
@@ -1933,6 +2038,53 @@ const SCR_COLS = [
   { key: "win_rate", label: "Win%", cls: "", term: "win_rate", def: false,
     td: (r) => `<td>${r.win_rate !== null && r.win_rate !== undefined ? r.win_rate + `<small style="color:var(--muted)">/${r.signal_trades}</small>` : "–"}</td>` },
   { key: "beta", label: "Beta", cls: "", term: "beta", def: false, td: (r) => `<td>${fmt(r.beta, 2)}</td>` },
+];
+
+/* Small signed "+x.x%" span, coloured green/red, for the Pred/Drift cells. */
+function pctSmall(v) {
+  const cls = v > 0 ? "pos" : v < 0 ? "neg" : "";
+  return `<small class="${cls}">${v > 0 ? "+" : ""}${fmt(v, 1)}%</small>`;
+}
+
+/* Short bilingual Why cell (বাংলা, 2 bullets) with full detail on hover — same
+   shape as the Suggestions table's Why column. */
+function shortlistWhyCell(m) {
+  const why = (m.why && m.why.length)
+    ? m.why.slice(0, 4)
+    : [...(m.reasons_long || []), ...(m.reasons_short || [])].slice(0, 2);
+  const whyBn = (m.why_bn || []).slice(0, 4);
+  const whyBnShort = (whyBn.length ? whyBn : why).slice(0, 2);
+  const whyTip = why.length
+    ? "<b>Why (details)</b><br>" + why.map((w) => "• " + w).join("<br>") +
+      (whyBn.length ? "<br><br><b>কেন (বিস্তারিত)</b><br>" + whyBn.map((w) => "• " + w).join("<br>") : "")
+    : "";
+  const body = whyBnShort.length ? whyBnShort.map((w) => "• " + w).join("<br>") : "–";
+  return `<td class="lft why-cell" style="max-width:280px"><small ${whyTip ? `data-tip="${escAttr(whyTip)}"` : ""}>${body}</small></td>`;
+}
+
+/* The Shortlisted tab has its own curated columns (independent of the Screener's
+   column picker): identity + colourful Verdict, the AI Pred. and Drift forecasts
+   (1w / 1m, price + %) and a short Why with details on hover. */
+const SHORTLIST_COLS = [
+  { key: "sector", label: "Sector", cls: "lft", term: "sector", td: (r) => `<td class="lft">${r.sector || "–"}</td>` },
+  { key: "price", label: "LTP", cls: "", td: (r) => `<td>${ltpYcp(r.price, r.ycp)}</td>` },
+  { key: "verdict", label: "Verdict", cls: "lft", term: "verdict",
+    td: (r) => `<td class="lft">${r.verdict ? verdictBadge(r.verdict) : "–"}</td>` },
+  { key: "composite", label: "Score", cls: "", term: "composite",
+    td: (r) => `<td><b>${fmt(r.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>` },
+  { key: "target_price", label: "Target", cls: "", term: "target",
+    td: (r) => `<td class="pos">${fmt(r.target_price, 1)}<br><small>+${fmt(r.target_pct, 0)}%</small></td>` },
+  { key: "stop_price", label: "Stop", cls: "", term: "stop",
+    td: (r) => `<td class="neg">${fmt(r.stop_price, 1)}<br><small>−${fmt(r.stop_pct, 0)}%</small></td>` },
+  { key: "pred_1w", label: "Pred 1w", cls: "", term: "pred_price",
+    td: (r) => `<td><span>${fmt(r.pred_1w_price, 1)}<br>${pctSmall(r.pred_1w_pct)}</span>${newsTiltMarker(r, 0.6)}</td>` },
+  { key: "pred_1m", label: "Pred 1m", cls: "", term: "pred_price",
+    td: (r) => `<td><span>${fmt(r.pred_1m_price, 1)}<br>${pctSmall(r.pred_1m_pct)}</span>${newsTiltMarker(r, 1.0)}</td>` },
+  { key: "drift_1w", label: "Drift 1w", cls: "", term: "drift_pred",
+    td: (r) => `<td>${fmt(r.drift_1w_price, 1)}<br>${pctSmall(r.drift_1w_pct)}</td>` },
+  { key: "drift_1m", label: "Drift 1m", cls: "", term: "drift_pred",
+    td: (r) => `<td>${fmt(r.drift_1m_price, 1)}<br>${pctSmall(r.drift_1m_pct)}</td>` },
+  { key: "why", label: "Why · কেন", cls: "lft", term: "why_col", td: (r) => shortlistWhyCell(r) },
 ];
 
 function loadVisibleCols() {
@@ -2135,7 +2287,7 @@ async function renderCompare() {
   } catch { /* sparkline is a nice-to-have; table still renders without it */ }
 
   const headCells = rows.map((r) => `<th class="lft compare-col">
-    <div class="compare-head"><b>${r.code}</b>
+    <div class="compare-head">${codeTag(r.code)}${newsIcon(r.code)}
       <button class="compare-remove" data-code="${r.code}" title="Remove from Compare">✕</button></div>
     <small style="color:var(--muted)">${r.sector || ""}</small>
     <canvas class="compare-spark" data-code="${r.code}" title="Click for full details"></canvas>
@@ -2166,7 +2318,7 @@ async function renderCompare() {
   });
 
   const { insights, verdictLine } = buildCompareInsights(rows, sets);
-  const insightRow = (i) => `<div class="sig-row"><a class="sig-code" data-code="${i.code}"><b>${i.code}</b></a>
+  const insightRow = (i) => `<div class="sig-row"><a class="sig-code" data-code="${i.code}">${codeTag(i.code)}</a>
     <span style="font-size:12.5px" data-bn="${escAttr(i.bn)}">${i.en}</span></div>`;
   $("#compareInsightsBody").innerHTML =
     (verdictLine ? `<div class="mplan" data-bn="${escAttr(verdictLine.bn)}">${verdictLine.en}</div>` : "") +
@@ -2266,7 +2418,7 @@ function screenerRowHtml(r, cols = currentVisibleCols()) {
   return `<tr data-code="${r.code}">
     <td>${starBtn(r.code)}</td>
     <td>${compareBtn(r.code)}</td>
-    <td class="lft"><b>${r.code}</b></td>
+    <td class="lft">${codeTag(r.code)}${newsIcon(r.code)}</td>
     ${cols.map((c) => c.td(r)).join("")}
   </tr>`;
 }
@@ -2278,18 +2430,28 @@ function wireScreenerTable(table) {
     tr.addEventListener("click", () => openDetail(tr.dataset.code)));
 }
 
-function renderScreenerShortlist(cols = currentVisibleCols()) {
+function renderScreenerShortlist() {
   const panel = $("#scrShortlistPanel");
+  const emptyPanel = $("#shortlistedEmptyPanel");
+  const badge = $("#shortlistedBadge");
+  if (badge) badge.textContent = state.shortlist.size ? `(${state.shortlist.size})` : "";
+  const showEmpty = () => { panel.classList.add("hidden"); if (emptyPanel) emptyPanel.classList.remove("hidden"); };
   const codes = [...state.shortlist];
-  if (!codes.length || !state.summary) { panel.classList.add("hidden"); return; }
+  if (!codes.length || !state.summary) { showEmpty(); return; }
   const t = state.summary.tickers;
   const rows = codes.map((c) => t[c] ? { code: c, ...t[c] } : null).filter(Boolean);
-  if (!rows.length) { panel.classList.add("hidden"); return; }
+  if (!rows.length) { showEmpty(); return; }
+  if (emptyPanel) emptyPanel.classList.add("hidden");
   $("#scrShortlistCount").textContent = `(${rows.length})`;
   const table = $("#scrShortlistTable");
-  table.querySelector("thead tr").innerHTML = $("#scrTable thead tr").innerHTML
-    .replace(/<th/g, '<th style="cursor:default"').replace(/ ↓| ↑/g, "");
-  table.querySelector("tbody").innerHTML = rows.map((r) => screenerRowHtml(r, cols)).join("");
+  // Dedicated Shortlisted columns (not the Screener's picker set): identity +
+  // colourful Verdict, AI Pred. & Drift (1w/1m) and a short Why (details on hover).
+  table.querySelector("thead tr").innerHTML =
+    `<th style="cursor:default">★</th><th style="cursor:default" data-term="compare">⚖</th>` +
+    `<th class="lft" style="cursor:default">Code</th>` +
+    SHORTLIST_COLS.map((c) =>
+      `<th class="${c.cls || ""}" style="cursor:default" ${c.term ? `data-term="${c.term}"` : ""}>${c.label}</th>`).join("");
+  table.querySelector("tbody").innerHTML = rows.map((r) => screenerRowHtml(r, SHORTLIST_COLS)).join("");
   wireScreenerTable(table);
   panel.classList.remove("hidden");
 }
@@ -2454,8 +2616,9 @@ function sliceRange(dates, closes, range) {
 function chartCardHtml(it) {
   const delta = state.chartsRange === "2y" ? it.r_2y : it.r_1y;
   return `<div class="card" data-code="${it.code}">
-      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t">${it.code}</span><span class="p"><span class="${ltpCls(it.price, it.ycp)}">${fmt(it.price)}</span> <small style="color:var(--muted)">Y ${fmt(it.ycp)}</small></span></div>
+      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t share-code${portClass(it.code)}" data-code="${it.code}">${it.code}</span>${newsIcon(it.code)}<span class="p"><span class="${ltpCls(it.price, it.ycp)}">${fmt(it.price)}</span> <small style="color:var(--muted)">Y ${fmt(it.ycp)}</small></span></div>
       <div class="delta">${state.chartsRange} ${pct(delta)} · <span class="term" data-term="score_short">S ${fmt(it.score_short, 0)}</span> · <span class="term" data-term="score_long">L ${fmt(it.score_long, 0)}</span></div>
+      <div class="delta card-verdict">${verdictBadgeFor(it.code)}</div>
       <canvas></canvas>
     </div>`;
 }
@@ -2610,8 +2773,8 @@ async function loadPotential() {
 
 function potCardHtml(it) {
   return `<div class="card" data-code="${it.code}">
-      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t">${it.code}</span><span class="p"><span class="${ltpCls(it.price, it.ycp)}">${fmt(it.price)}</span> <small style="color:var(--muted)">Y ${fmt(it.ycp)}</small></span></div>
-      <div class="delta">6m ${pct(it.proj_6m)} · <span class="term" data-term="score_short">S ${fmt(it.score_short, 0)}</span> · <span class="term" data-term="score_long">L ${fmt(it.score_long, 0)}</span></div>
+      <div class="top">${starBtn(it.code)}${compareBtn(it.code)}<span class="t share-code${portClass(it.code)}" data-code="${it.code}">${it.code}</span>${newsIcon(it.code)}<span class="p"><span class="${ltpCls(it.price, it.ycp)}">${fmt(it.price)}</span> <small style="color:var(--muted)">Y ${fmt(it.ycp)}</small></span></div>
+      <div class="delta">6m ${pct(it.proj_6m)} · <span class="term" data-term="score_short">S ${fmt(it.score_short, 0)}</span> · <span class="term" data-term="score_long">L ${fmt(it.score_long, 0)}</span> · ${verdictBadgeFor(it.code)}</div>
       <div class="delta" data-term="returns">past 1w ${pct(it.r_1w)} · 1m ${pct(it.r_1m)} · 2m ${pct(it.r_2m)}</div>
       <div class="delta" data-term="pred_price">AI Pred 1w ${fmt(it.pred_1w_price, 1)} (${pct(it.pred_1w_pct)}) · 1m ${fmt(it.pred_1m_price, 1)} (${pct(it.pred_1m_pct)})</div>
       <canvas></canvas>
@@ -2966,24 +3129,44 @@ async function loadNews() {
 function renderNews() {
   const nd = state.newsData;
   if (!nd) return;
-  $("#newsCount").textContent = nd.total
-    ? `${nd.shown} of ${nd.total} shown` : "";
   if (!nd.items.length) {
+    $("#newsCount").textContent = "";
     $("#newsList").innerHTML = `<div class="axis-note">No news stored yet — click <b>News Fetch</b> to pull the
       latest from amarstock. · এখনো কোনো সংবাদ নেই — <b>News Fetch</b> চাপুন।</div>`;
     return;
   }
-  $("#newsList").innerHTML = nd.items.map((n) => {
+  // The source splits one long announcement into continuation rows that share
+  // Code + Date + Time + Title but carry different body text (each part starts
+  // "(Cont. News of …)"). Merge those back into a single card, joining the parts,
+  // so the list shows one item per announcement instead of repeated headers.
+  const merged = [];
+  const byKey = new Map();
+  nd.items.forEach((n) => {
+    const key = `${n.code}|${n.date}|${n.time}|${n.category}|${n.title}`;
+    const seen = byKey.get(key);
+    if (seen) { if (n.text) seen.parts.push(n.text); return; }
+    const item = { ...n, parts: n.text ? [n.text] : [] };
+    byKey.set(key, item);
+    merged.push(item);
+  });
+
+  $("#newsCount").textContent = nd.total
+    ? `${merged.length} of ${nd.total} shown` : "";
+
+  $("#newsList").innerHTML = merged.map((n) => {
     const catCls = NEWS_RISK_CATS.has(n.category) ? "news-cat risk" : "news-cat";
     const codeCls = n.tracked ? "news-code tracked" : "news-code untracked";
     const codeAttr = n.tracked ? ` data-code="${n.code}" title="Open ${n.code} detail"` : "";
+    const body = n.parts.map((t) => `<p>${escAttr(t)}</p>`).join("");
+    const when = newsFullWhen(n.date, n.time);
     return `<div class="news-item">
-      <div class="news-when"><b>${n.date || ""}</b>${n.time || ""}</div>
+      <div class="news-when" title="${escAttr(when)}"><b>${n.date || ""}</b>${n.time || ""}</div>
       <div class="news-body">
         <h4><span class="${codeCls}"${codeAttr}>${escAttr(n.code || "")}</span>
           <span class="${catCls}">${escAttr((n.category || "").replace(/-/g, " "))}</span>
           ${escAttr(n.title || "")}</h4>
-        <p>${escAttr(n.text || "")}</p>
+        ${body}
+        <p class="news-bn">${escAttr(newsCtxBn(n.category))}</p>
       </div>
     </div>`;
   }).join("");

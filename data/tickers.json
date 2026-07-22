@@ -19,6 +19,7 @@
   "AGNISYSL": "https://www.dsebd.org/displayCompany.php?name=AGNISYSL",
   "AGRANINS": "https://www.dsebd.org/displayCompany.php?name=AGRANINS",
   "AIBL1STIMF": "https://www.dsebd.org/displayCompany.php?name=AIBL1STIMF",
+  "AIBLPBOND": "https://www.dsebd.org/displayCompany.php?name=AIBLPBOND",
   "AIL": "https://www.dsebd.org/displayCompany.php?name=AIL",
   "AL-HAJTEX": "https://www.dsebd.org/displayCompany.php?name=AL-HAJTEX",
   "ALARABANK": "https://www.dsebd.org/displayCompany.php?name=ALARABANK",
@@ -83,7 +84,6 @@
   "CENTRALPHL": "https://www.dsebd.org/displayCompany.php?name=CENTRALPHL",
   "CITYBANK": "https://www.dsebd.org/displayCompany.php?name=CITYBANK",
   "CITYGENINS": "https://www.dsebd.org/displayCompany.php?name=CITYGENINS",
-  "CLICL": "https://www.dsebd.org/displayCompany.php?name=CLICL",
   "CNATEX": "https://www.dsebd.org/displayCompany.php?name=CNATEX",
   "CONFIDCEM": "https://www.dsebd.org/displayCompany.php?name=CONFIDCEM",
   "CONTININS": "https://www.dsebd.org/displayCompany.php?name=CONTININS",
@@ -133,7 +133,6 @@
   "FEDERALINS": "https://www.dsebd.org/displayCompany.php?name=FEDERALINS",
   "FEKDIL": "https://www.dsebd.org/displayCompany.php?name=FEKDIL",
   "FINEFOODS": "https://www.dsebd.org/displayCompany.php?name=FINEFOODS",
-  "FIRSTFIN": "https://www.dsebd.org/displayCompany.php?name=FIRSTFIN",
   "FORTUNE": "https://www.dsebd.org/displayCompany.php?name=FORTUNE",
   "FUWANGCER": "https://www.dsebd.org/displayCompany.php?name=FUWANGCER",
   "FUWANGFOOD": "https://www.dsebd.org/displayCompany.php?name=FUWANGFOOD",
@@ -264,7 +263,6 @@
   "PADMALIFE": "https://www.dsebd.org/displayCompany.php?name=PADMALIFE",
   "PADMAOIL": "https://www.dsebd.org/displayCompany.php?name=PADMAOIL",
   "PARAMOUNT": "https://www.dsebd.org/displayCompany.php?name=PARAMOUNT",
-  "PBLPBOND": "https://www.dsebd.org/displayCompany.php?name=PBLPBOND",
   "PDL": "https://www.dsebd.org/displayCompany.php?name=PDL",
   "PENINSULA": "https://www.dsebd.org/displayCompany.php?name=PENINSULA",
   "PEOPLESINS": "https://www.dsebd.org/displayCompany.php?name=PEOPLESINS",
@@ -363,9 +361,7 @@
   "TAKAFULINS": "https://www.dsebd.org/displayCompany.php?name=TAKAFULINS",
   "TALLUSPIN": "https://www.dsebd.org/displayCompany.php?name=TALLUSPIN",
   "TAMIJTEX": "https://www.dsebd.org/displayCompany.php?name=TAMIJTEX",
-  "TB20Y0831": "https://www.dsebd.org/displayCompany.php?name=TB20Y0831",
-  "TB5Y0928": "https://www.dsebd.org/displayCompany.php?name=TB5Y0928",
-  "TB5Y1128": "https://www.dsebd.org/displayCompany.php?name=TB5Y1128",
+  "TB5Y1229": "https://www.dsebd.org/displayCompany.php?name=TB5Y1229",
   "TECHNODRUG": "https://www.dsebd.org/displayCompany.php?name=TECHNODRUG",
   "TILIL": "https://www.dsebd.org/displayCompany.php?name=TILIL",
   "TITASGAS": "https://www.dsebd.org/displayCompany.php?name=TITASGAS",
@@ -394,5 +390,5 @@
   "ZAHINTEX": "https://www.dsebd.org/displayCompany.php?name=ZAHINTEX",
   "ZEALBANGLA": "https://www.dsebd.org/displayCompany.php?name=ZEALBANGLA"
  },
- "fetched_at": "2026-07-21 16:06:31"
+ "fetched_at": "2026-07-22 15:29:15"
 }

@@ -314,6 +314,25 @@ th[data-term], .mstat[data-term] { cursor: help; }
 /* genuinely informational (non-buy) badges — the blue freed up from v-buy */
 .v-info { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
 
+/* Suggestions (Top 20) and Shortlisted — vivid solid verdict badges so each call
+   reads as its own colour and Strong Buy vs Buy are unmistakable. Fixed saturated
+   fills carry their own contrast, so they work on light and dark backgrounds. */
+#top10Table .verdict,
+#scrShortlistTable .verdict { color: #fff; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.12); }
+#top10Table .verdict small,
+#scrShortlistTable .verdict small { color: #fff; opacity: 0.92; }
+#top10Table .v-strong,  #scrShortlistTable .v-strong  { background: #1a7f37; }
+#top10Table .v-buy,     #scrShortlistTable .v-buy     { background: #35a760; }
+#top10Table .v-watch,   #scrShortlistTable .v-watch   { background: #c78200; }
+#top10Table .v-neutral, #scrShortlistTable .v-neutral { background: #6a7178; }
+#top10Table .v-avoid,   #scrShortlistTable .v-avoid   { background: #d03b3b; }
+#top10Table .v-info,    #scrShortlistTable .v-info    { background: #2a78d6; }
+
+/* Share codes held in the Portfolio render in blue across every report; remove
+   the holding and the code falls back to its default colour. --accent is the
+   theme-aware blue (adjusts for light/dark automatically). */
+.share-code.in-portfolio { color: var(--accent); }
+
 /* ---------- modal plan banner ---------- */
 .mplan {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -495,6 +514,11 @@ details.overview-toggle > .panel:first-of-type { border-top: 1px solid var(--bor
 .news-when b { display: block; color: var(--ink); font-size: 11.5px; }
 .news-body h4 { margin: 0 0 2px; font-size: 13px; }
 .news-body p { margin: 3px 0 0; font-size: 12px; color: var(--ink-2); }
+.news-body p.news-bn {
+  margin-top: 5px; font-size: 11.5px; color: var(--muted);
+  padding-left: 8px; border-left: 2px solid var(--border);
+}
+.news-when { cursor: default; }
 .news-code {
   font-weight: 700; text-decoration: none; color: var(--accent);
   margin-right: 6px;
@@ -507,3 +531,17 @@ details.overview-toggle > .panel:first-of-type { border-top: 1px solid var(--bor
   background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent);
 }
 .news-cat.risk { background: color-mix(in srgb, #d64545 18%, transparent); color: #d64545; }
+
+/* 📰 marker beside a share in any list/chart that has recent company news.
+   Hover (data-tip) shows the news content in বাংলা. */
+.news-icon {
+  cursor: help; font-size: 11.5px; line-height: 1; margin-left: 3px;
+  vertical-align: middle; user-select: none;
+}
+.news-icon.risk {
+  outline: 1px solid color-mix(in srgb, #d64545 55%, transparent);
+  border-radius: 4px; padding: 0 1px;
+}
+/* verdict shown on Charts / AI Prediction cards (chart cards lack a table cell) */
+.card-verdict { margin-top: 2px; }
+.hp-verdict { display: inline-flex; }

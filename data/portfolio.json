@@ -6,6 +6,48 @@
    "qty": 50,
    "buy_price": 293.0,
    "buy_date": "2026-07-21"
+  },
+  {
+   "id": "1784698495958",
+   "code": "ORIONINFU",
+   "qty": 100,
+   "buy_price": 295.6,
+   "buy_date": "2026-07-22"
+  },
+  {
+   "id": "1784698574649",
+   "code": "SONALIPAPR",
+   "qty": 10,
+   "buy_price": 249.4,
+   "buy_date": "2026-07-22"
+  },
+  {
+   "id": "1784698850725",
+   "code": "TECHNODRUG",
+   "qty": 1000,
+   "buy_price": 49.2,
+   "buy_date": "2026-07-22"
+  },
+  {
+   "id": "1784698895725",
+   "code": "UNITEDINS",
+   "qty": 1000,
+   "buy_price": 50.1,
+   "buy_date": "2026-07-22"
+  },
+  {
+   "id": "1784703399444",
+   "code": "SANDHANINS",
+   "qty": 1000,
+   "buy_price": 28.1,
+   "buy_date": "2026-07-22"
+  },
+  {
+   "id": "1784704308339",
+   "code": "SONARBAINS",
+   "qty": 1000,
+   "buy_price": 38.0,
+   "buy_date": "2026-07-22"
   }
  ],
  "closed": [
