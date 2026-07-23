@@ -291,6 +291,14 @@ tbody tr:hover { background: var(--chip); }
 .term { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; cursor: help; }
 th[data-term], .mstat[data-term] { cursor: help; }
 .tooltip b { font-size: 12.5px; }
+/* circled ⓘ button for compact Flags/Alerts/Why cells */
+.info-i { color: var(--accent); cursor: help; font-size: 13px; font-weight: 600; user-select: none; }
+.info-i:hover { opacity: 0.72; }
+.info-i.info-i-off { color: var(--muted); }
+/* Alerts & Flags block in the detail popup */
+.mflags { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 4px; }
+.mflag-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mflag-row > b { font-size: 11px; color: var(--muted); font-weight: 600; margin-right: 2px; }
 
 /* ---------- top 10 panel ---------- */
 .panel.top10 { margin-bottom: 18px; }

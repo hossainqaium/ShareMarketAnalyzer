@@ -943,10 +943,77 @@ function newsTiltMarker(m, factor) {
     + "% বদলেছে।")}">📰${eff > 0 ? "+" : ""}${eff.toFixed(1)}%</span>`;
 }
 
-function verdictBadge(v) {
+/* --- flags & alerts helpers (Bengali hover) ---------------------------
+   flagMeta() resolves a flag/alert slug to its short label + বাংলা meaning
+   from the glossary; alertsFor() derives a share's active company alerts
+   (halt / audit / near record-date) from the market-wide alerts map. */
+function flagMeta(slug) {
+  const g = GLOSSARY["flag:" + slug];
+  return { label: g ? g.t : slug.replace(/-/g, " "), bn: g ? g.bn : slug };
+}
+function alertsFor(code) {
+  const A = (state.summary && state.summary.alerts) || {};
+  const out = [];
+  if ((A.trading_halt || []).includes(code)) out.push({ slug: "trading-halt" });
+  if ((A.audit_concern || []).includes(code)) out.push({ slug: "audit-concern" });
+  const rd = (A.record_dates_soon || []).find((r) => r.ticker === code);
+  if (rd) out.push({ slug: "record-date-soon",
+    extra: `${rd.days}d${rd.dividend_pct ? `, ${rd.dividend_pct.toFixed(0)}%` : ""}` });
+  return out;
+}
+/* chip forms for the detail popup — বাংলা meaning on hover (data-bn) */
+function flagChip(slug) {
+  const m = flagMeta(slug);
+  return `<span class="chip flag" data-bn="${escAttr(m.bn)}">${m.label}</span>`;
+}
+function alertChip(al) {
+  const m = flagMeta(al.slug);
+  const cls = al.slug === "record-date-soon" ? "alert-good" : "alert-bad";
+  return `<span class="chip sig ${cls}" data-bn="${escAttr(m.bn)}">${m.label}` +
+    `${al.extra ? ` <small>${al.extra}</small>` : ""}</span>`;
+}
+/* circled ⓘ button whose hover reveals the original flags/alerts list in বাংলা,
+   used to keep the Top-20 Flags/Alerts columns compact. */
+function flagsInfo(flags) {
+  flags = flags || [];
+  const tip = flags.length
+    ? `<b>ঝুঁকি-চিহ্ন (${flags.length}টি)</b><br>` +
+      flags.map((f) => { const m = flagMeta(f); return `<b>${m.label}</b> — ${m.bn}`; }).join("<br><br>")
+    : `<b>ঝুঁকি-চিহ্ন</b><br>এই শেয়ারে কোনো ঝুঁকি-চিহ্ন নেই।`;
+  const cls = flags.length ? "info-i" : "info-i info-i-off";
+  return `<span class="${cls}" data-tip="${escAttr(tip)}">ⓘ</span>`;
+}
+function alertsInfo(code) {
+  const al = alertsFor(code);
+  const tip = al.length
+    ? `<b>সতর্কতা (${al.length}টি)</b><br>` +
+      al.map((a) => { const m = flagMeta(a.slug);
+        return `<b>${m.label}${a.extra ? " (" + a.extra + ")" : ""}</b> — ${m.bn}`; }).join("<br><br>")
+    : `<b>সতর্কতা</b><br>এই শেয়ারে এখন কোনো সক্রিয় সতর্কতা নেই (লেনদেন বন্ধ / নিরীক্ষা উদ্বেগ / আসন্ন রেকর্ড ডেট নেই)।`;
+  const cls = al.length ? "info-i" : "info-i info-i-off";
+  return `<span class="${cls}" data-tip="${escAttr(tip)}">ⓘ</span>`;
+}
+
+/* বাংলা hover explaining WHY a share earned its verdict — the generic meaning
+   plus this share's own top reasons and risk flags. Shown anywhere a verdict
+   badge appears (Suggestions, Screener, Spike, Margin, detail popup, …). */
+function verdictTip(v, m) {
+  let h = `<b>${v} · ${VERDICT_BN[v] || ""}</b>` +
+    `<div style="max-width:320px;margin-top:3px">${(GLOSSARY.verdict || {}).bn || ""}</div>`;
+  if (m) {
+    const rs = (m.why_bn && m.why_bn.length ? m.why_bn : (m.why || [])).slice(0, 4);
+    if (rs.length) h += `<div style="max-width:320px;margin-top:6px"><b>এই রায়ের কারণ:</b><br>` +
+      rs.map((w) => "• " + w).join("<br>") + `</div>`;
+    const fl = m.flags || [];
+    if (fl.length) h += `<div style="max-width:320px;margin-top:5px;color:var(--down)"><b>ঝুঁকি-চিহ্ন:</b> ` +
+      fl.map((f) => flagMeta(f).label).join(", ") + `</div>`;
+  }
+  return h;
+}
+function verdictBadge(v, m) {
   const cls = { "Strong Buy": "v-strong", "Buy": "v-buy", "Watch": "v-watch",
                 "Neutral": "v-neutral", "Avoid": "v-avoid" }[v] || "v-neutral";
-  return `<span class="verdict ${cls}" data-term="verdict">${v}<small>${VERDICT_BN[v] || ""}</small></span>`;
+  return `<span class="verdict ${cls}" data-tip="${escAttr(verdictTip(v, m))}">${v}<small>${VERDICT_BN[v] || ""}</small></span>`;
 }
 
 /* A share-code label used in every report table/list. Codes held in the
@@ -971,7 +1038,7 @@ function applyPortfolioHighlight() {
    lists/charts whose own row objects don't carry the verdict field. */
 function verdictBadgeFor(code) {
   const m = state.summary && state.summary.tickers[code];
-  return m && m.verdict ? verdictBadge(m.verdict) : "–";
+  return m && m.verdict ? verdictBadge(m.verdict, m) : "–";
 }
 
 /* Short বাংলা labels for the news categories on a ticker's recent_news, so the
@@ -1089,17 +1156,20 @@ function renderTop10() {
     const whyBn = (m.why_bn || []).slice(0, 4);
     // default: Bengali, 2 bullets (compact); hover: full detail in both languages
     const whyBnShort = (whyBn.length ? whyBn : why).slice(0, 2);
-    const whyTip =
-      "<b>Why (details)</b><br>" + why.map((w) => "• " + w).join("<br>") +
-      (whyBn.length ? "<br><br><b>কেন (বিস্তারিত)</b><br>" + whyBn.map((w) => "• " + w).join("<br>") : "");
+    // full बांগला detail for the Why info (ⓘ) button; falls back to English why
+    const whyInfoTip = "<b>কেন (বিস্তারিত)</b><br>" +
+      (whyBn.length ? whyBn : why).map((w) => "• " + w).join("<br>");
     return `<tr data-code="${c}">
       <td>${i + 1}</td>
       <td>${starBtn(c)}</td>
       <td>${compareBtn(c)}</td>
       <td class="lft" style="max-width:80px;white-space:normal;overflow-wrap:break-word">${codeTag(c)}${newsIcon(c)}<br><small style="color:var(--muted)">${m.sector || ""}</small></td>
       <td>${ltpYcp(m.price, m.ycp)}</td>
-      <td class="lft">${verdictBadge(m.verdict)}</td>
+      <td class="lft">${verdictBadge(m.verdict, m)}</td>
       <td><b>${fmt(m.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>
+      <td class="lft" data-term="category">${m.category || "–"}</td>
+      <td>${flagsInfo(m.flags)}</td>
+      <td>${alertsInfo(c)}</td>
       <td class="lft" style="min-width:130px;white-space:nowrap" data-tip="${escAttr("<b>Action · পদক্ষেপ</b><br>" + actionSentence(m))}"><b>${actionShort(m)}</b></td>
       <td class="pos" data-term="target">${fmt(m.target_price, 1)}<br><small>+${fmt(m.target_pct, 0)}%</small></td>
       <td class="neg" data-term="stop">${fmt(m.stop_price, 1)}<br><small>−${fmt(m.stop_pct, 0)}%</small></td>
@@ -1107,9 +1177,9 @@ function renderTop10() {
       <td><span data-term="pred_price">${fmt(m.pred_1m_price, 1)}<br><small class="${m.pred_1m_pct > 0 ? "pos" : m.pred_1m_pct < 0 ? "neg" : ""}">${m.pred_1m_pct > 0 ? "+" : ""}${fmt(m.pred_1m_pct, 1)}%</small></span>${newsTiltMarker(m, 1.0)}</td>
       <td data-term="drift_pred">${fmt(m.drift_1w_price, 1)}<br><small class="${m.drift_1w_pct > 0 ? "pos" : m.drift_1w_pct < 0 ? "neg" : ""}">${m.drift_1w_pct > 0 ? "+" : ""}${fmt(m.drift_1w_pct, 1)}%</small></td>
       <td data-term="drift_pred">${fmt(m.drift_1m_price, 1)}<br><small class="${m.drift_1m_pct > 0 ? "pos" : m.drift_1m_pct < 0 ? "neg" : ""}">${m.drift_1m_pct > 0 ? "+" : ""}${fmt(m.drift_1m_pct, 1)}%</small></td>
-      <td class="lft why-cell" style="max-width:280px"><small data-tip="${escAttr(whyTip)}">${whyBnShort.map((w) => "• " + w).join("<br>")}</small></td>
+      <td class="lft why-cell" style="max-width:280px"><small data-tip="${escAttr(whyInfoTip)}">${whyBnShort.map((w) => "• " + w).join("<br>")}</small></td>
     </tr>`;
-  }).join("") || `<tr><td colspan="15" class="loading">No qualifying shares in this hold-range window today</td></tr>`;
+  }).join("") || `<tr><td colspan="18" class="loading">No qualifying shares in this hold-range window today</td></tr>`;
   wireStarButtons($("#top10Table"));
   wireCompareButtons($("#top10Table"));
   $("#top10Table tbody").querySelectorAll("tr[data-code]").forEach((tr) =>
@@ -1790,7 +1860,7 @@ function txRowHtml(e, i) {
     <td>${fmt(e.value_today_mn, 2)}</td>
     <td>${Number(e.volume_today || 0).toLocaleString()}</td>
     <td>${fmt(e.rsi14, 0)}</td>
-    <td class="lft">${verdictBadge(e.verdict)} ${flags}</td>
+    <td class="lft">${verdictBadge(e.verdict, e)} ${flags}</td>
     <td><b>${fmt(e.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>
     <td class="pos" data-term="target">${fmt(e.target_price, 1)}<br><small>+${fmt(e.target_pct, 0)}%</small></td>
     <td class="neg" data-term="stop">${fmt(e.stop_price, 1)}<br><small>−${fmt(e.stop_pct, 0)}%</small></td>
@@ -2069,7 +2139,7 @@ const SHORTLIST_COLS = [
   { key: "sector", label: "Sector", cls: "lft", term: "sector", td: (r) => `<td class="lft">${r.sector || "–"}</td>` },
   { key: "price", label: "LTP", cls: "", td: (r) => `<td>${ltpYcp(r.price, r.ycp)}</td>` },
   { key: "verdict", label: "Verdict", cls: "lft", term: "verdict",
-    td: (r) => `<td class="lft">${r.verdict ? verdictBadge(r.verdict) : "–"}</td>` },
+    td: (r) => `<td class="lft">${r.verdict ? verdictBadge(r.verdict, r) : "–"}</td>` },
   { key: "composite", label: "Score", cls: "", term: "composite",
     td: (r) => `<td><b>${fmt(r.composite, 0)}</b><small style="color:var(--muted)">/100</small></td>` },
   { key: "target_price", label: "Target", cls: "", term: "target",
@@ -2144,7 +2214,7 @@ function crossTabSets() {
 /* ---------------- compare tab: side-by-side + head-to-head insights ---------------- */
 const COMPARE_GROUPS = [
   { group: "Overall", rows: [
-    { label: "Verdict", term: "verdict", val: (m) => verdictBadge(m.verdict) },
+    { label: "Verdict", term: "verdict", val: (m) => verdictBadge(m.verdict, m) },
     { label: "Composite score", term: "composite", val: (m) => `<b>${fmt(m.composite, 0)}</b>/100` },
     { label: "Short-term score", term: "score_short", val: (m) => `${fmt(m.score_short, 0)}/100` },
     { label: "Long-term score", term: "score_long", val: (m) => `${fmt(m.score_long, 0)}/100` },
@@ -2881,11 +2951,22 @@ async function openDetail(code) {
     p.instrument_type ? escAttr(p.instrument_type) : null,
   ].filter(Boolean).join(" · ");
 
-  $("#mPlan").innerHTML = a.verdict ? `${verdictBadge(a.verdict)}
+  const mForVerdict = (state.summary && state.summary.tickers[code]) || a;
+  $("#mPlan").innerHTML = a.verdict ? `${verdictBadge(a.verdict, mForVerdict)}
     ${a.buy_date ? `<span data-term="buy_date">Buy <b>${a.buy_date}</b></span>` : ""}
     <span data-term="horizon"><b>${a.horizon}</b> <small>(${a.horizon_bn || ""})</small></span>
     ${a.plan ? `<span class="plan-text">${a.plan}</span>` : ""}
     ${a.buy_note ? `<span class="plan-text">${a.buy_note}</span>` : ""}` : "";
+
+  // Alerts & Flags — each chip reveals its বাংলা meaning on hover
+  const dFlags = a.flags || [];
+  const dAlerts = alertsFor(code);
+  const noneChip = '<small style="color:var(--muted)">নেই · none</small>';
+  const mFlagsEl = $("#mFlags");
+  mFlagsEl.classList.remove("hidden");
+  mFlagsEl.innerHTML =
+    `<div class="mflag-row"><b class="term" data-term="company_alerts">সতর্কতা · Alerts</b> ${dAlerts.length ? dAlerts.map(alertChip).join(" ") : noneChip}</div>` +
+    `<div class="mflag-row"><b class="term" data-term="flags">ঝুঁকি-চিহ্ন · Flags</b> ${dFlags.length ? dFlags.map(flagChip).join(" ") : noneChip}</div>`;
 
   const stats = [
     ["Composite score", fmt(a.composite, 0) + "/100", "composite"],
@@ -2931,7 +3012,8 @@ async function openDetail(code) {
   $("#mScoreL").textContent = fmt(a.score_long, 0);
   $("#mReasonsS").innerHTML = (a.reasons_short.length ? a.reasons_short : ["No strong short-term signals"])
     .map((r) => `<li>${r}</li>`).join("") +
-    (a.flags || []).map((f) => `<li class="neg">⚠ ${f}</li>`).join("");
+    (a.flags || []).map((f) => { const fm = flagMeta(f);
+      return `<li class="neg" data-bn="${escAttr(fm.bn)}">⚠ ${fm.label}</li>`; }).join("");
   $("#mReasonsL").innerHTML = (a.reasons_long.length ? a.reasons_long : ["No strong long-term signals"])
     .map((r) => `<li>${r}</li>`).join("");
 
