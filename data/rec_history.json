@@ -1355,5 +1355,214 @@
     "pred_1m": 228.13
    }
   }
+ },
+ "2026-07-23": {
+  "strong_buy": [
+   "ACIFORMULA",
+   "AMANFEED",
+   "APEXFOOT",
+   "DBH",
+   "DUTCHBANGL",
+   "EASTRNLUB",
+   "LANKABAFIN",
+   "LHB",
+   "MIDLANDBNK",
+   "PHARMAID",
+   "TECHNODRUG",
+   "UNITEDFIN",
+   "UNITEDINS"
+  ],
+  "buy": [
+   "ACMELAB",
+   "AGNISYSL",
+   "ARAMIT",
+   "ARGONDENIM",
+   "BATBC",
+   "BSCPLC",
+   "BSRMLTD",
+   "BSRMSTEEL",
+   "CITYBANK",
+   "CITYGENINS",
+   "CVOPRL",
+   "DHAKABANK",
+   "DSHGARME",
+   "ENVOYTEX",
+   "FARCHEM",
+   "FEKDIL",
+   "FUWANGCER",
+   "HWAWELLTEX",
+   "IBNSINA",
+   "IBP",
+   "IDLC",
+   "JAMUNABANK",
+   "KARNAPHULI",
+   "KOHINOOR",
+   "MALEKSPIN",
+   "MJLBD",
+   "MLDYEING",
+   "MONOSPOOL",
+   "NPOLYMER",
+   "PADMAOIL",
+   "PRIMEBANK",
+   "QUEENSOUTH",
+   "RAKCERAMIC",
+   "RENATA",
+   "ROBI",
+   "SAIHAMCOT",
+   "SALVO",
+   "SANDHANINS",
+   "SHARPIND",
+   "SHASHADNIM",
+   "SIMTEX",
+   "SIPLC",
+   "SONALIANSH",
+   "SONARGAON",
+   "SOUTHEASTB",
+   "SQUARETEXT",
+   "SUMITPOWER",
+   "TAMIJTEX",
+   "UNIONINS"
+  ],
+  "top20": [
+   "ACIFORMULA",
+   "IDLC",
+   "EASTRNLUB",
+   "DBH",
+   "LANKABAFIN",
+   "TECHNODRUG",
+   "LHB",
+   "SHASHADNIM",
+   "MIDLANDBNK",
+   "DUTCHBANGL",
+   "QUEENSOUTH",
+   "UNITEDINS",
+   "RENATA",
+   "AMANFEED",
+   "APEXFOOT",
+   "BATBC",
+   "SOUTHEASTB",
+   "BSRMSTEEL",
+   "FEKDIL",
+   "NPOLYMER"
+  ],
+  "high_profit": [
+   "ITC",
+   "ACIFORMULA",
+   "SAMORITA",
+   "DSSL",
+   "IDLC",
+   "CITYBANK",
+   "STANDARINS",
+   "QUEENSOUTH",
+   "MLDYEING",
+   "SHAHJABANK",
+   "ACI",
+   "DBH",
+   "SIPLC",
+   "JAMUNAOIL",
+   "CONFIDCEM"
+  ],
+  "pred": {
+   "ACIFORMULA": {
+    "price": 173.1,
+    "pred_1w": 174.99,
+    "pred_1m": 179.77
+   },
+   "IDLC": {
+    "price": 46.9,
+    "pred_1w": 48.99,
+    "pred_1m": 53.72
+   },
+   "EASTRNLUB": {
+    "price": 2056.6,
+    "pred_1w": 2091.02,
+    "pred_1m": 2087.16
+   },
+   "DBH": {
+    "price": 43.6,
+    "pred_1w": 44.58,
+    "pred_1m": 47.08
+   },
+   "LANKABAFIN": {
+    "price": 18.2,
+    "pred_1w": 18.6,
+    "pred_1m": 19.63
+   },
+   "TECHNODRUG": {
+    "price": 47.3,
+    "pred_1w": 47.81,
+    "pred_1m": 47.88
+   },
+   "LHB": {
+    "price": 59.0,
+    "pred_1w": 61.3,
+    "pred_1m": 66.41
+   },
+   "SHASHADNIM": {
+    "price": 28.9,
+    "pred_1w": 29.13,
+    "pred_1m": 30.17
+   },
+   "MIDLANDBNK": {
+    "price": 18.8,
+    "pred_1w": 18.88,
+    "pred_1m": 17.01
+   },
+   "DUTCHBANGL": {
+    "price": 48.3,
+    "pred_1w": 49.74,
+    "pred_1m": 50.66
+   },
+   "QUEENSOUTH": {
+    "price": 17.5,
+    "pred_1w": 17.67,
+    "pred_1m": 18.19
+   },
+   "UNITEDINS": {
+    "price": 49.1,
+    "pred_1w": 50.08,
+    "pred_1m": 52.75
+   },
+   "RENATA": {
+    "price": 474.1,
+    "pred_1w": 483.85,
+    "pred_1m": 495.41
+   },
+   "AMANFEED": {
+    "price": 38.0,
+    "pred_1w": 38.2,
+    "pred_1m": 38.29
+   },
+   "APEXFOOT": {
+    "price": 215.6,
+    "pred_1w": 217.16,
+    "pred_1m": 222.28
+   },
+   "BATBC": {
+    "price": 225.7,
+    "pred_1w": 230.88,
+    "pred_1m": 234.7
+   },
+   "SOUTHEASTB": {
+    "price": 10.6,
+    "pred_1w": 10.84,
+    "pred_1m": 12.35
+   },
+   "BSRMSTEEL": {
+    "price": 94.2,
+    "pred_1w": 95.82,
+    "pred_1m": 101.63
+   },
+   "FEKDIL": {
+    "price": 26.7,
+    "pred_1w": 26.63,
+    "pred_1m": 28.22
+   },
+   "NPOLYMER": {
+    "price": 35.6,
+    "pred_1w": 35.95,
+    "pred_1m": 37.13
+   }
+  }
  }
 }

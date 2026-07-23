@@ -48,6 +48,20 @@
    "qty": 1000,
    "buy_price": 38.0,
    "buy_date": "2026-07-22"
+  },
+  {
+   "id": "1784782446727",
+   "code": "ACIFORMULA",
+   "qty": 200,
+   "buy_price": 175.5,
+   "buy_date": "2026-07-23"
+  },
+  {
+   "id": "1784783716737",
+   "code": "ACIFORMULA",
+   "qty": 100,
+   "buy_price": 173.5,
+   "buy_date": "2026-07-23"
   }
  ],
  "closed": [

@@ -613,6 +613,83 @@
    "total_taka": 7055694699451.8
   },
   "date": "2026-07-22",
-  "fetched_at": "2026-07-22 15:29:16"
+  "fetched_at": "2026-07-22 19:41:11"
+ },
+ "2026-07-23": {
+  "as_of_text": "Jul 23, 2026 at 2:40 PM",
+  "indices": {
+   "DSEX": {
+    "level": 5871.06459,
+    "change": -27.89961,
+    "change_pct": -0.47296
+   },
+   "DSES": {
+    "level": 1183.06032,
+    "change": -16.11868,
+    "change_pct": -1.34414
+   },
+   "DS30": {
+    "level": 2216.65361,
+    "change": -3.34743,
+    "change_pct": -0.15079
+   },
+   "DSMEX": {
+    "level": 1220.09769,
+    "change": -1.18134,
+    "change_pct": -0.09673
+   }
+  },
+  "total_trades": 249005.0,
+  "total_volume": 412214217.0,
+  "total_value_mn": 9388.808,
+  "advanced": 59,
+  "declined": 310,
+  "unchanged": 20,
+  "categories": {
+   "All": {
+    "advanced": 59,
+    "declined": 310,
+    "unchanged": 20,
+    "total": 389
+   },
+   "A": {
+    "advanced": 30,
+    "declined": 161,
+    "unchanged": 5,
+    "total": 196
+   },
+   "B": {
+    "advanced": 5,
+    "declined": 66,
+    "unchanged": 2,
+    "total": 73
+   },
+   "N": {
+    "advanced": 0,
+    "declined": 0,
+    "unchanged": 0,
+    "total": 0
+   },
+   "Z": {
+    "advanced": 24,
+    "declined": 83,
+    "unchanged": 13,
+    "total": 120
+   },
+   "MF": {
+    "advanced": 3,
+    "declined": 31,
+    "unchanged": 0,
+    "total": 34
+   }
+  },
+  "market_cap": {
+   "equity_taka": 3605140748868.7,
+   "mutual_fund_taka": 32492190704.2,
+   "debt_taka": 3375075689460.2,
+   "total_taka": 7012708629033.1
+  },
+  "date": "2026-07-23",
+  "fetched_at": "2026-07-23 15:30:04"
  }
 }
